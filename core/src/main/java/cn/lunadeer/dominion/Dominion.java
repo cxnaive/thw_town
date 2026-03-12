@@ -14,6 +14,8 @@ import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.XVersionManager;
+import cn.lunadeer.dominion.utils.holograme.HoloManager;
+import cn.lunadeer.dominion.nms.NMSManager;
 import cn.lunadeer.dominion.utils.bStatsMetrics;
 import cn.lunadeer.dominion.utils.command.CommandManager;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -62,11 +64,12 @@ public final class Dominion extends JavaPlugin {
             Configuration.loadConfigurationAndDatabase(instance.getServer().getConsoleSender());
         } catch (Exception e) {
             XLogger.error(e);
-            Bukkit.getPluginManager().disablePlugin(this);
+            Bukkit.getServer().shutdown();  // Fatal error, shutdown server
             return;
         }
         Notification.instance.setPrefix(Language.dominionText.notificationPrefix);
         XVersionManager.VERSION = XVersionManager.GetVersion(this);
+        NMSManager.initialize();
 
         new VaultConnect(this);
         new MultiServerManager(this);
@@ -98,6 +101,7 @@ public final class Dominion extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        HoloManager.instance().removeAll(); // Clean up hologram display entities
         if (DatabaseManager.instance != null)
             DatabaseManager.instance.close();
         Scheduler.cancelAll();

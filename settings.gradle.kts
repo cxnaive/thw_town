@@ -3,6 +3,10 @@ rootProject.name = "Dominion"
 include(
     "api",
     "core",
-    "v1_20_1",
-    "v1_21"
+    "versions:v1_20_1",
+    "versions:v1_21",
+    "versions:v1_21_4",
+    "versions:v1_21_6",
+    "versions:v1_21_8",
+    "versions:v1_21_9"
 )

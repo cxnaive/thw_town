@@ -15,7 +15,7 @@ import cn.lunadeer.dominion.events.dominion.modify.*;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.providers.DominionProvider;
 import cn.lunadeer.dominion.utils.Notification;
-import cn.lunadeer.dominion.utils.ParticleUtil;
+import cn.lunadeer.dominion.utils.BorderRenderUtil;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -110,9 +110,14 @@ public class DominionProviderHandler extends DominionProvider {
                 // name check
                 assertDominionName(event.getName());
                 // amount check
-                assertPlayerDominionAmount(event.getOperator(), event.getWorld().getUID());
+                assertPlayerDominionAmount(event.getOperator(), event.getWorld().getUID(), parent != null);
                 // size check
                 assertDominionSize(event.getOperator(), event.getWorld().getUID(), event.getCuboid());
+                //permission check
+                if (parent != null) {
+                    assertDominionOwner(event.getOperator(), parent);
+                }
+
                 // parent check
                 assertWithinParent(event.getOperator(), toBeCreated, event.getCuboid());
                 assertSubDepth(event.getOperator(), toBeCreated);
@@ -120,11 +125,11 @@ public class DominionProviderHandler extends DominionProvider {
                 assertDominionIntersect(event.getOperator(), toBeCreated, event.getCuboid());
                 // handle economy
                 if (!event.isSkipEconomy()) {
-                    assertEconomy(event.getOperator(), CuboidDTO.ZERO, toBeCreated.getCuboid());
+                    assertEconomy(event.getOperator(), CuboidDTO.ZERO, toBeCreated.getCuboid(), parent != null);
                 }
                 // do db insert
                 DominionDTO inserted = DominionDOO.insert(toBeCreated);
-                ParticleUtil.showBorder(event.getOperator(), inserted);
+                BorderRenderUtil.showBorder(event.getOperator(), inserted);
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.createSuccess, event.getName());
                 return inserted;
             } catch (Exception e) {
@@ -156,10 +161,10 @@ public class DominionProviderHandler extends DominionProvider {
                 assertContainSubs(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertDominionIntersect(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 if (!event.isSkipEconomy()) {
-                    assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid());
+                    assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(), dominion.getParentDomId() != -1);
                 }
                 event.setDominion(event.getDominion().setCuboid(event.getNewCuboid()));
-                ParticleUtil.showBorder(event.getOperator(), event.getDominion());
+                BorderRenderUtil.showBorder(event.getOperator(), event.getDominion());
                 if (expand) {
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.expandSuccess, event.getDominion().getName());
                 } else {
@@ -203,12 +208,12 @@ public class DominionProviderHandler extends DominionProvider {
                     DominionDOO.deleteById(sub_dominion.getId());
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, sub_dominion.getName());
                     if (!event.isSkipEconomy())
-                        assertEconomy(event.getOperator(), sub_dominion.getCuboid(), CuboidDTO.ZERO);
+                        assertEconomy(event.getOperator(), sub_dominion.getCuboid(), CuboidDTO.ZERO, true);
                 }
                 DominionDOO.deleteById(event.getDominion().getId());
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, event.getDominion().getName());
                 if (!event.isSkipEconomy())
-                    assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO);
+                    assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO, event.getDominion().getParentDomId() != -1);
                 return event.getDominion();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.dominionProviderHandlerText.deleteFailed, event.getDominion().getName(), e.getMessage());
@@ -261,7 +266,7 @@ public class DominionProviderHandler extends DominionProvider {
                     throw new DominionException(Language.dominionProviderHandlerText.alreadyBelong,
                             event.getDominion().getName(), newOwnerBukkit.getName());
                 }
-                assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid());
+                assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid(), false);
                 List<DominionDTO> sub_dominions = getSubDominionsRecursive(event.getDominion());
                 if (!event.isForce()) {
                     if (!sub_dominions.isEmpty()) {

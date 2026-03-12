@@ -1,10 +1,8 @@
 package cn.lunadeer.dominion.misc;
 
 import cn.lunadeer.dominion.commands.*;
-import cn.lunadeer.dominion.uis.AllDominion;
-import cn.lunadeer.dominion.uis.MainMenu;
-import cn.lunadeer.dominion.uis.MigrateList;
-import cn.lunadeer.dominion.uis.TitleList;
+import cn.lunadeer.dominion.configuration.Configuration;
+import cn.lunadeer.dominion.uis.*;
 import cn.lunadeer.dominion.uis.dominion.DominionList;
 import cn.lunadeer.dominion.uis.dominion.DominionManage;
 import cn.lunadeer.dominion.uis.dominion.copy.CopyMenu;
@@ -22,6 +20,7 @@ import cn.lunadeer.dominion.uis.dominion.manage.member.SelectPlayer;
 import cn.lunadeer.dominion.uis.dominion.manage.member.SelectTemplate;
 import cn.lunadeer.dominion.uis.template.TemplateFlags;
 import cn.lunadeer.dominion.uis.template.TemplateList;
+import cn.lunadeer.dominion.utils.holograme.HoloCommand;
 
 public class InitCommands {
     public InitCommands() {
@@ -39,6 +38,7 @@ public class InitCommands {
         // cn.lunadeer.dominion.uis
         new MainMenu();
         new AllDominion();
+        new AllDominionOfPlayer();
         new MigrateList();
         new TitleList();
         // cn.lunadeer.dominion.uis.dominion
@@ -65,5 +65,7 @@ public class InitCommands {
         new TemplateList();
         new TemplateFlags();
 
+        // cn.lunadeer.dominion.utils.holograme (only for debug)
+        if (Configuration.debug) new HoloCommand();
     }
 }

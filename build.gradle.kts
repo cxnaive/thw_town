@@ -5,7 +5,7 @@ import java.util.*
 
 plugins {
     id("java")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "9.0.0-beta4"
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
 }
 
@@ -21,7 +21,7 @@ libraries += "net.kyori:adventure-text-minimessage:4.22.0"
 var suffixes = getAndIncrementVersion()
 
 group = "cn.lunadeer"
-version = "4.7.0-$suffixes"
+version = "4.7.5-$suffixes"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -34,7 +34,7 @@ tasks.withType<JavaCompile> {
 
 allprojects {
     apply(plugin = "java")
-    apply(plugin = "com.github.johnrengelman.shadow")
+    apply(plugin = "com.gradleup.shadow")
 
     repositories {
         mavenLocal()
@@ -90,13 +90,35 @@ allprojects {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":v1_20_1"))
-    implementation(project(":v1_21"))
+    implementation(project("versions:v1_20_1"))
+    implementation(project("versions:v1_21"))
+    implementation(project("versions:v1_21_4"))
+    implementation(project("versions:v1_21_6"))
+    implementation(project("versions:v1_21_8"))
+    implementation(project("versions:v1_21_9"))
+}
+
+// Reobfuscate all subproject JARs that have paperweight reobfJar task
+val reobfAllJars = tasks.register("reobfAllJars") {
+    description = "Reobfuscate all subproject JARs with paperweight (skip if task doesn't exist)"
+    group = "build"
+}
+
+subprojects {
+    afterEvaluate {
+        tasks.findByName("reobfJar")?.let { reobfTask ->
+            reobfAllJars.configure {
+                dependsOn(reobfTask)
+            }
+        }
+    }
 }
 
 tasks.shadowJar {
     archiveClassifier.set("")
     archiveVersion.set(project.version.toString())
+    // Ensure all NMS modules are reobfuscated before assembling the final JAR
+    dependsOn(reobfAllJars)
 }
 
 tasks.register("Clean&Build") { // <<<< RUN THIS TASK TO BUILD PLUGIN
@@ -126,6 +148,8 @@ tasks.named("publishPluginPublicationToHangar") {
     dependsOn(tasks.named("jar"))
 }
 
+
+
 // Function to get current git branch
 fun getCurrentGitBranch(): String {
     return try {
@@ -149,15 +173,15 @@ fun getAndIncrementVersion(): String {
     }
 
     val currentBranch = getCurrentGitBranch()
-    val versionType = if (currentBranch.startsWith("dev/")) "alpha" else "beta"
+    val versionType = if (currentBranch.startsWith("dev/")) "alpha" else "release"
 
-    val currentSuffix = props.getProperty("suffixes", if (versionType == "beta") "beta" else "${versionType}.24")
+    val currentSuffix = props.getProperty("suffixes", if (versionType == "release") "release" else "${versionType}.24")
 
     // Check if we need to switch version type (branch changed)
     val currentType = currentSuffix.split(".")[0]
     if (currentType != versionType) {
         // Branch changed, reset to default for new type
-        val newSuffix = if (versionType == "beta") "beta" else "${versionType}.1"
+        val newSuffix = if (versionType == "release") "release" else "${versionType}.1"
         props.setProperty("suffixes", newSuffix)
         FileOutputStream(versionFile).use {
             props.store(it, "Auto-generated version file - branch: $currentBranch")
@@ -165,13 +189,13 @@ fun getAndIncrementVersion(): String {
         return newSuffix
     }
 
-    // For beta, just return "beta" without incrementing
-    if (versionType == "beta") {
-        props.setProperty("suffixes", "beta")
+    // For release, just return "beta" without incrementing
+    if (versionType == "release") {
+        props.setProperty("suffixes", "release")
         FileOutputStream(versionFile).use {
             props.store(it, "Auto-generated version file - branch: $currentBranch")
         }
-        return "beta"
+        return "release"
     }
 
     // For alpha, increment the number
