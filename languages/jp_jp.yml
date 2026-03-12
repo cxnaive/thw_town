@@ -520,6 +520,9 @@ flags:
   drop_item:
     display-name: アイテムを捨てる
     description: インベントリ内のアイテムを捨てることができるかどうか
+  use_map:
+    display-name: 地図を使用
+    description: 空白地図で地図を作成できるかどうか
   jukebox:
     display-name: ジュークボックス
     description: ジュークボックスを使用できるかどうか

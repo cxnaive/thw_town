@@ -520,6 +520,9 @@ flags:
   drop_item:
     display-name: Drop Item
     description: Whether player can drop item in dominion.
+  use_map:
+    display-name: Use Map
+    description: Whether player can use empty map to create map in dominion.
   jukebox:
     display-name: Jukebox
     description: Whether can interact with jukebox.

@@ -470,6 +470,9 @@ flags:
   drop_item:
     display-name: 丢弃物品
     description: 是否可以丢弃背包中的物品
+  use_map:
+    display-name: 使用地图
+    description: 是否可以使用空白地图创建地图
   jukebox:
     display-name: 唱片机
     description: 是否可以使用唱片机
