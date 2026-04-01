@@ -446,10 +446,15 @@ public class DominionDOO implements DominionDTO {
     @Override
     public @NotNull Location getTpLocation() {
         if (Objects.equals(tp_location.getValue(), "default")) {
-            return new Location(getWorld(),
-                    (double) (cuboid.x1() + cuboid.x2()) / 2,
-                    (double) (cuboid.y1() + cuboid.y2()) / 2,
-                    (double) (cuboid.z1() + cuboid.z2()) / 2);
+            World w = getWorld();
+            double centerX = (double) (cuboid.x1() + cuboid.x2()) / 2;
+            double centerZ = (double) (cuboid.z1() + cuboid.z2()) / 2;
+            double centerY = (double) (cuboid.y1() + cuboid.y2()) / 2;
+            if (w != null) {
+                int surfaceY = w.getHighestBlockYAt((int) centerX, (int) centerZ) + 1;
+                centerY = Math.min(centerY, surfaceY);
+            }
+            return new Location(w, centerX, centerY, centerZ);
         } else {
             // 0:0:0
             String[] loc = tp_location.getValue().split(":");

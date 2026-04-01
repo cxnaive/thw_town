@@ -2,39 +2,25 @@ package cn.lunadeer.dominion.utils;
 
 import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
-import cn.lunadeer.dominion.utils.holograme.HoloItem;
-import cn.lunadeer.dominion.utils.holograme.HoloManager;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * Utility class for displaying dominion borders using client-side BlockDisplay holograms.
- * <p>
- * Replaces the previous particle-based implementation with NMS packet-based display entities
- * for better visual quality and lower network overhead. The border is rendered as:
- * <ul>
- *   <li>12 edge lines forming the cuboid wireframe (4 bottom edges, 4 top edges, 4 vertical edges)</li>
- *   <li>4 horizontal lines at the player's Y level (front, back, left, right) if player is within bounds</li>
- * </ul>
- * The border automatically disappears after {@link #DISPLAY_DURATION_TICKS} ticks.
+ * Utility class for displaying dominion borders using particles.
+ * Renders the border as FLAME particles along the edges of the cuboid.
  */
 public class BorderRenderUtil {
 
-    /** How long the border display remains visible, in ticks (20 ticks = 1 second). */
-    private static final long DISPLAY_DURATION_TICKS = 200L; // 10 seconds
-
-    /** Thickness of each border wall in blocks. */
-    private static final float WALL_THICKNESS = 0.08f;
-
-    /** Material used for border walls. */
-    private static final Material BORDER_MATERIAL = Material.WHITE_STAINED_GLASS;
-
+    /** Default glow color for API compatibility (not used in particle mode) */
     public static final Color DEFAULT_GLOW_COLOR = Color.fromRGB(0, 180, 255);
+
+    /** Maximum render radius for particles */
+    private static final int renderMaxRadius = 48;
 
     public static void showBorder(CommandSender sender, DominionDTO dominion) {
         if (!(sender instanceof Player player)) {
@@ -42,166 +28,130 @@ public class BorderRenderUtil {
         }
         showBorder(player,
                 dominion.getWorld(),
-                dominion.getCuboid(),
-                Color.fromRGB(dominion.getColorR(), dominion.getColorG(), dominion.getColorB())
+                dominion.getCuboid()
         );
     }
 
     public static void showBorder(Player player, DominionDTO dominion) {
         showBorder(player,
                 dominion.getWorld(),
-                dominion.getCuboid(),
-                Color.fromRGB(dominion.getColorR(), dominion.getColorG(), dominion.getColorB())
+                dominion.getCuboid()
         );
     }
 
-    public static void showBorder(Player player, World world, CuboidDTO cuboid, Color GLOW_COLOR) {
-        Scheduler.runTask(() -> showBorderDisplay(player, world, cuboid, GLOW_COLOR));
+    public static void showBorder(Player player, World world, CuboidDTO cuboid, Color color) {
+        // Color parameter is ignored in particle mode - FLAME particles are used
+        showBorder(player, world, cuboid);
     }
 
-    /**
-     * Creates and displays a holographic border around the specified cuboid region for the given player.
-     * Any previously displayed border for this player is removed first. The border auto-removes
-     * after {@link #DISPLAY_DURATION_TICKS} ticks.
-     */
-    private static void showBorderDisplay(Player player, World world, CuboidDTO cuboid, Color GLOW_COLOR) {
-        if (player == null || !player.isOnline() || world == null) return;
+    public static void showBorder(Player player, World world, CuboidDTO cuboid) {
+        showBoxFace(player,
+                world,
+                cuboid.x1(),
+                cuboid.y1(),
+                cuboid.z1(),
+                cuboid.x2(),
+                cuboid.y2(),
+                cuboid.z2()
+        );
+    }
 
-        String holoName = "border_" + player.getUniqueId();
+    public static void showBoxFace(Player player, World world,
+                                   int x1, int y1, int z1, int x2, int y2, int z2) {
+        Location loc1 = new Location(world, x1, y1, z1);
+        Location loc2 = new Location(world, x2, y2, z2);
+        showBoxFace(player, loc1, loc2);
+    }
 
-        // Remove any existing border display for this player
-        if (HoloManager.instance().exists(holoName)) {
-            HoloManager.instance().remove(holoName);
-        }
-
-        int x1 = cuboid.x1(), y1 = cuboid.y1(), z1 = cuboid.z1();
-        int x2 = cuboid.x2(), y2 = cuboid.y2(), z2 = cuboid.z2();
-
-        float sizeX = x2 - x1;
-        float sizeY = y2 - y1;
-        float sizeZ = z2 - z1;
-
-        if (sizeX <= 0 || sizeY <= 0 || sizeZ <= 0) return;
-
-        Location anchor = new Location(world, x1, y1, z1);
-        HoloItem border = HoloManager.instance().create(holoName, anchor);
-
-        // ===== 12条边框线 =====
-        
-        // 底部4条边 (y1层)
-        border.addBlockDisplay("bottom_north", BORDER_MATERIAL)
-                .offset(0, 0, 0)
-                .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("bottom_south", BORDER_MATERIAL)
-                .offset(0, 0, sizeZ)
-                .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("bottom_west", BORDER_MATERIAL)
-                .offset(0, 0, 0)
-                .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("bottom_east", BORDER_MATERIAL)
-                .offset(sizeX, 0, 0)
-                .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        // 顶部4条边 (y2层)
-        border.addBlockDisplay("top_north", BORDER_MATERIAL)
-                .offset(0, sizeY, 0)
-                .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("top_south", BORDER_MATERIAL)
-                .offset(0, sizeY, sizeZ)
-                .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("top_west", BORDER_MATERIAL)
-                .offset(0, sizeY, 0)
-                .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("top_east", BORDER_MATERIAL)
-                .offset(sizeX, sizeY, 0)
-                .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        // 4条竖直边
-        border.addBlockDisplay("vertical_nw", BORDER_MATERIAL)
-                .offset(0, 0, 0)
-                .scale(WALL_THICKNESS, sizeY, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("vertical_ne", BORDER_MATERIAL)
-                .offset(sizeX, 0, 0)
-                .scale(WALL_THICKNESS, sizeY, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("vertical_sw", BORDER_MATERIAL)
-                .offset(0, 0, sizeZ)
-                .scale(WALL_THICKNESS, sizeY, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        border.addBlockDisplay("vertical_se", BORDER_MATERIAL)
-                .offset(sizeX, 0, sizeZ)
-                .scale(WALL_THICKNESS, sizeY, WALL_THICKNESS)
-                .brightness(15, 15);
-                //.glowColor(GLOW_COLOR);
-
-        // ===== 玩家高度的水平线（前后左右四条）=====
-        double playerY = player.getLocation().getY();
-        if (playerY >= y1 && playerY <= y2) {
-            float playerOffsetY = (float) (playerY - y1);
-
-            border.addBlockDisplay("player_north", BORDER_MATERIAL)
-                    .offset(0, playerOffsetY, 0)
-                    .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                    .brightness(15, 15);
-                    //.glowColor(GLOW_COLOR);
-
-            border.addBlockDisplay("player_south", BORDER_MATERIAL)
-                    .offset(0, playerOffsetY, sizeZ)
-                    .scale(sizeX, WALL_THICKNESS, WALL_THICKNESS)
-                    .brightness(15, 15);
-                    //.glowColor(GLOW_COLOR);
-
-            border.addBlockDisplay("player_west", BORDER_MATERIAL)
-                    .offset(0, playerOffsetY, 0)
-                    .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                    .brightness(15, 15);
-                    //.glowColor(GLOW_COLOR);
-
-            border.addBlockDisplay("player_east", BORDER_MATERIAL)
-                    .offset(sizeX, playerOffsetY, 0)
-                    .scale(WALL_THICKNESS, WALL_THICKNESS, sizeZ)
-                    .brightness(15, 15);
-                    //.glowColor(GLOW_COLOR);
-        }
-
-        // Only show to the requesting player (client-side only)
-        border.show(player);
-
-        // Auto-remove after the display duration
-        Scheduler.runTaskLater(() -> {
-            if (HoloManager.instance().exists(holoName)) {
-                HoloManager.instance().remove(holoName);
+    public static void showBoxFace(Player player, Location loc1, Location loc2) {
+        Scheduler.runTask(() -> {
+            if (!loc1.getWorld().equals(loc2.getWorld())) {
+                return;
             }
-        }, DISPLAY_DURATION_TICKS);
+            int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());
+            int minY = Math.min(loc1.getBlockY(), loc2.getBlockY());
+            int minZ = Math.min(loc1.getBlockZ(), loc2.getBlockZ());
+            int maxX = Math.max(loc1.getBlockX(), loc2.getBlockX());
+            int maxY = Math.max(loc1.getBlockY(), loc2.getBlockY());
+            int maxZ = Math.max(loc1.getBlockZ(), loc2.getBlockZ());
+
+            int player_minx = player.getLocation().getBlockX() - renderMaxRadius;
+            int player_maxx = player.getLocation().getBlockX() + renderMaxRadius;
+            int player_miny = player.getLocation().getBlockY() - renderMaxRadius / 2;
+            int player_maxy = player.getLocation().getBlockY() + renderMaxRadius / 2;
+            int player_minz = player.getLocation().getBlockZ() - renderMaxRadius;
+            int player_maxz = player.getLocation().getBlockZ() + renderMaxRadius;
+
+            boolean skip_minx = false;
+            boolean skip_maxx = false;
+            boolean skip_minz = false;
+            boolean skip_maxz = false;
+
+            int[] adjustedX = adjustBoundary(player_minx, player_maxx, minX, maxX);
+            if (minX != adjustedX[0]) {
+                skip_minx = true;
+                minX = adjustedX[0];
+            }
+            if (maxX != adjustedX[1]) {
+                skip_maxx = true;
+                maxX = adjustedX[1];
+            }
+
+            int[] adjustedZ = adjustBoundary(player_minz, player_maxz, minZ, maxZ);
+            if (minZ != adjustedZ[0]) {
+                skip_minz = true;
+                minZ = adjustedZ[0];
+            }
+            if (maxZ != adjustedZ[1]) {
+                skip_maxz = true;
+                maxZ = adjustedZ[1];
+            }
+
+            int[] adjustedY = adjustBoundary(player_miny, player_maxy, minY, maxY);
+            minY = adjustedY[0];
+            maxY = adjustedY[1];
+
+            for (int y = minY; y <= maxY; y++) {
+                for (int x = minX; x <= maxX; x++) {
+                    if (!skip_minz) {
+                        spawnParticle(player, x, y, minZ);
+                    }
+                    if (!skip_maxz) {
+                        spawnParticle(player, x, y, maxZ);
+                    }
+                }
+                for (int z = minZ; z <= maxZ; z++) {
+                    if (!skip_minx) {
+                        spawnParticle(player, minX, y, z);
+                    }
+                    if (!skip_maxx) {
+                        spawnParticle(player, maxX, y, z);
+                    }
+                }
+            }
+        });
+    }
+
+    private static void spawnParticle(Player player, double x, double y, double z) {
+        player.spawnParticle(Particle.FLAME, x, y, z, 2, 0, 0, 0, 0);
+    }
+
+    private static int[] adjustBoundary(int playerMin, int playerMax, int boundaryMin, int boundaryMax) {
+        if (playerMax <= boundaryMin) {
+            boundaryMin = boundaryMax;
+        } else if (playerMax <= boundaryMax) {
+            boundaryMax = playerMax;
+            if (playerMin >= boundaryMin) {
+                boundaryMin = playerMin;
+            }
+        } else {
+            if (playerMin > boundaryMin) {
+                boundaryMin = playerMin;
+            } else if (playerMin > boundaryMax) {
+                boundaryMin = boundaryMax;
+            }
+        }
+        return new int[]{boundaryMin, boundaryMax};
     }
 
 }
