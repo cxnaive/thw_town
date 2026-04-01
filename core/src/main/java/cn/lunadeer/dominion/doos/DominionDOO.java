@@ -483,6 +483,11 @@ public class DominionDOO implements DominionDTO {
         return this;
     }
 
+    @Override
+    public boolean isDefaultTpLocation() {
+        return Objects.equals(tp_location.getValue(), "default");
+    }
+
     public @NotNull DominionDOO setColor(@NotNull Color color) throws SQLException {
         this.color.setValue(String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()));
         Update.update("dominion")

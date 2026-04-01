@@ -5,10 +5,12 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.managers.DatabaseMigration;
 import cn.lunadeer.dominion.managers.DatabaseTables;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.uis.MainMenu;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.command.Argument;
 import cn.lunadeer.dominion.utils.command.Option;
 import cn.lunadeer.dominion.utils.command.SecondaryCommand;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -36,6 +38,7 @@ public class AdministratorCommand {
         public String reloadDescription = "Reload cache, configuration, or both.";
         public String exportDescription = "Export data (MCA list or database).";
         public String importDescription = "Import database data.";
+        public String migrateDescription = "Migrate dominion data from another server export, merging with current data.";
         public String updateLanguageDescription = "Regenerate language files from plugin internal language files.";
         public String updateLanguageConfirm = "This will overwrite your current language files, please confirm by adding 'confirm' at the end of the command.";
 
@@ -220,6 +223,24 @@ public class AdministratorCommand {
                 return;
             }
             DatabaseTables.importTables(sender);
+        }
+    }.needPermission(adminPermission).register();
+
+    public static SecondaryCommand migrateData = new SecondaryCommand("migrate_db", List.of(
+            new Argument("folder", true),
+            new Argument("new_server_id", true)
+    ), Language.administratorCommandText.migrateDescription) {
+        @Override
+        public void executeHandler(CommandSender sender) {
+            String folder = getArgumentValue(0);
+            int newServerId;
+            try {
+                newServerId = Integer.parseInt(getArgumentValue(1));
+            } catch (NumberFormatException e) {
+                Notification.error(sender, "Invalid server ID: " + getArgumentValue(1));
+                return;
+            }
+            DatabaseMigration.migrateDatabase(sender, folder, newServerId);
         }
     }.needPermission(adminPermission).register();
 

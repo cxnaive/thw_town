@@ -122,6 +122,7 @@ public class CacheManager {
      * Reloads the cache for this server.
      */
     public void reloadCache() {
+        playerCache.load();
         thisServerCache.getDominionCache().load();
         thisServerCache.getMemberCache().load();
         thisServerCache.getGroupCache().load();

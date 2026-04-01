@@ -365,10 +365,14 @@ public class DominionManage extends AbstractUI {
                         dominion.getCuboid().y1() + " ~ " + dominion.getCuboid().y2(),
                         dominion.getCuboid().getSquare(),
                         dominion.getCuboid().getVolume(),
-                        dominion.getTpLocation().getWorld().getName() + ":" +
-                                dominion.getTpLocation().getBlockX() + "," +
-                                dominion.getTpLocation().getBlockY() + "," +
-                                dominion.getTpLocation().getBlockZ()
+                        dominion.isDefaultTpLocation() ?
+                                dominion.getWorld().getName() + ":" +
+                                        (dominion.getCuboid().x1() + dominion.getCuboid().x2()) / 2 + "," +
+                                        (dominion.getCuboid().z1() + dominion.getCuboid().z2()) / 2 + " (auto Y)" :
+                                dominion.getTpLocation().getWorld().getName() + ":" +
+                                        dominion.getTpLocation().getBlockX() + "," +
+                                        dominion.getTpLocation().getBlockY() + "," +
+                                        dominion.getTpLocation().getBlockZ()
                 ));
 
         view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.envSettingButton) {

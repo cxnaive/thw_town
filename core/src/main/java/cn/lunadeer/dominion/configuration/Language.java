@@ -11,6 +11,7 @@ import cn.lunadeer.dominion.handler.GroupProviderHandler;
 import cn.lunadeer.dominion.handler.MemberProviderHandler;
 import cn.lunadeer.dominion.handler.SelectPointEventsHandler;
 import cn.lunadeer.dominion.inputters.*;
+
 import cn.lunadeer.dominion.managers.DatabaseTables;
 import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TeleportManager;
@@ -150,6 +151,8 @@ public class Language extends ConfigurationFile {
     public static Limitation.LimitationText limitationText = new Limitation.LimitationText();
 
     public static DatabaseTables.DatabaseManagerText databaseManagerText = new DatabaseTables.DatabaseManagerText();
+
+    public static MigrationText migrationText = new MigrationText();
 
     public static TeleportManager.TeleportManagerText teleportManagerText = new TeleportManager.TeleportManagerText();
 
