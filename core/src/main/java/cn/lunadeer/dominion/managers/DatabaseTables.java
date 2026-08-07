@@ -12,6 +12,7 @@ import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import cn.lunadeer.dominion.utils.databse.FIelds.*;
 import cn.lunadeer.dominion.utils.databse.syntax.Alter.Alter;
+import cn.lunadeer.dominion.utils.databse.syntax.Delete;
 import cn.lunadeer.dominion.utils.databse.syntax.Insert;
 import cn.lunadeer.dominion.utils.databse.syntax.Show.Show;
 import cn.lunadeer.dominion.utils.databse.syntax.Table.Column;
@@ -318,6 +319,16 @@ public class DatabaseTables {
                     .column(tp_cache_uuid)
                     .column(tp_cache_dom_id)
                     .execute();
+        }
+
+        // Remove orphaned member rows whose player record no longer exists
+        // (e.g. left behind by a partially failed auto-clean); they crash member
+        // list views and member management with a NullPointerException.
+        int orphanedMembers = Delete.delete().from("dominion_member")
+                .where("NOT EXISTS (SELECT 1 FROM player_name WHERE player_name.uuid = dominion_member.player_uuid)")
+                .execute();
+        if (orphanedMembers > 0) {
+            XLogger.warn("Removed {0} orphaned dominion member record(s) with missing player data.", orphanedMembers);
         }
     }
 

@@ -279,7 +279,9 @@ public class DominionDOO implements DominionDTO {
 
     @Override
     public @NotNull PlayerDTO getOwnerDTO() {
-        return Objects.requireNonNull(CacheManager.instance.getPlayer(getOwner()));
+        UUID owner = getOwner();
+        return Objects.requireNonNull(CacheManager.instance.getPlayer(owner),
+                "Missing player record for owner of dominion " + getId() + " (owner uuid: " + owner + ")");
     }
 
     @Override

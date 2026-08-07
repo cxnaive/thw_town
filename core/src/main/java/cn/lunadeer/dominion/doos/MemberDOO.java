@@ -146,7 +146,9 @@ public class MemberDOO implements MemberDTO {
 
     @Override
     public @NotNull PlayerDTO getPlayer() {
-        return Objects.requireNonNull(CacheManager.instance.getPlayer(getPlayerUUID()));
+        UUID playerUuid = getPlayerUUID();
+        return Objects.requireNonNull(CacheManager.instance.getPlayer(playerUuid),
+                "Missing player record for member " + getId() + " (player uuid: " + playerUuid + ")");
     }
 
     public MemberDOO setGroupId(Integer groupId) throws SQLException {

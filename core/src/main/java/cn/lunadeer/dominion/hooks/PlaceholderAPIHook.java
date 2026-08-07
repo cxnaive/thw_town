@@ -83,7 +83,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             DominionDTO dominion = CacheManager.instance.getDominion(bukkitPlayer.getLocation());
             if (dominion == null) return null; // Dominion not found
             return dominion.getMembers().stream().anyMatch(member ->
-                    member.getPlayer().getUuid().equals(bukkitPlayer.getUniqueId()))
+                    member.getPlayerUUID().equals(bukkitPlayer.getUniqueId()))
                     ? "true" : "false";
         }
         // %dominion_is_member_<dominion_name>%: Check if the player is a member of a specific dominion
@@ -95,7 +95,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (dominion == null) return null; // Dominion not found
 
             return dominion.getMembers().stream().anyMatch(member ->
-                    member.getPlayer().getUuid().equals(bukkitPlayer.getUniqueId()))
+                    member.getPlayerUUID().equals(bukkitPlayer.getUniqueId()))
                     ? "true" : "false";
         }
         // %dominion_members%: Get the list of members in the dominion the player is currently in

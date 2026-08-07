@@ -15,6 +15,7 @@ import cn.lunadeer.dominion.events.member.MemberSetFlagEvent;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.providers.MemberProvider;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -74,6 +75,7 @@ public class MemberProviderHandler extends MemberProvider {
                 return memberModified;
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.memberProviderHandlerText.setFlagFailed, e.getMessage());
+                XLogger.error(e);
                 return null;
             }
         });
@@ -92,7 +94,7 @@ public class MemberProviderHandler extends MemberProvider {
                 if (event.getPlayer().getUuid().equals(event.getDominion().getOwner())) {
                     throw new DominionException(Language.memberProviderHandlerText.cantBeOwner);
                 }
-                if (event.getDominion().getMembers().stream().anyMatch(m -> m.getPlayer().getUuid().equals(event.getPlayer().getUuid()))) {
+                if (event.getDominion().getMembers().stream().anyMatch(m -> m.getPlayerUUID().equals(event.getPlayer().getUuid()))) {
                     throw new DominionException(Language.memberProviderHandlerText.alreadyMember,
                             event.getPlayer().getLastKnownName(), dominion.getName());
                 }
@@ -102,6 +104,7 @@ public class MemberProviderHandler extends MemberProvider {
                 return member;
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.memberProviderHandlerText.addMemberFailed, e.getMessage());
+                XLogger.error(e);
                 return null;
             }
         });
@@ -140,6 +143,7 @@ public class MemberProviderHandler extends MemberProvider {
                 return event.getMember();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.memberProviderHandlerText.removeMemberFailed, e.getMessage());
+                XLogger.error(e);
                 return null;
             }
         });
