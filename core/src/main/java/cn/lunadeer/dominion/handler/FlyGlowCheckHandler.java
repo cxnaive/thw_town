@@ -1,6 +1,8 @@
 package cn.lunadeer.dominion.handler;
 
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
+import cn.lunadeer.dominion.api.dtos.GroupDTO;
+import cn.lunadeer.dominion.api.dtos.MemberDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
@@ -34,7 +36,7 @@ public class FlyGlowCheckHandler implements Listener {
             return;
         }
         handle(event.getPlayer(), event.getTo(), Flags.FLY, () -> allowFly(player), () -> disableFly(player));
-        handle(event.getPlayer(), event.getTo(), Flags.GLOW, () -> player.setGlowing(true), () -> player.setGlowing(false));
+        handleGlow(event.getPlayer(), event.getTo());
     }
 
     @EventHandler
@@ -75,6 +77,35 @@ public class FlyGlowCheckHandler implements Listener {
         }
     }
 
+
+    /**
+     * Glow is an effect flag, not a protection flag, so the privilege cascade's
+     * admin/owner bypass must not apply (it would force glowing on with no way to
+     * turn it off). Everyone is evaluated by their actual membership level:
+     * member -> member/group flag, non-member (including the owner) -> guest flag.
+     */
+    private static void handleGlow(@NotNull Player player, @Nullable DominionDTO to) {
+        if (to == null) {
+            World world = player.getWorld();
+            player.setGlowing(WorldWide.isWorldWideEnabled(world) && WorldWide.getGuestFlagValue(world, Flags.GLOW));
+            return;
+        }
+        if (!Flags.GLOW.getEnable()) {
+            player.setGlowing(false);
+            return;
+        }
+        MemberDTO member = CacheManager.instance.getMember(to, player);
+        boolean glow;
+        if (member != null) {
+            GroupDTO group = CacheManager.instance.getGroup(member.getGroupId());
+            glow = (member.getGroupId() != -1 && group != null)
+                    ? group.getFlagValue(Flags.GLOW)
+                    : member.getFlagValue(Flags.GLOW);
+        } else {
+            glow = to.getGuestPrivilegeFlagValue().getOrDefault(Flags.GLOW, Flags.GLOW.getDefaultValue());
+        }
+        player.setGlowing(glow);
+    }
 
     private static void allowFly(Player player) {
         for (String flyPN : Configuration.flyPermissionNodes) {
