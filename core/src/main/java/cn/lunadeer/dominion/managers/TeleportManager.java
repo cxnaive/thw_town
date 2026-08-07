@@ -1,6 +1,7 @@
 package cn.lunadeer.dominion.managers;
 
 import cn.lunadeer.dominion.Dominion;
+import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.cache.CacheManager;
@@ -18,6 +19,7 @@ import cn.lunadeer.dominion.utils.scheduler.CancellableTask;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -74,7 +76,7 @@ public class TeleportManager implements Listener {
             if (dominion.getServerId() != Configuration.multiServer.serverId) {
                 return;
             }
-            Scheduler.runEntityTask(() -> doTeleportSafely(event.getPlayer(), dominion.getTpLocation()), event.getPlayer());
+            Scheduler.runEntityTask(() -> doTeleportSafely(event.getPlayer(), dominion), event.getPlayer());
         } catch (Exception e) {
             Notification.error(event.getPlayer(), e);
         }
@@ -151,7 +153,7 @@ public class TeleportManager implements Listener {
         // teleport
         CancellableTask task = Scheduler.runTaskLaterAsync(() -> {
             if (dominion.getServerId() == Configuration.multiServer.serverId) {
-                Scheduler.runEntityTask(() -> doTeleportSafely(player, dominion.getTpLocation()), player);
+                Scheduler.runEntityTask(() -> doTeleportSafely(player, dominion), player);
             } else {
                 if (!Configuration.multiServer.enable) return;
                 try {
@@ -197,8 +199,76 @@ public class TeleportManager implements Listener {
         } else {
             location.getWorld().getChunkAtAsyncUrgently(location).thenAccept((chunk) -> {
                 Location loc = findNearestSafeLocation(location);
-                player.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                // Use player scheduler to ensure teleport runs on correct region thread (Folia)
+                player.getScheduler().run(Dominion.instance, (t) -> player.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN), null);
             });
+        }
+    }
+
+    /**
+     * Teleports a player to a dominion's teleport location safely.
+     * <p>
+     * This method handles Folia compatibility by asynchronously loading the chunk before
+     * calculating the highest block Y position (for default tp locations).
+     *
+     * @param player   The player to be teleported.
+     * @param dominion The dominion to teleport to.
+     */
+    public static void doTeleportSafely(Player player, DominionDTO dominion) {
+        if (!player.getPassengers().isEmpty()) {
+            player.getPassengers().forEach(player::removePassenger);
+        }
+        if (player.isInsideVehicle() && player.getVehicle() != null) {
+            Scheduler.runEntityTask(() -> player.getVehicle().removePassenger(player), player.getVehicle());
+            player.leaveVehicle();
+        }
+
+        World world = dominion.getWorld();
+        if (world == null) {
+            return;
+        }
+
+        CuboidDTO cuboid = dominion.getCuboid();
+        double centerX = (double) (cuboid.x1() + cuboid.x2()) / 2;
+        double centerZ = (double) (cuboid.z1() + cuboid.z2()) / 2;
+        double centerY = (double) (cuboid.y1() + cuboid.y2()) / 2;
+
+        if (!isPaper()) {
+            // Spigot: sync chunk loading
+            Location tpLoc;
+            if (dominion.isDefaultTpLocation()) {
+                // getHighestBlockYAt will load chunk if needed
+                int surfaceY = world.getHighestBlockYAt((int) centerX, (int) centerZ) + 1;
+                double finalY = Math.min(centerY, surfaceY);
+                tpLoc = new Location(world, centerX, finalY, centerZ);
+            } else {
+                tpLoc = dominion.getTpLocation();
+            }
+            Location loc = findNearestSafeLocation(tpLoc);
+            Bukkit.getScheduler().runTask(Dominion.instance, () -> player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN));
+        } else {
+            // Paper/Folia: async chunk loading
+            if (dominion.isDefaultTpLocation()) {
+                // Load chunk at center location for default tp
+                Location centerLoc = new Location(world, centerX, centerY, centerZ);
+                world.getChunkAtAsyncUrgently(centerLoc).thenAccept((chunk) -> {
+                    // Now it's safe to call getHighestBlockYAt since chunk is loaded
+                    int surfaceY = world.getHighestBlockYAt((int) centerX, (int) centerZ) + 1;
+                    double finalY = Math.min(centerY, surfaceY);
+                    Location tpLoc = new Location(world, centerX, finalY, centerZ);
+                    Location loc = findNearestSafeLocation(tpLoc);
+                    // Use player scheduler to ensure teleport runs on correct region thread (Folia)
+                    player.getScheduler().run(Dominion.instance, (t) -> player.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN), null);
+                });
+            } else {
+                // Load chunk at custom tp location
+                Location tpLoc = dominion.getTpLocation();
+                world.getChunkAtAsyncUrgently(tpLoc).thenAccept((chunk) -> {
+                    Location loc = findNearestSafeLocation(tpLoc);
+                    // Use player scheduler to ensure teleport runs on correct region thread (Folia)
+                    player.getScheduler().run(Dominion.instance, (t) -> player.teleportAsync(loc, PlayerTeleportEvent.TeleportCause.PLUGIN), null);
+                });
+            }
         }
     }
 
