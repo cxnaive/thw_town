@@ -129,6 +129,17 @@ public class TownTrustDOO {
         Delete.delete().from("town_trust").where("town_id = ?", townId).execute();
     }
 
+    /**
+     * Delete every OUTPOST-scoped grant pointing at the given dominion
+     * (any town). Used on detach/release so stale grants cannot silently
+     * revive if the dominion later re-attaches to a town.
+     */
+    public static void deleteByOutpost(@NotNull Integer dominionId) throws SQLException {
+        Delete.delete().from("town_trust")
+                .where("scope_type = ? AND scope_id = ?", TrustScope.OUTPOST.name(), dominionId)
+                .execute();
+    }
+
     public @NotNull Integer getTownId() {
         return townId.getValue();
     }

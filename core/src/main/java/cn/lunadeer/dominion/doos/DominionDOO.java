@@ -392,8 +392,10 @@ public class DominionDOO implements DominionDTO {
     }
 
     /**
-     * Detach this dominion from its town (admin release). Clears the
-     * outpost admin as well: the town cascade no longer applies.
+     * Detach this dominion from its town (admin release / disband return).
+     * Clears the outpost admin as well: the town cascade no longer
+     * applies. OUTPOST-scoped trust grants pointing at this dominion are
+     * deleted so they cannot silently revive on a later re-attachment.
      */
     public @NotNull DominionDOO detachFromTown() throws SQLException {
         this.townId.setValue(null);
@@ -404,6 +406,7 @@ public class DominionDOO implements DominionDTO {
                 .set(this.townId, this.attachedBy, this.attachedAt, this.outpostAdminUuid)
                 .where("id = ?", id.getValue())
                 .execute();
+        TownTrustDOO.deleteByOutpost(id.getValue());
         CacheManager.instance.getCache().getDominionCache().load(id.getValue());
         return this;
     }

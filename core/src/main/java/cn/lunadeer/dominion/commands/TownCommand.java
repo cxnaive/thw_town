@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -67,6 +68,9 @@ public class TownCommand implements TabExecutor {
         public String joinConfirmNoLand = "Joining {0} makes you a resident. Re-run with 'confirm' to proceed.";
         public String disbandConfirm = "Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with 'confirm' to proceed.";
         public String disbandConfirmContributors = "Contributed land of these players will be dissolved: {0}.";
+        public String disbandConfirmReturn = "Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with 'confirm' to proceed.";
+        public String disbandConfirmContributorsReturn = "Contributed land of these players will be returned to them: {0}.";
+        public String dominionNotExist = "Dominion {0} does not exist.";
         public String noTown = "You are not in any town.";
         public String noManagedTown = "You are not the mayor or an assistant of any town.";
         public String townInfo = "&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})";
@@ -85,6 +89,12 @@ public class TownCommand implements TabExecutor {
                 .put(invitee, System.currentTimeMillis() + INVITE_TTL_MS);
     }
 
+    /** Drop expired entries so the table cannot grow without bound. */
+    private static void pruneExpired(@NotNull Map<UUID, Long> townInvites) {
+        long now = System.currentTimeMillis();
+        townInvites.entrySet().removeIf(e -> e.getValue() <= now);
+    }
+
     /**
      * Drop every pending invite of a town (disband): a same-name town
      * created afterwards must not inherit them.
@@ -96,6 +106,7 @@ public class TownCommand implements TabExecutor {
     private static boolean hasInvite(@NotNull String townName, @NotNull UUID invitee) {
         Map<UUID, Long> townInvites = invites.get(townName.toLowerCase());
         if (townInvites == null) return false;
+        pruneExpired(townInvites);
         Long expiry = townInvites.get(invitee);
         return expiry != null && expiry > System.currentTimeMillis();
     }
@@ -103,6 +114,7 @@ public class TownCommand implements TabExecutor {
     private static boolean consumeInvite(@NotNull String townName, @NotNull UUID invitee) {
         Map<UUID, Long> townInvites = invites.get(townName.toLowerCase());
         if (townInvites == null) return false;
+        pruneExpired(townInvites);
         Long expiry = townInvites.remove(invitee);
         return expiry != null && expiry > System.currentTimeMillis();
     }
@@ -176,11 +188,21 @@ public class TownCommand implements TabExecutor {
                     contributors.add(contributor);
                 }
             }
-            Notification.warn(sender, Language.townCommandText.disbandConfirm,
-                    town.getName(), outposts.size(), outpostNames(outposts));
-            if (!contributors.isEmpty()) {
-                Notification.warn(sender, Language.townCommandText.disbandConfirmContributors,
-                        String.join(", ", contributors));
+            boolean dissolveAll = !"return-contributed".equals(Configuration.town.disbandPolicy);
+            if (dissolveAll) {
+                Notification.warn(sender, Language.townCommandText.disbandConfirm,
+                        town.getName(), outposts.size(), outpostNames(outposts));
+                if (!contributors.isEmpty()) {
+                    Notification.warn(sender, Language.townCommandText.disbandConfirmContributors,
+                            String.join(", ", contributors));
+                }
+            } else {
+                Notification.warn(sender, Language.townCommandText.disbandConfirmReturn,
+                        town.getName(), outposts.size(), outpostNames(outposts));
+                if (!contributors.isEmpty()) {
+                    Notification.warn(sender, Language.townCommandText.disbandConfirmContributorsReturn,
+                            String.join(", ", contributors));
+                }
             }
             return;
         }
@@ -217,6 +239,9 @@ public class TownCommand implements TabExecutor {
         if (!attachable.isEmpty() && !Configuration.town.allowJoinWithLegacyLand) {
             throw new cn.lunadeer.dominion.misc.DominionException(Language.townManagerText.joinWithLegacyLandDisabled);
         }
+        // every validation that does not need consent must run before the
+        // invite is consumed, so a failed join never burns it
+        TownManager.assertCanJoinNewTown(player);
         boolean bypass = Others.bypassLimit(player);
         if (!bypass && !hasInvite(town.getName(), player.getUniqueId())) {
             throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.noInvite, town.getName());
@@ -366,20 +391,24 @@ public class TownCommand implements TabExecutor {
         String name = requireArg(args, index);
         DominionDTO dto = CacheManager.instance.getDominion(name);
         if (!(dto instanceof DominionDOO doo)) {
-            throw new cn.lunadeer.dominion.misc.DominionException(Language.townManagerText.townNotExist, name);
+            throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.dominionNotExist, name);
         }
         return doo;
     }
 
     /**
-     * The town the sender belongs to (first membership).
+     * The town the sender belongs to. With multiple memberships (config
+     * allowing), prefer the town they actually lead — mayor over
+     * assistant over resident — instead of raw database row order, so
+     * bank/land operations hit the intended town.
      */
     private static @NotNull TownDOO resolveOwnTown(@NotNull CommandSender sender) throws Exception {
         if (!(sender instanceof Player player)) {
             throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.onlyPlayer);
         }
-        List<TownMemberDOO> memberships = CacheManager.instance.getTownCache()
-                .getMembershipsOf(player.getUniqueId());
+        List<TownMemberDOO> memberships = new ArrayList<>(CacheManager.instance.getTownCache()
+                .getMembershipsOf(player.getUniqueId()));
+        memberships.sort(Comparator.comparingInt(m -> roleRank(m.getRole())));
         for (TownMemberDOO membership : memberships) {
             TownDOO town = CacheManager.instance.getTownCache().getTown(membership.getTownId());
             if (town != null) return town;
@@ -388,14 +417,16 @@ public class TownCommand implements TabExecutor {
     }
 
     /**
-     * The town the sender manages (first membership with a manager role).
-     * Admins who actually hold a manager role resolve normally; admins
-     * acting on arbitrary towns use the admin commands instead.
+     * The town the sender manages (membership with the highest manager
+     * role). Admins who actually hold a manager role resolve normally;
+     * admins acting on arbitrary towns use the admin commands instead.
      */
     private static @NotNull TownDOO resolveManagedTown(@NotNull CommandSender sender) throws Exception {
         if (sender instanceof Player player) {
-            for (TownMemberDOO membership : CacheManager.instance.getTownCache()
-                    .getMembershipsOf(player.getUniqueId())) {
+            List<TownMemberDOO> memberships = new ArrayList<>(CacheManager.instance.getTownCache()
+                    .getMembershipsOf(player.getUniqueId()));
+            memberships.sort(Comparator.comparingInt(m -> roleRank(m.getRole())));
+            for (TownMemberDOO membership : memberships) {
                 if (membership.getRole() == TownMemberDOO.TownRole.RESIDENT) continue;
                 TownDOO town = CacheManager.instance.getTownCache().getTown(membership.getTownId());
                 if (town != null) return town;
@@ -403,6 +434,14 @@ public class TownCommand implements TabExecutor {
             throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.noManagedTown);
         }
         throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.onlyPlayer);
+    }
+
+    private static int roleRank(@NotNull TownMemberDOO.TownRole role) {
+        return switch (role) {
+            case MAYOR -> 0;
+            case ASSISTANT -> 1;
+            case RESIDENT -> 2;
+        };
     }
 
     private static @NotNull String outpostNames(@NotNull List<DominionDOO> outposts) {

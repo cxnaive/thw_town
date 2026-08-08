@@ -34,6 +34,7 @@ public class GroupProviderHandler extends GroupProvider {
         public String createGroupFailed = "Failed to create group, reason: {0}";
 
         public String townGroupReserved = "The @town group is managed by the town system and cannot be deleted or renamed.";
+        public String townOutpostNoCustomGroups = "Custom groups have no effect on town outposts; use the @town group or /town trust instead.";
         public String deleteGroupSuccess = "Group {0} deleted successfully.";
         public String deleteGroupFailed = "Failed to delete group, reason: {0}";
 
@@ -90,6 +91,14 @@ public class GroupProviderHandler extends GroupProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 assertDominionManage(event.getOperator(), event.getDominion());
+                // on town outposts only the built-in @town group takes
+                // effect (§5.1) — a custom group would be dead weight
+                if (event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                        && doo.isTownOutpost()
+                        && event.getOperator() instanceof org.bukkit.entity.Player operatorPlayer
+                        && !cn.lunadeer.dominion.misc.Others.bypassLimit(operatorPlayer)) {
+                    throw new DominionException(Language.groupProviderHandlerText.townOutpostNoCustomGroups);
+                }
                 assertGroupName(event.getDominion(), event.getGroupNamePlain());
                 GroupDTO group = GroupDOO.create(event.getGroupNameColored(), event.getDominion());
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.createGroupSuccess,

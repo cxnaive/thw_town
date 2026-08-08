@@ -12,7 +12,16 @@ Phase 1 实现落点（对照 §9）：
 - DOO/缓存：`TownDOO` / `TownMemberDOO` / `TownTrustDOO` + 全局
   `TownCache`（跨服实体，挂 CacheManager 直属，仿 PlayerCache）；
   `town.balance` 以 BIGINT 分存储（ORM FieldFloat 在三种方言都是
-  32 位，大额会漂移）；
+  32 位，大额会漂移）；扣款走原子条件更新
+  （`balance = balance - ? WHERE balance >= ?`，并发不透支），
+  金额在入口量化到分（杜绝子分印钞），Vault/DB 两腿失败自动补偿
+  并留 XLogger 对账日志；
+- 并发与一致性（第二轮 review 加固）：join/disband 竞争复核回滚、
+  createTown 失败补偿回滚、镇名大小写不敏感唯一（对齐 dominion
+  名字符集）、TownCache 原子快照 + 写后即时刷新（reloadNow）、
+  归档表 flag 列幂等（新版本新增 flag 不击穿归档）、
+  disband 子区先于父区归档删除（防 FK 级联击穿）、
+  并入成员的自有 legacy 领地随之一并挂靠（§3 不变量 3）；
 - 命令：独立 `/town` TabExecutor（create/disband/invite/join/leave/
   kick/transfer/trust/untrust/deposit/withdraw/outpost/admin/info/
   list）；`/dom town release <dominion>` 管理员仲裁；
@@ -262,12 +271,18 @@ TownMember                       —— 按该 Outpost 的"镇成员默认 flags
   ↓
 TownTrust（scope=TOWN 或 scope=该 OUTPOST；含挂靠时转换的旧成员）
   ↓
-保留的 dominion_group            —— 旧群组覆盖层，镇级可管理和清除
+保留的 dominion_group            —— 旧群组覆盖层（Phase 1 不可达，见下注记）
   ↓
 该 Outpost 的 guest flags
   ↓
 Outsider
 ```
+
+> **Phase 1 注记（第二轮 review 结论）**：dominion_group 覆盖层在挂靠后
+> 不可达——群组只能经由 dominion_member 行触达，而挂靠已归档并删除
+> 全部成员行；镇属 Outpost 上同时禁止创建自定义组（仅内建 `@town`
+> 组生效）。该层仅概念保留，功能无损。OUTPOST 级 Trust 在
+> detach/release 时随 `detachFromTown` 删除，不会在重新挂靠时复活。
 
 - 每个 Outpost 的独立 flags 零成本：Dominion 本来就带 env flags + guest flags。
   新增的"镇成员默认 flags"每 Outpost 一份，实现时复用现有 group/template

@@ -175,6 +175,39 @@ public class TownDOO {
         return this;
     }
 
+    /**
+     * Atomically charge the given amount of cents, refusing overdraft:
+     * the UPDATE carries a {@code balance >= ?} guard so concurrent
+     * withdrawals (two managers, or two backends) can never drive the
+     * balance negative — the loser gets {@code false} instead of money.
+     * On success the local value is re-read from the database.
+     */
+    public boolean tryChargeCents(long cents) throws SQLException {
+        if (cents < 0) {
+            throw new IllegalArgumentException("cents must be >= 0");
+        }
+        int updated;
+        try (Connection conn = DatabaseManager.instance.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE town SET balance = balance - ? WHERE id = ? AND balance >= ?")) {
+            ps.setLong(1, cents);
+            ps.setInt(2, id.getValue());
+            ps.setLong(3, cents);
+            updated = ps.executeUpdate();
+        }
+        // re-read either way so the local value reflects the database
+        try (Connection conn = DatabaseManager.instance.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT balance FROM town WHERE id = ?")) {
+            ps.setInt(1, id.getValue());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    this.balanceCents.setValue(rs.getLong(1));
+                }
+            }
+        }
+        return updated == 1;
+    }
+
     public boolean canAfford(double amount) {
         return getBalance() + 1e-9 >= amount;
     }

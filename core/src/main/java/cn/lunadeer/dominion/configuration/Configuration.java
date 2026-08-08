@@ -312,6 +312,12 @@ public class Configuration extends ConfigurationFile {
             XLogger.warn("Invalid town max-memberships: {0}", town.maxMemberships);
             town.maxMemberships = 1;
         }
+        if (town.maxMemberships == 0) {
+            // 0 would deadlock the server (no one can ever create or join
+            // a town); treat it as a misconfiguration of the default
+            XLogger.warn("town max-memberships of 0 makes towns unusable; resetting to 1.");
+            town.maxMemberships = 1;
+        }
         if (town.foundingMaxSize <= 0) {
             XLogger.warn("Invalid town founding-max-size: {0}", town.foundingMaxSize);
             town.foundingMaxSize = 32;

@@ -111,6 +111,7 @@ member-provider-handler-text:
   remove-member-success: 成功将成员 {0} 移出领地 {1}
   remove-member-failed: 移除成员失败，原因：{0}
 group-provider-handler-text:
+  town-outpost-no-custom-groups: '自定义权限组在城镇前哨上不生效，请使用 @town 组或 /town trust。'
   town-group-reserved: '@town 组由城镇系统管理，不能删除或重命名。'
   owner-only: 只有领地所有者可以配置管理员权限组
   set-flag-success: 设置权限组 {0} 的权限 {1} 为 {2} 成功
@@ -598,9 +599,10 @@ ui-commands-description:
   environment-flags: 管理领地的环境权限。
   guest-flags: 管理领地的访客权限。
 town-manager-text:
+  disband-enclave-dissolved: '你的领地 {0} 已随城镇 {1} 一并解散。'
   only-mayor-can-transfer: '只有 {0} 的现任镇长可以转让镇长。'
   town-name-should-not-empty: 城镇名称不能为空。
-  town-name-invalid: 城镇名称不能包含空格或点号。
+  town-name-invalid: '镇名不能包含空格、点、§、&、~ 或逗号。'
   town-name-exist: 城镇名称 {0} 已存在。
   town-not-exist: 城镇 {0} 不存在。
   already-in-town: 你已经是城镇 {0} 的成员。
@@ -642,6 +644,9 @@ town-manager-text:
   merge-member-merged: '{0} 已作为居民并入城镇 {1}。'
   merge-member-trusted: '{0} 已超加入上限，已转为前哨 {1} 的信任授权。'
 town-command-text:
+  disband-confirm-contributors-return: '以下玩家贡献的领地将归还给本人：{0}。'
+  disband-confirm-return: '解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。'
+  dominion-not-exist: '领地 {0} 不存在。'
   disband-confirm-contributors: '以下玩家贡献的领地将被解散：{0}。'
   only-player: 该命令只能由玩家执行。
   usage: |-

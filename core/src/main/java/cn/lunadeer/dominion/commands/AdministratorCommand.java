@@ -114,15 +114,23 @@ public class AdministratorCommand {
                 Notification.warn(sender, getUsage());
                 return;
             }
-            try {
-                DominionDTO dto = CacheManager.instance.getDominion(getArgumentValue(1));
-                if (!(dto instanceof DominionDOO doo)) {
-                    throw new DominionException(Language.townManagerText.townNotExist, getArgumentValue(1));
+            // capture argument values BEFORE the async hop:
+            // SecondaryCommand stores them in a ThreadLocal that is
+            // cleared when executeHandler returns
+            String dominionName = getArgumentValue(1);
+            // detaching runs SQL and cache reloads — keep it off the main
+            // thread like every /town subcommand
+            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+                try {
+                    DominionDTO dto = CacheManager.instance.getDominion(dominionName);
+                    if (!(dto instanceof DominionDOO doo)) {
+                        throw new DominionException(Language.townCommandText.dominionNotExist, dominionName);
+                    }
+                    TownManager.releaseOutpost(sender, doo);
+                } catch (Exception e) {
+                    Notification.error(sender, e);
                 }
-                TownManager.releaseOutpost(sender, doo);
-            } catch (Exception e) {
-                Notification.error(sender, e);
-            }
+            });
         }
     }.needPermission(adminPermission).register();
 

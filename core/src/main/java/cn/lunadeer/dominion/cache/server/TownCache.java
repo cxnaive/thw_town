@@ -28,8 +28,24 @@ public class TownCache extends Cache {
     private volatile ConcurrentHashMap<Integer, List<TownTrustDOO>> trustsByTown = new ConcurrentHashMap<>();
     private volatile ConcurrentHashMap<UUID, List<TownTrustDOO>> trustsByPlayer = new ConcurrentHashMap<>();
 
+    /**
+     * Immediate synchronous reload, bypassing the base class throttle.
+     * TownManager write paths use this so a follow-up command (invite
+     * right after create, join right after attach) never reads a cache
+     * that is up to 4s stale.
+     */
+    public void reloadNow() {
+        try {
+            loadExecution();
+        } catch (Exception e) {
+            cn.lunadeer.dominion.utils.XLogger.error(e);
+        }
+    }
+
     @Override
-    void loadExecution() throws Exception {
+    synchronized void loadExecution() throws Exception {
+        // read+swap under one lock: two concurrent loads must not let the
+        // older DB snapshot overwrite the newer one
         ConcurrentHashMap<Integer, TownDOO> tempTownsById = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, Integer> tempTownNameToId = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer, List<TownMemberDOO>> tempMembersByTown = new ConcurrentHashMap<>();
@@ -53,14 +69,12 @@ public class TownCache extends Cache {
             tempTrustsByPlayer.computeIfAbsent(trust.getPlayerUuid(), k -> new ArrayList<>()).add(trust);
         }
 
-        synchronized (this) {
-            townsById = tempTownsById;
-            townNameToId = tempTownNameToId;
-            membersByTown = tempMembersByTown;
-            membersByPlayer = tempMembersByPlayer;
-            trustsByTown = tempTrustsByTown;
-            trustsByPlayer = tempTrustsByPlayer;
-        }
+        townsById = tempTownsById;
+        townNameToId = tempTownNameToId;
+        membersByTown = tempMembersByTown;
+        membersByPlayer = tempMembersByPlayer;
+        trustsByTown = tempTrustsByTown;
+        trustsByPlayer = tempTrustsByPlayer;
     }
 
     /**

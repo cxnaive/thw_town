@@ -454,10 +454,13 @@ public class DatabaseTables {
                     .column(dma_archived_at)
                     .column(dma_archive_reason)
                     .execute();
-            for (Flag flag : Flags.getAllPriFlags()) {
-                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
-                Alter.alter().table("dominion_member_archive").add().column(column).execute();
-            }
+        }
+        // outside the create guard (same idempotent pattern as the live
+        // tables): a flag added by a later version must also appear here,
+        // or archive INSERT..SELECT statements referencing it will fail
+        for (Flag flag : Flags.getAllPriFlags()) {
+            Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+            Alter.alter().table("dominion_member_archive").add().column(column).execute();
         }
 
         // 5.0.0 town era: dominion attachment columns (all nullable except
@@ -535,14 +538,15 @@ public class DatabaseTables {
                     .column(da_archived_at)
                     .column(da_archive_reason)
                     .execute();
-            for (Flag flag : Flags.getAllEnvFlags()) {
-                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
-                Alter.alter().table("dominion_archive").add().column(column).execute();
-            }
-            for (Flag flag : Flags.getAllPriFlags()) {
-                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
-                Alter.alter().table("dominion_archive").add().column(column).execute();
-            }
+        }
+        // outside the create guard (see dominion_member_archive above)
+        for (Flag flag : Flags.getAllEnvFlags()) {
+            Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+            Alter.alter().table("dominion_archive").add().column(column).execute();
+        }
+        for (Flag flag : Flags.getAllPriFlags()) {
+            Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+            Alter.alter().table("dominion_archive").add().column(column).execute();
         }
 
         // Remove orphaned member rows whose player record no longer exists

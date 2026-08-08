@@ -62,7 +62,7 @@ public class TownManager {
 
     public static class TownManagerText extends ConfigurationPart {
         public String townNameShouldNotEmpty = "Town name should not be empty.";
-        public String townNameInvalid = "Town name should not contain space or dot.";
+        public String townNameInvalid = "Town name should not contain space, dot, section sign, ampersand, tilde or comma.";
         public String townNameExist = "Town name {0} already exists.";
         public String townNotExist = "Town {0} does not exist.";
         public String alreadyInTown = "You are already a member of town {0}.";
@@ -73,7 +73,8 @@ public class TownManager {
         public String createSuccess = "Town {0} created. {1} outpost(s) attached.";
         public String createSuccessFounding = "Town {0} created with a founding outpost.";
         public String disbandSuccess = "Town {0} disbanded. {1} outpost(s) dissolved and archived.";
-        public String disbandSuccessReturn = "Town {0} disbanded. {1} outpost(s) returned to contributors, {2} dissolved.";
+        public String disbandSuccessReturn = "Town {0} disbanded: {1} outpost(s) returned to contributors, {2} dissolved.";
+        public String disbandEnclaveDissolved = "Your dominion {0} was dissolved together with town {1}.";
         public String joinSuccess = "You joined town {0}. {1} outpost(s) attached to the town.";
         public String leaveSuccess = "You left town {0}. Your land stays with the town.";
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
@@ -183,11 +184,25 @@ public class TownManager {
         if (name.isEmpty()) {
             throw new DominionException(Language.townManagerText.townNameShouldNotEmpty);
         }
-        if (name.contains(" ") || name.contains(".")) {
+        // same character set as assertDominionName: the town name becomes
+        // the founding outpost's dominion name and is rendered into other
+        // players' messages (legacy color codes would be an injection)
+        if (name.contains(" ") || name.contains(".")
+                || name.contains("§") || name.contains("&")
+                || name.contains("~") || name.contains(",")) {
             throw new DominionException(Language.townManagerText.townNameInvalid);
         }
+        // the cache resolves names case-insensitively and MySQL's default
+        // collation is case-insensitive too, so uniqueness must be
+        // case-insensitive everywhere or "Foo"/"foo" coexist on SQLite/PG
+        // and one of them becomes unreachable by name
         if (cache().getTown(name) != null || TownDOO.select(name) != null) {
             throw new DominionException(Language.townManagerText.townNameExist, name);
+        }
+        for (TownDOO existing : TownDOO.selectAll()) {
+            if (existing.getName().equalsIgnoreCase(name)) {
+                throw new DominionException(Language.townManagerText.townNameExist, existing.getName());
+            }
         }
     }
 
@@ -269,33 +284,59 @@ public class TownManager {
             double cost = Configuration.town.foundingCost;
             if (cost > 0 && !bypassLimit(founder)
                     && VaultConnect.instance.getBalance(founder) < cost) {
-                throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                        name, cost, VaultConnect.instance.getBalance(founder));
+                // the town bank does not exist yet; this is the founder's
+                // personal wallet falling short
+                throw new DominionException(Language.vaultConnectText.insufficientFunds,
+                        cost, VaultConnect.instance.currencyNamePlural(),
+                        VaultConnect.instance.getBalance(founder));
             }
         }
 
         TownDOO town = TownDOO.insert(name, founder.getUniqueId());
         TownMemberDOO.insert(town.getId(), founder.getUniqueId(),
                 TownMemberDOO.TownRole.MAYOR, TownMemberDOO.MemberSource.FOUNDER);
-        cache().load();
+        cache().reloadNow();
 
-        if (foundingToCreate != null) {
-            DominionDOO created = DominionDOO.insert(foundingToCreate);
-            created.bornIntoTown(town.getId());
-            created.setClaimKind("FOUNDING");
-            ensureTownMemberGroup(created);
-            double cost = Configuration.town.foundingCost;
-            if (cost > 0 && !bypassLimit(founder)) {
-                // the town bank starts empty, so the founding cost is
-                // charged to the founder's wallet (free by default, §12.1)
-                VaultConnect.instance.withdrawPlayer(founder, cost);
+        DominionDOO foundingCreated = null;
+        try {
+            if (foundingToCreate != null) {
+                foundingCreated = DominionDOO.insert(foundingToCreate);
+                foundingCreated.bornIntoTown(town.getId());
+                foundingCreated.setClaimKind("FOUNDING");
+                ensureTownMemberGroup(foundingCreated);
+                double cost = Configuration.town.foundingCost;
+                if (cost > 0 && !bypassLimit(founder)) {
+                    // the town bank starts empty, so the founding cost is
+                    // charged to the founder's wallet (free by default, §12.1)
+                    VaultConnect.instance.withdrawPlayer(founder, cost);
+                }
+                Notification.info(founder, Language.townManagerText.createSuccessFounding, name);
+            } else {
+                int attached = attachPlayerDominions(town, founder.getUniqueId(), founder.getUniqueId());
+                Notification.info(founder, Language.townManagerText.createSuccess, name, attached);
             }
-            Notification.info(founder, Language.townManagerText.createSuccessFounding, name);
-        } else {
-            int attached = attachPlayerDominions(town, founder.getUniqueId(), founder.getUniqueId());
-            Notification.info(founder, Language.townManagerText.createSuccess, name, attached);
+        } catch (Exception e) {
+            // a failure after the town row was inserted must not leave
+            // orphans behind — roll every insert back before rethrowing,
+            // including the founding dominion whose town_id would
+            // otherwise dangle at the deleted town
+            XLogger.error("createTown failed after town insert (town={0}); rolling back. {1}",
+                    town.getId(), e.getMessage());
+            try {
+                if (foundingCreated != null) {
+                    DominionDOO.deleteById(foundingCreated.getId());
+                }
+                TownMemberDOO.deleteByTown(town.getId());
+                TownTrustDOO.deleteByTown(town.getId());
+                TownDOO.deleteById(town.getId());
+                cache().reloadNow();
+            } catch (Exception rollbackError) {
+                XLogger.error("Rollback of failed createTown ALSO failed (town={0}): {1}",
+                        town.getId(), rollbackError.getMessage());
+            }
+            throw e;
         }
-        cache().load();
+        cache().reloadNow();
         return town;
     }
 
@@ -311,9 +352,28 @@ public class TownManager {
         List<DominionDOO> outposts = outpostsOf(town.getId());
         int dissolved = 0;
         int returned = 0;
+        // ids already handled as part of a parent's sub-tree: deleting a
+        // parent FK-cascades its subs, so subs must be archived and
+        // deleted BEFORE their parent or their archive rows are lost
+        java.util.Set<Integer> processed = new java.util.HashSet<>();
         for (DominionDOO outpost : outposts) {
+            if (!processed.add(outpost.getId())) continue;
             boolean contributed = outpost.getAttachedBy() != null;
             if (dissolveAll || !contributed) {
+                // sub-dominions inside the dissolving outpost dissolve with
+                // it (§4.3 enclaves included) — archive children first,
+                // deepest last in the recursive list
+                List<DominionDTO> subs = cn.lunadeer.dominion.misc.Others.getSubDominionsRecursive(outpost);
+                for (int i = subs.size() - 1; i >= 0; i--) {
+                    DominionDOO sub = (DominionDOO) subs.get(i);
+                    if (!processed.add(sub.getId())) continue;
+                    UUID enclaveOwner = sub.getOwner();
+                    archiveDominion(sub, town.getId(), "DISBANDED_TOWN");
+                    archiveMembers(sub, town.getId(), "DISBANDED_TOWN");
+                    DominionDOO.deleteById(sub.getId());
+                    notifyIfOnline(enclaveOwner, Language.townManagerText.disbandEnclaveDissolved,
+                            sub.getName(), town.getName());
+                }
                 archiveDominion(outpost, town.getId(), "DISBANDED_TOWN");
                 archiveMembers(outpost, town.getId(), "DISBANDED_TOWN");
                 DominionDOO.deleteById(outpost.getId());
@@ -332,7 +392,7 @@ public class TownManager {
         TownTrustDOO.deleteByTown(town.getId());
         TownDOO.deleteById(town.getId());
         cn.lunadeer.dominion.commands.TownCommand.clearInvites(town.getName());
-        cache().load();
+        cache().reloadNow();
         CacheManager.instance.getCache().getDominionCache().load();
         CacheManager.instance.getCache().getMemberCache().load();
         if (dissolveAll) {
@@ -357,8 +417,16 @@ public class TownManager {
         assertCanJoinNewTown(player);
         TownMemberDOO.insert(town.getId(), player.getUniqueId(),
                 TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.JOINED);
+        // join raced with a concurrent disband: attaching now would point
+        // this player's land at a dead town and strip their access, so
+        // re-verify the town row and roll the membership back
+        if (TownDOO.select(town.getId()) == null) {
+            TownMemberDOO.delete(town.getId(), player.getUniqueId());
+            cache().reloadNow();
+            throw new DominionException(Language.townManagerText.townNotExist, town.getName());
+        }
         int attached = attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
-        cache().load();
+        cache().reloadNow();
         Notification.info(player, Language.townManagerText.joinSuccess, town.getName(), attached);
     }
 
@@ -376,7 +444,7 @@ public class TownManager {
         }
         TownMemberDOO.delete(town.getId(), player.getUniqueId());
         clearOutpostAdmin(town.getId(), player.getUniqueId());
-        cache().load();
+        cache().reloadNow();
         Notification.info(player, Language.townManagerText.leaveSuccess, town.getName());
     }
 
@@ -392,7 +460,7 @@ public class TownManager {
         }
         TownMemberDOO.delete(town.getId(), target);
         clearOutpostAdmin(town.getId(), target);
-        cache().load();
+        cache().reloadNow();
         Notification.info(operator, Language.townManagerText.kickSuccess,
                 CacheManager.instance.getPlayerName(target), town.getName());
         Player targetPlayer = operator.getServer().getPlayer(target);
@@ -422,7 +490,7 @@ public class TownManager {
             oldMayorMember.setRole(TownMemberDOO.TownRole.ASSISTANT);
         }
         town.setMayor(target);
-        cache().load();
+        cache().reloadNow();
         Notification.info(operator, Language.townManagerText.transferSuccess,
                 town.getName(), CacheManager.instance.getPlayerName(target));
     }
@@ -469,7 +537,7 @@ public class TownManager {
         TownTrustDOO.delete(town.getId(), target, scope, scopeId);
         TownTrustDOO.insert(town.getId(), target, scope, scopeId, build, destroy, switchFlag, itemUse,
                 operator.getUniqueId());
-        cache().load();
+        cache().reloadNow();
         Notification.info(operator, Language.townManagerText.trustSuccess,
                 CacheManager.instance.getPlayerName(target), town.getName(), scope.name());
     }
@@ -480,7 +548,7 @@ public class TownManager {
         int scopeId = scope == TownTrustDOO.TrustScope.TOWN ? town.getId()
                 : (outpost == null ? -1 : outpost.getId());
         TownTrustDOO.delete(town.getId(), target, scope, scopeId);
-        cache().load();
+        cache().reloadNow();
         Notification.info(operator, Language.townManagerText.untrustSuccess,
                 CacheManager.instance.getPlayerName(target), town.getName(), scope.name());
     }
@@ -489,34 +557,83 @@ public class TownManager {
     // Town bank
     // ------------------------------------------------------------------
 
-    public static void deposit(@NotNull Player player, @NotNull TownDOO town, double amount) throws Exception {
+    /**
+     * Quantize a currency amount to whole cents. Sub-cent amounts are
+     * rejected: the town bank stores integer cents, so a 0.001 deposit
+     * would otherwise round to zero and silently print/destroy money.
+     */
+    private static long toCents(double amount) throws DominionException {
         if (!(amount > 0) || !Double.isFinite(amount)) {
             throw new DominionException(Language.townManagerText.invalidAmount, amount);
         }
+        long cents = Math.round(amount * 100.0);
+        if (cents <= 0) {
+            throw new DominionException(Language.townManagerText.invalidAmount, amount);
+        }
+        return cents;
+    }
+
+    /** Cents for a computed price; any positive price costs at least 1 cent. */
+    private static long priceToCents(double price) {
+        if (price <= 0) return 0;
+        return Math.max(1, Math.round(price * 100.0));
+    }
+
+    public static void deposit(@NotNull Player player, @NotNull TownDOO town, double amount) throws Exception {
+        long cents = toCents(amount);
+        double quantized = cents / 100.0;
         if (cache().getMember(town.getId(), player.getUniqueId()) == null && !bypassLimit(player)) {
             throw new DominionException(Language.townManagerText.onlyMemberCanDeposit, town.getName());
         }
-        VaultConnect.instance.withdrawPlayer(player, amount);
-        town.adjustBalance(amount);
-        cache().load();
+        VaultConnect.instance.withdrawPlayer(player, quantized);
+        try {
+            town.adjustBalance(quantized);
+        } catch (Exception e) {
+            // second leg failed: refund the player and leave a paper trail
+            XLogger.error("Town deposit second leg failed (player={0}, town={1}, amount={2}); refunding. {3}",
+                    player.getUniqueId(), town.getId(), quantized, e.getMessage());
+            try {
+                VaultConnect.instance.depositPlayer(player, quantized);
+            } catch (Exception refundError) {
+                XLogger.error("Refund after failed town deposit ALSO failed (player={0}, amount={1}): {2}",
+                        player.getUniqueId(), quantized, refundError.getMessage());
+            }
+            throw e;
+        }
+        cache().reloadNow();
         Notification.info(player, Language.townManagerText.depositSuccess,
-                amount, town.getName(), town.getBalance());
+                quantized, town.getName(), town.getBalance());
     }
 
     public static void withdraw(@NotNull Player player, @NotNull TownDOO town, double amount) throws Exception {
-        if (!(amount > 0) || !Double.isFinite(amount)) {
-            throw new DominionException(Language.townManagerText.invalidAmount, amount);
-        }
+        long cents = toCents(amount);
+        double quantized = cents / 100.0;
         assertManager(player, town);
-        if (!town.canAfford(amount) && !bypassLimit(player)) {
+        if (bypassLimit(player)) {
+            town.adjustBalance(-quantized);
+        } else if (!town.tryChargeCents(cents)) {
+            // atomic guarded charge: a concurrent withdrawal can never
+            // overdraw the bank — the loser lands here
             throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                    town.getName(), amount, town.getBalance());
+                    town.getName(), quantized, town.getBalance());
         }
-        town.adjustBalance(-amount);
-        VaultConnect.instance.depositPlayer(player, amount);
-        cache().load();
+        try {
+            VaultConnect.instance.depositPlayer(player, quantized);
+        } catch (Exception e) {
+            // second leg failed: put the money back into the town bank
+            XLogger.error("Town withdraw second leg failed (player={0}, town={1}, amount={2}); restoring bank. {3}",
+                    player.getUniqueId(), town.getId(), quantized, e.getMessage());
+            try {
+                town.adjustBalance(quantized);
+            } catch (Exception restoreError) {
+                XLogger.error("Restore after failed town withdraw ALSO failed (town={0}, amount={1}): {2}",
+                        town.getId(), quantized, restoreError.getMessage());
+            }
+            throw e;
+        }
+        cache().reloadNow();
         Notification.info(player, Language.townManagerText.withdrawSuccess,
-                amount, town.getName(), town.getBalance());
+                quantized, town.getName(), town.getBalance());
     }
 
     // ------------------------------------------------------------------
@@ -543,18 +660,20 @@ public class TownManager {
         assertDominionIntersect(operator, toCreate, cuboid);
 
         double price = priceOf(operator, CuboidDTO.ZERO, cuboid);
-        if (price > 0 && !bypassLimit(operator) && !town.canAfford(price)) {
-            throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                    town.getName(), price, town.getBalance());
-        }
+        long cents = bypassLimit(operator) ? 0 : priceToCents(price);
         // insert first, charge after: a failed insert must never eat money
         DominionDOO created = DominionDOO.insert(toCreate);
-        if (price > 0 && !bypassLimit(operator)) {
-            town.adjustBalance(-price);
+        if (cents > 0 && !town.tryChargeCents(cents)) {
+            // concurrent drain between the amount check and the charge:
+            // undo the insert rather than handing out free land
+            DominionDOO.deleteById(created.getId());
+            cache().reloadNow();
+            throw new DominionException(Language.townManagerText.insufficientTownFunds,
+                    town.getName(), cents / 100.0, town.getBalance());
         }
         created.bornIntoTown(town.getId());
         ensureTownMemberGroup(created);
-        cache().load();
+        cache().reloadNow();
         Notification.info(operator, Language.townManagerText.outpostCreateSuccess,
                 dominionName, town.getName(), Math.max(price, 0));
         return created;
@@ -568,16 +687,15 @@ public class TownManager {
                                         @NotNull CuboidDTO before, @NotNull CuboidDTO after) throws Exception {
         double price = priceOf(operator, before, after);
         if (price > 0) {
-            if (!town.canAfford(price)) {
+            if (!town.tryChargeCents(priceToCents(price))) {
                 throw new DominionException(Language.townManagerText.insufficientTownFunds,
                         town.getName(), price, town.getBalance());
             }
-            town.adjustBalance(-price);
         } else if (price < 0) {
             Limitation.Economy ecoConf = Configuration.getPlayerLimitation(operator).economy;
             town.adjustBalance(-price * ecoConf.refundRate);
         }
-        cache().load();
+        cache().reloadNow();
     }
 
     private static double priceOf(@NotNull Player operator, @NotNull CuboidDTO before, @NotNull CuboidDTO after) {
@@ -700,7 +818,7 @@ public class TownManager {
     public static void attachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
                                      @NotNull UUID operator) throws Exception {
         if (dominion.isTownOutpost()) return;
-        mergeMembers(town, dominion);
+        mergeMembers(town, dominion, operator);
         dominion.attachToTown(town.getId(), operator);
         ensureTownMemberGroup(dominion);
     }
@@ -727,7 +845,8 @@ public class TownManager {
      * RESIDENT (capacity allowing) or convert to an outpost-scoped trust.
      * The live dominion_member rows are then deleted.
      */
-    private static void mergeMembers(@NotNull TownDOO town, @NotNull DominionDOO dominion) throws Exception {
+    private static void mergeMembers(@NotNull TownDOO town, @NotNull DominionDOO dominion,
+                                     @NotNull UUID operator) throws Exception {
         List<MemberDOO> members = MemberDOO.selectByDominionId(dominion.getId());
         if (members.isEmpty()) return;
         archiveMembers(dominion, town.getId(), "MERGED_INTO_TOWN");
@@ -745,6 +864,10 @@ public class TownManager {
                             TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.MERGED);
                     notifyIfOnline(uuid, Language.townManagerText.mergeMemberMerged,
                             CacheManager.instance.getPlayerName(uuid), town.getName());
+                    // plan §3 invariant 3: a town member's land must belong
+                    // to a town — merge their own legacy dominions too,
+                    // otherwise it strands townless with no attach path
+                    attachPlayerDominions(town, uuid, operator);
                 } else {
                     boolean[] mapped = mapMemberFlagsToTrust(member);
                     TownTrustDOO.delete(town.getId(), uuid, TownTrustDOO.TrustScope.OUTPOST, dominion.getId());

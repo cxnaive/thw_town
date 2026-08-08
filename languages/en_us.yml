@@ -111,6 +111,7 @@ member-provider-handler-text:
   remove-member-success: Successfully removed {0} from {1}.
   remove-member-failed: 'Failed to remove member, reason: {0}'
 group-provider-handler-text:
+  town-outpost-no-custom-groups: 'Custom groups have no effect on town outposts; use the @town group or /town trust instead.'
   town-group-reserved: 'The @town group is managed by the town system and cannot be deleted or renamed.'
   owner-only: Only the owner can manage admin group.
   set-flag-success: Set group {0} flag {1} to {2} successfully.
@@ -598,9 +599,10 @@ ui-commands-description:
   environment-flags: Manage environment flags of a dominion.
   guest-flags: Manage guest privilege flags of a dominion.
 town-manager-text:
+  disband-enclave-dissolved: 'Your dominion {0} was dissolved together with town {1}.'
   only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
   town-name-should-not-empty: Town name should not be empty.
-  town-name-invalid: Town name should not contain space or dot.
+  town-name-invalid: 'Town name should not contain space, dot, section sign, ampersand, tilde or comma.'
   town-name-exist: Town name {0} already exists.
   town-not-exist: Town {0} does not exist.
   already-in-town: You are already a member of town {0}.
@@ -642,6 +644,9 @@ town-manager-text:
   merge-member-merged: '{0} merged into town {1} as resident.'
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
 town-command-text:
+  disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
+  disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
+  dominion-not-exist: 'Dominion {0} does not exist.'
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
   usage: |-
