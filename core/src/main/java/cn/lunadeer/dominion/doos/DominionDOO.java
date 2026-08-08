@@ -12,6 +12,7 @@ import cn.lunadeer.dominion.utils.databse.FIelds.Field;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldBoolean;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldInteger;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldString;
+import cn.lunadeer.dominion.utils.databse.FIelds.FieldTimestamp;
 import cn.lunadeer.dominion.utils.databse.syntax.Delete;
 import cn.lunadeer.dominion.utils.databse.syntax.Insert;
 import cn.lunadeer.dominion.utils.databse.syntax.Select;
@@ -42,12 +43,18 @@ public class DominionDOO implements DominionDTO {
     private final FieldString color = new FieldString("color", "#00BFFF");
     private final FieldString world_uid = new FieldString("world_uid");
     private final FieldInteger serverId = new FieldInteger("server_id");
+    // Town era: nullable attachment columns (NULL = townless outpost)
+    private final FieldInteger townId = new FieldInteger("town_id");
+    private final FieldString claimKind = new FieldString("claim_kind", "NORMAL");
+    private final FieldString outpostAdminUuid = new FieldString("outpost_admin_uuid");
+    private final FieldString attachedBy = new FieldString("attached_by");
+    private final FieldTimestamp attachedAt = new FieldTimestamp("attached_at");
 
     // Cache for the parsed UUID to avoid repeated string parsing
     private UUID cachedWorldUid = null;
 
     private static Field<?>[] fields() {
-        Field<?>[] fields = new Field<?>[6 + 6 + Flags.getAllEnvFlagsEnable().size() + Flags.getAllPriFlagsEnable().size() + 4];
+        Field<?>[] fields = new Field<?>[6 + 6 + Flags.getAllEnvFlagsEnable().size() + Flags.getAllPriFlagsEnable().size() + 4 + 5];
         fields[0] = rootDominion().cuboid.x1Field();
         fields[1] = rootDominion().cuboid.y1Field();
         fields[2] = rootDominion().cuboid.z1Field();
@@ -71,6 +78,11 @@ public class DominionDOO implements DominionDTO {
         fields[i++] = rootDominion().tp_location;
         fields[i++] = rootDominion().color;
         fields[i++] = rootDominion().serverId;
+        fields[i++] = rootDominion().townId;
+        fields[i++] = rootDominion().claimKind;
+        fields[i++] = rootDominion().outpostAdminUuid;
+        fields[i++] = rootDominion().attachedBy;
+        fields[i++] = rootDominion().attachedAt;
         return fields;
     }
 
@@ -104,7 +116,12 @@ public class DominionDOO implements DominionDTO {
                 preFlags,
                 (String) map.get("tp_location").getValue(),
                 (String) map.get("color").getValue(),
-                (Integer) map.get("server_id").getValue()
+                (Integer) map.get("server_id").getValue(),
+                (Integer) map.get("town_id").getValue(),
+                (String) map.get("claim_kind").getValue(),
+                (String) map.get("outpost_admin_uuid").getValue(),
+                (String) map.get("attached_by").getValue(),
+                (java.sql.Timestamp) map.get("attached_at").getValue()
         );
     }
 
@@ -124,7 +141,8 @@ public class DominionDOO implements DominionDTO {
                 -1,
                 "null", "null",
                 new HashMap<>(), new HashMap<>(),
-                "default", "#00BFFF", -1);
+                "default", "#00BFFF", -1,
+                null, "NORMAL", null, null, null);
     }
 
     public static @Nullable DominionDOO select(Integer id) throws SQLException {
@@ -143,6 +161,14 @@ public class DominionDOO implements DominionDTO {
         List<Map<String, Field<?>>> res = Select.select(fields()).from("dominion").where("name = ?", name).execute();
         if (res.isEmpty()) return null;
         return parse(res.get(0));
+    }
+
+    public static @NotNull List<DominionDOO> selectByTownId(Integer townId) throws SQLException {
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("dominion")
+                .where("town_id = ?", townId)
+                .execute();
+        return res.stream().map(DominionDOO::parse).toList();
     }
 
     public static @NotNull DominionDOO insert(DominionDOO dominion) throws SQLException {
@@ -184,7 +210,12 @@ public class DominionDOO implements DominionDTO {
                         Map<PriFlag, Boolean> preFlags,
                         String tp_location,
                         String color,
-                        Integer serverId) {
+                        Integer serverId,
+                        Integer townId,
+                        String claimKind,
+                        String outpostAdminUuid,
+                        String attachedBy,
+                        java.sql.Timestamp attachedAt) {
         this.id.setValue(id);
         this.owner.setValue(owner.toString());
         this.name.setValue(name);
@@ -198,6 +229,11 @@ public class DominionDOO implements DominionDTO {
         this.tp_location.setValue(tp_location);
         this.color.setValue(color);
         this.serverId.setValue(serverId);
+        this.townId.setValue(townId);
+        this.claimKind.setValue(claimKind);
+        this.outpostAdminUuid.setValue(outpostAdminUuid);
+        this.attachedBy.setValue(attachedBy);
+        this.attachedAt.setValue(attachedAt);
     }
 
     // constructor for new dominion
@@ -303,6 +339,108 @@ public class DominionDOO implements DominionDTO {
     @Override
     public @NotNull String getName() {
         return name.getValue();
+    }
+
+    // ---------- Town era: attachment state ----------
+
+    /**
+     * The town this dominion is attached to, or null for a townless outpost.
+     * NULL town_id preserves the pre-town permission chain byte-for-byte.
+     */
+    public @Nullable Integer getTownId() {
+        return townId.getValue();
+    }
+
+    public boolean isTownOutpost() {
+        return townId.getValue() != null;
+    }
+
+    public @NotNull String getClaimKind() {
+        String v = claimKind.getValue();
+        return v == null ? "NORMAL" : v;
+    }
+
+    public @Nullable UUID getOutpostAdminUuid() {
+        String v = outpostAdminUuid.getValue();
+        return v == null ? null : UUID.fromString(v);
+    }
+
+    public @Nullable UUID getAttachedBy() {
+        String v = attachedBy.getValue();
+        return v == null ? null : UUID.fromString(v);
+    }
+
+    public @Nullable java.sql.Timestamp getAttachedAt() {
+        return attachedAt.getValue();
+    }
+
+    /**
+     * Attach this dominion to a town (outpost conversion). owner_uuid keeps
+     * its value as the contributor record; permission resolution switches to
+     * the town cascade based on town_id alone.
+     */
+    public @NotNull DominionDOO attachToTown(@NotNull Integer town, @NotNull UUID operator) throws SQLException {
+        this.townId.setValue(town);
+        this.attachedBy.setValue(operator.toString());
+        this.attachedAt.setValue(new java.sql.Timestamp(System.currentTimeMillis()));
+        Update.update("dominion")
+                .set(this.townId, this.attachedBy, this.attachedAt)
+                .where("id = ?", id.getValue())
+                .execute();
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
+    /**
+     * Detach this dominion from its town (admin release). Clears the
+     * outpost admin as well: the town cascade no longer applies.
+     */
+    public @NotNull DominionDOO detachFromTown() throws SQLException {
+        this.townId.setValue(null);
+        this.attachedBy.setValue(null);
+        this.attachedAt.setValue(null);
+        this.outpostAdminUuid.setValue(null);
+        Update.update("dominion")
+                .set(this.townId, this.attachedBy, this.attachedAt, this.outpostAdminUuid)
+                .where("id = ?", id.getValue())
+                .execute();
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
+    /**
+     * Mark a freshly inserted dominion as born into a town (founding/remote
+     * outpost): town_id is set with NO attached_by, distinguishing
+     * town-native land from contributed legacy land on disband.
+     */
+    public @NotNull DominionDOO bornIntoTown(@NotNull Integer town) throws SQLException {
+        this.townId.setValue(town);
+        Update.update("dominion")
+                .set(this.townId)
+                .where("id = ?", id.getValue())
+                .execute();
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
+    public @NotNull DominionDOO setOutpostAdmin(@Nullable UUID admin) throws SQLException {
+        this.outpostAdminUuid.setValue(admin == null ? null : admin.toString());
+        Update.update("dominion")
+                .set(this.outpostAdminUuid)
+                .where("id = ?", id.getValue())
+                .execute();
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
+    public @NotNull DominionDOO setClaimKind(@NotNull String kind) throws SQLException {
+        this.claimKind.setValue(kind);
+        Update.update("dominion")
+                .set(this.claimKind)
+                .where("id = ?", id.getValue())
+                .execute();
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
     }
 
     @Override

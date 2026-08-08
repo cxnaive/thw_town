@@ -158,6 +158,7 @@ public class DominionInterface extends DominionAPI {
 
     @Override
     public void reloadCache() {
+        CacheManager.instance.getTownCache().load();
         CacheManager.instance.getCache().getDominionCache().load();
         CacheManager.instance.getCache().getMemberCache().load();
         CacheManager.instance.getCache().getGroupCache().load();

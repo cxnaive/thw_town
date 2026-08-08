@@ -13,6 +13,10 @@ commands:
     description: Dominion plugin command
     usage: /dominion <cmd>
     aliases: [ dominion, dom ]
+  town:
+    description: Town system command
+    usage: /town <cmd>
+    aliases: [ t ]
 permissions:
   dominion.admin:
     description: Administrator permissions for Dominion plugin

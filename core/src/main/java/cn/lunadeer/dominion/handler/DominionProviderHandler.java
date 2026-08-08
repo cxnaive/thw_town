@@ -7,12 +7,17 @@ import cn.lunadeer.dominion.api.dtos.flag.EnvFlag;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.commands.DominionOperateCommand;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
+import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.events.dominion.DominionCreateEvent;
 import cn.lunadeer.dominion.events.dominion.DominionDeleteEvent;
 import cn.lunadeer.dominion.events.dominion.modify.*;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.misc.DominionException;
+import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.providers.DominionProvider;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.BorderRenderUtil;
@@ -45,6 +50,13 @@ public class DominionProviderHandler extends DominionProvider {
     public static class DominionProviderHandlerText extends ConfigurationPart {
         public String createSuccess = "Create dominion {0} success.";
         public String createFailed = "Create dominion {0} failed, reason: {1}";
+        public String personalCreationDisabled = "Personal dominions can no longer be created. Create or join a town instead (/town create).";
+        public String subCreationDisabled = "Sub dominions can no longer be created.";
+        public String legacyResizeDisabled = "Resizing legacy dominions is disabled on this server.";
+        public String legacyDeleteDisabled = "Deleting dominions is disabled on this server.";
+        public String townOutpostNoDelete = "Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.";
+        public String townOutpostNoTransfer = "Dominion {0} is town property and cannot be transferred.";
+        public String autoAttachedToTown = "Dominion {0} was attached to town {1} because its new owner is a town member.";
 
         public String expandSuccess = "Expand dominion {0} success.";
         public String expandFailed = "Expand dominion {0} failed, reason: {1}";
@@ -100,6 +112,17 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
+                // Town era gates (plan §5.3/§12.2): personal and sub dominion
+                // creation is frozen; towns expand through TownManager, which
+                // creates outposts directly and never passes through here.
+                if (event.getOperator() instanceof Player gatePlayer && !Others.bypassLimit(gatePlayer)) {
+                    if (parent == null && !Configuration.landSystem.allowNewPersonalDominion) {
+                        throw new DominionException(Language.dominionProviderHandlerText.personalCreationDisabled);
+                    }
+                    if (parent != null && !Configuration.landSystem.allowNewSubDominion) {
+                        throw new DominionException(Language.dominionProviderHandlerText.subCreationDisabled);
+                    }
+                }
                 DominionDOO toBeCreated = new DominionDOO(
                         event.getOwner(),
                         event.getName(),
@@ -155,13 +178,36 @@ public class DominionProviderHandler extends DominionProvider {
             }
             boolean expand = amount > 0;
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                DominionDOO resizeDoo = (DominionDOO) event.getDominion();
+                TownDOO resizeTown = null;
+                if (resizeDoo.isTownOutpost()) {
+                    // resize of a town outpost: mayor/assistant only (charged
+                    // to the town bank below); outpost admins cannot resize.
+                    resizeTown = TownManager.requireTown(resizeDoo.getTownId());
+                    if (event.getOperator() instanceof Player resizePlayer) {
+                        TownManager.assertManager(resizePlayer, resizeTown);
+                    }
+                } else if (event.getOperator() instanceof Player resizePlayer
+                        && !Others.bypassLimit(resizePlayer)
+                        && !Configuration.landSystem.legacyAllowResize) {
+                    throw new DominionException(Language.dominionProviderHandlerText.legacyResizeDisabled);
+                }
+                if (!resizeDoo.isTownOutpost()) {
+                    assertDominionOwner(event.getOperator(), event.getDominion());
+                }
                 assertDominionSize(event.getOperator(), event.getDominion().getWorldUid(), event.getNewCuboid());
                 assertWithinParent(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertContainSubs(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertDominionIntersect(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 if (!event.isSkipEconomy()) {
-                    assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(), dominion.getParentDomId() != -1);
+                    if (resizeTown != null) {
+                        if (event.getOperator() instanceof Player resizePlayer) {
+                            TownManager.chargeTownResize(resizePlayer, resizeTown,
+                                    event.getOldCuboid(), event.getNewCuboid());
+                        }
+                    } else {
+                        assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(), dominion.getParentDomId() != -1);
+                    }
                 }
                 event.setDominion(event.getDominion().setCuboid(event.getNewCuboid()));
                 BorderRenderUtil.showBorder(event.getOperator(), event.getDominion());
@@ -194,6 +240,22 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return CompletableFuture.supplyAsync(() -> {
             try {
+                DominionDOO delDoo = (DominionDOO) event.getDominion();
+                TownDOO delTown = null;
+                if (delDoo.isTownOutpost()) {
+                    // town property: personal deletion is impossible; admins
+                    // may force-delete (refund goes to the town bank), the
+                    // regular paths are town disband or admin release.
+                    delTown = TownManager.requireTown(delDoo.getTownId());
+                    boolean privileged = !(event.getOperator() instanceof Player p) || Others.bypassLimit(p);
+                    if (!privileged) {
+                        throw new DominionException(Language.dominionProviderHandlerText.townOutpostNoDelete, delDoo.getName());
+                    }
+                } else if (event.getOperator() instanceof Player p
+                        && !Others.bypassLimit(p)
+                        && !Configuration.landSystem.legacyAllowDelete) {
+                    throw new DominionException(Language.dominionProviderHandlerText.legacyDeleteDisabled);
+                }
                 assertDominionOwner(event.getOperator(), event.getDominion());
                 // check subs
                 List<DominionDTO> sub_dominions = getSubDominionsRecursive(event.getDominion());
@@ -212,8 +274,15 @@ public class DominionProviderHandler extends DominionProvider {
                 }
                 DominionDOO.deleteById(event.getDominion().getId());
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, event.getDominion().getName());
-                if (!event.isSkipEconomy())
-                    assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO, event.getDominion().getParentDomId() != -1);
+                if (!event.isSkipEconomy()) {
+                    if (delTown != null) {
+                        if (event.getOperator() instanceof Player p) {
+                            TownManager.chargeTownResize(p, delTown, event.getDominion().getCuboid(), CuboidDTO.ZERO);
+                        }
+                    } else {
+                        assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO, event.getDominion().getParentDomId() != -1);
+                    }
+                }
                 return event.getDominion();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.dominionProviderHandlerText.deleteFailed, event.getDominion().getName(), e.getMessage());
@@ -231,7 +300,7 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), dominion);
+                assertDominionManage(event.getOperator(), dominion);
                 if (Objects.equals(event.getOldName(), event.getNewName())) {
                     throw new DominionException(Language.dominionProviderHandlerText.sameName);
                 }
@@ -257,6 +326,12 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
+                DominionDOO giveDoo = (DominionDOO) event.getDominion();
+                // town property is never transferable; admin arbitration goes
+                // through /dom town release instead.
+                if (giveDoo.isTownOutpost()) {
+                    throw new DominionException(Language.dominionProviderHandlerText.townOutpostNoTransfer, giveDoo.getName());
+                }
                 assertDominionOwner(event.getOperator(), event.getDominion());
                 if (dominion.getParentDomId() != -1) {
                     throw new DominionException(Language.dominionProviderHandlerText.cannotGiveSub, event.getDominion().getName());
@@ -278,6 +353,12 @@ public class DominionProviderHandler extends DominionProvider {
                     return null;
                 }
                 for (DominionDTO sub_dominion : sub_dominions) {
+                    // a sub that is already a town outpost (cross-town
+                    // enclave, §4.3) keeps its contributor record — rewriting
+                    // it would misdirect return-contributed restitution
+                    if (((DominionDOO) sub_dominion).isTownOutpost()) {
+                        continue;
+                    }
                     sub_dominion.setOwner(newOwnerBukkit.getUniqueId());
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveSuccess,
                             sub_dominion.getName(), newOwnerBukkit.getName());
@@ -285,6 +366,25 @@ public class DominionProviderHandler extends DominionProvider {
                 event.setDominion(event.getDominion().setOwner(newOwnerBukkit.getUniqueId()));
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveSuccess,
                         event.getDominion().getName(), newOwnerBukkit.getName());
+                // Town era (operation matrix): a townless outpost transferred
+                // to a town member attaches to their town automatically.
+                List<TownMemberDOO> memberships = CacheManager.instance.getTownCache()
+                        .getMembershipsOf(newOwnerBukkit.getUniqueId());
+                if (!memberships.isEmpty()) {
+                    TownDOO town = CacheManager.instance.getTownCache().getTown(memberships.get(0).getTownId());
+                    if (town != null) {
+                        UUID attachOperator = event.getOperator() instanceof Player p
+                                ? p.getUniqueId() : newOwnerBukkit.getUniqueId();
+                        for (DominionDTO sub : sub_dominions) {
+                            TownManager.attachOutpost(town, (DominionDOO) sub, attachOperator);
+                        }
+                        TownManager.attachOutpost(town, (DominionDOO) event.getDominion(), attachOperator);
+                        Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
+                                event.getDominion().getName(), town.getName());
+                        Notification.info(newOwnerBukkit, Language.dominionProviderHandlerText.autoAttachedToTown,
+                                event.getDominion().getName(), town.getName());
+                    }
+                }
                 return event.getDominion();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.dominionProviderHandlerText.giveFailed,
@@ -303,7 +403,7 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 DominionDTO d = CacheManager.instance.getCache().getDominionCache().getDominion(event.getNewTpLocation());
                 if (d == null || !d.getId().equals(event.getDominion().getId())) {
                     throw new DominionException(Language.dominionProviderHandlerText.tpLocationNotInDominion, event.getDominion().getName());
@@ -328,7 +428,7 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 if (event.getType() == DominionSetMessageEvent.TYPE.ENTER) {
                     event.setDominion(event.getDominion().setJoinMessage(event.getNewMessage()));
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.setEnterMessageSuccess, event.getDominion().getName());
@@ -357,7 +457,7 @@ public class DominionProviderHandler extends DominionProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 event.setDominion(event.getDominion().setColor(event.getNewColor()));
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.SetMapColorSuccess, event.getDominion().getName());
                 return event.getDominion();

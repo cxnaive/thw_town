@@ -7,6 +7,7 @@ import cn.lunadeer.dominion.api.dtos.MemberDTO;
 import cn.lunadeer.dominion.api.dtos.PlayerDTO;
 import cn.lunadeer.dominion.cache.server.DominionCache;
 import cn.lunadeer.dominion.cache.server.PlayerCache;
+import cn.lunadeer.dominion.cache.server.TownCache;
 import cn.lunadeer.dominion.cache.server.ResidenceDataCache;
 import cn.lunadeer.dominion.cache.server.ServerCache;
 import cn.lunadeer.dominion.configuration.Configuration;
@@ -20,6 +21,7 @@ import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.AutoTimer;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.XLogger;
+import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -43,6 +45,7 @@ public class CacheManager {
     private final ServerCache thisServerCache;
     private final ConcurrentHashMap<Integer, ServerCache> otherServerCaches = new ConcurrentHashMap<>();
     private final PlayerCache playerCache;
+    private final TownCache townCache;
     private final ResidenceDataCache residenceDataCache = new ResidenceDataCache();
 
     private final ConcurrentHashMap<UUID, Integer> playerCurrentDominionId = new ConcurrentHashMap<>();
@@ -59,6 +62,15 @@ public class CacheManager {
 
         this.playerCache = new PlayerCache();
         this.playerCache.load();
+
+        this.townCache = new TownCache();
+        this.townCache.load();
+        // Towns are cross-server entities and there is no cross-server
+        // invalidation channel (plan §7.4); a periodic refresh bounds the
+        // staleness of other backends' town mutations to ~60s instead of
+        // requiring a restart. Cache.load() is throttled to UPDATE_INTERVAL
+        // internally, so this is one full reload per minute at most.
+        Scheduler.runTaskRepeatAsync(townCache::load, 60 * 20L, 60 * 20L);
 
         this.thisServerCache = new ServerCache(Configuration.multiServer.serverId);
         this.thisServerCache.getDominionCache().load();
@@ -123,6 +135,7 @@ public class CacheManager {
      */
     public void reloadCache() {
         playerCache.load();
+        townCache.load();
         thisServerCache.getDominionCache().load();
         thisServerCache.getMemberCache().load();
         thisServerCache.getGroupCache().load();
@@ -154,6 +167,16 @@ public class CacheManager {
      */
     public PlayerCache getPlayerCache() {
         return playerCache;
+    }
+
+    /**
+     * Gets the global TownCache instance (towns are cross-server entities,
+     * so this cache is not scoped to ServerCache).
+     *
+     * @return the town cache
+     */
+    public TownCache getTownCache() {
+        return townCache;
     }
 
     /**

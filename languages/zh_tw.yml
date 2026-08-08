@@ -58,9 +58,6 @@ converts-text:
   no-group-found: 在領地 {0} 中找不到權限組 {1}。
 
 others-text:
-  auto-clean-start: 開始自動清理 {0} 天未登入的玩家資料…
-  auto-cleaning-player: 已清理玩家 {0} 的資料。
-  auto-clean-end: 自動清理完成！
   no-permission-for-flag: 你沒有 {0}({1})權限。
 
 vault-connect-text:
@@ -69,6 +66,13 @@ vault-connect-text:
   insufficient-funds: 餘額不足，需要 {0}{1}，但你僅有 {2}{1}。
 
 dominion-provider-handler-text:
+  auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
+  town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
+  town-outpost-no-delete: Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.
+  legacy-delete-disabled: Deleting dominions is disabled on this server.
+  legacy-resize-disabled: Resizing legacy dominions is disabled on this server.
+  sub-creation-disabled: Sub dominions can no longer be created.
+  personal-creation-disabled: Personal dominions can no longer be created. Create or join a town instead (/town create).
   create-success: 成功建立領地 {0}。
   create-failed: 建立領地 {0} 失敗，原因：{1}。
   expand-success: 成功擴張領地 {0}。
@@ -102,6 +106,7 @@ dominion-provider-handler-text:
   set-guest-flag-failed: 設定通用權限 {0} 為 {1} 失敗，原因：{2}。
 
 member-provider-handler-text:
+  use-trust-for-town-outposts: 'This dominion belongs to a town; per-player grants are managed with /town trust instead of members.'
   set-flag-success: 已成功在領地 {2} 為 {1} 設定權限 {0}。
   owner-only: 僅有領地擁有者可管理管理員。
   group-already: 該成員已屬於權限組 {0}，無法重複設定。
@@ -114,6 +119,7 @@ member-provider-handler-text:
   remove-member-failed: 移除成員失敗，原因：{0}。
 
 group-provider-handler-text:
+  town-group-reserved: 'The @town group is managed by the town system and cannot be deleted or renamed.'
   owner-only: 僅有領地擁有者可管理管理員群組。
   set-flag-success: 成功將群組 {0} 的權限 {1} 設定為 {2}。
   set-flag-failed: 設定群組權限失敗，原因：{0}。
@@ -186,6 +192,7 @@ set-map-color-inputter-text:
   hint: 輸入十六進位色碼(例如：#FF5733)以設定地圖顏色。
   description: Web 地圖上領地的顏色。
 administrator-command-text:
+  town-release-description: Release a town outpost back to its contributor (arbitration).
   reload-cache-button: 重新載入快取
   reload-cache-description: 重新載入快取(請勿頻繁執行)
   reload-config-button: 重新載入設定
@@ -620,3 +627,79 @@ ui-commands-description:
   member-flags: 管理成員權限權限
   environment-flags: 管理領地環境權限
   guest-flags: 管理領地通用權限權限
+town-manager-text:
+  only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
+  town-name-should-not-empty: Town name should not be empty.
+  town-name-invalid: Town name should not contain space or dot.
+  town-name-exist: Town name {0} already exists.
+  town-not-exist: Town {0} does not exist.
+  already-in-town: You are already a member of town {0}.
+  not-in-town: You are not a member of town {0}.
+  not-town-manager: Only the mayor or assistants of {0} can do this.
+  max-memberships-reached: You already belong to {0} town(s), the server limit is {1}.
+  join-with-legacy-land-disabled: Players owning legacy land cannot join towns on this server.
+  create-success: Town {0} created. {1} outpost(s) attached.
+  create-success-founding: Town {0} created with a founding outpost.
+  disband-success: Town {0} disbanded. {1} outpost(s) dissolved and archived.
+  disband-success-return: Town {0} disbanded. {1} outpost(s) returned to contributors, {2} dissolved.
+  join-success: You joined town {0}. {1} outpost(s) attached to the town.
+  leave-success: You left town {0}. Your land stays with the town.
+  mayor-cannot-leave: The mayor cannot leave; transfer the mayor role or disband the town first.
+  kick-success: Kicked {0} from town {1}.
+  cannot-kick-manager: You cannot kick the mayor or an assistant.
+  transfer-success: Mayor of {0} transferred to {1}.
+  target-not-member: '{0} is not a member of town {1}.'
+  trust-success: Trusted {0} on {1} (scope {2}).
+  untrust-success: Removed trust of {0} on {1} (scope {2}).
+  trust-disabled: The trust system is disabled on this server.
+  trust-target-outpost-not-in-town: Outpost {0} does not belong to town {1}.
+  deposit-success: 'Deposited {0} into the bank of {1}. New balance: {2}.'
+  withdraw-success: 'Withdrew {0} from the bank of {1}. New balance: {2}.'
+  insufficient-town-funds: 'Town bank of {0} cannot afford {1} (balance: {2}).'
+  invalid-amount: 'Invalid amount: {0}.'
+  outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
+  outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
+  outpost-amount-exceeded: Town {0} has reached the outpost amount limit.
+  founding-too-large: Founding outpost exceeds the max edge length of {0} blocks.
+  founding-required: 'You own no land: a founding outpost location is required to create a town.'
+  release-success: Outpost {0} released from town {1}, returned to contributor {2}.
+  release-not-outpost: Dominion {0} is not a town outpost.
+  release-founding-denied: A founding outpost can never be released; it dissolves with its town.
+  only-member-can-deposit: Only members of {0} can deposit into its bank.
+  outpost-admin-set: Outpost admin of {0} set to {1}.
+  outpost-admin-cleared: Outpost admin of {0} cleared.
+  outpost-admin-not-member: Outpost admin must be a member of town {0}.
+  merge-member-merged: '{0} merged into town {1} as resident.'
+  merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
+town-command-text:
+  disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
+  only-player: This command can only be executed by a player.
+  usage: |-
+    &b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+    &b/town invite <player> &7- invite a player (mayor/assistant)
+    &b/town join <town> [confirm] &7- join an invited town
+    &b/town leave &7- leave your town (land stays with the town)
+    &b/town kick <player> &7- kick a resident (mayor/assistant)
+    &b/town transfer <player> &7- transfer the mayor role
+    &b/town disband [confirm] &7- disband the town (dissolves outposts)
+    &b/town deposit <amount> &7- deposit into the town bank
+    &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
+    &b/town outpost create <name> &7- create a remote outpost (selected points)
+    &b/town admin <outpost> [player] &7- set/clear the outpost admin
+    &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
+    &b/town untrust <player> [town|outpost <name>]
+    &b/town info [town] &7- town information
+    &b/town list &7- list towns
+  unknown-sub-command: 'Unknown town command: {0}'
+  no-invite: You need an invite from the mayor or an assistant of {0} to join.
+  invite-sent: Invited {0} to join {1} (valid for 5 minutes).
+  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with ''confirm'' to proceed.'
+  join-confirm-no-land: 'Joining {0} makes you a resident. Re-run with ''confirm'' to proceed.'
+  disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
+  no-town: You are not in any town.
+  no-managed-town: You are not the mayor or an assistant of any town.
+  town-info: '&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})'
+  town-list-entry: '{0} (mayor: {1})'
+  need-points: Select two points with the select tool first.
+  player-not-found: Player {0} not found.
+  member-list: 'Members of {0}: {1}'

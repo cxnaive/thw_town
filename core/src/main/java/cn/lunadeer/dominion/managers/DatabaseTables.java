@@ -22,6 +22,7 @@ import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.command.CommandSender;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -340,6 +341,210 @@ public class DatabaseTables {
                     .execute();
         }
 
+        // 5.0.0 town era: town
+        // balance is BIGINT cents (TownDOO stores cents): the ORM's
+        // FieldFloat maps to 32-bit REAL/FLOAT on all three dialects and
+        // would silently drift on sums above 2^24 cents.
+        // No FK on dominion.town_id (added below): .foreign() renders
+        // ON DELETE CASCADE, and disbanding a town must go through the
+        // archive path in TownManager, never a silent cascade.
+        if (!Show.show().tables().execute().contains("town")) {
+            Column town_id = Column.of(new FieldInteger("id")).primary().serial().notNull().unique();
+            Column town_name = Column.of(new FieldString("name")).notNull().unique();
+            Column town_founder = Column.of(new FieldString("founder_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
+            Column town_mayor = Column.of(new FieldString("mayor_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
+            Column town_balance = Column.of(new FieldLong("balance")).notNull().defaultSqlVal("0");
+            Column town_status = Column.of(new FieldString("status")).notNull().defaultSqlVal("'ACTIVE'");
+            Column town_created_at = Column.of(new FieldTimestamp("created_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Create.create().table("town")
+                    .column(town_id)
+                    .column(town_name)
+                    .column(town_founder)
+                    .column(town_mayor)
+                    .column(town_balance)
+                    .column(town_status)
+                    .column(town_created_at)
+                    .execute();
+        }
+
+        // 5.0.0 town era: town_member
+        // Composite uniqueness (town_id, player_uuid) via explicit index:
+        // the ORM's joinUnique renders an inline constraint that MySQL/PG
+        // reject, and this block only runs when the table did not exist.
+        if (!Show.show().tables().execute().contains("town_member")) {
+            Column tm_town_id = Column.of(new FieldInteger("town_id")).notNull().foreign("town", new FieldInteger("id"));
+            Column tm_player_uuid = Column.of(new FieldString("player_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
+            Column tm_role = Column.of(new FieldString("role")).notNull().defaultSqlVal("'RESIDENT'");
+            Column tm_source = Column.of(new FieldString("source")).notNull().defaultSqlVal("'JOINED'");
+            Column tm_joined_at = Column.of(new FieldTimestamp("joined_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Create.create().table("town_member")
+                    .column(tm_town_id)
+                    .column(tm_player_uuid)
+                    .column(tm_role)
+                    .column(tm_source)
+                    .column(tm_joined_at)
+                    .execute();
+            try (Connection conn = DatabaseManager.instance.getConnection()) {
+                conn.createStatement().execute(
+                        "CREATE UNIQUE INDEX idx_town_member_pk ON town_member(town_id, player_uuid);");
+                conn.createStatement().execute(
+                        "CREATE INDEX idx_town_member_player ON town_member(player_uuid);");
+            } catch (Exception e) {
+                throw new SQLException("Failed to create town_member indexes", e);
+            }
+        }
+
+        // 5.0.0 town era: town_trust
+        // scope_id holds town.id for TOWN scope and dominion.id for OUTPOST
+        // scope; no FK on scope_id since it is polymorphic.
+        if (!Show.show().tables().execute().contains("town_trust")) {
+            Column tt_town_id = Column.of(new FieldInteger("town_id")).notNull().foreign("town", new FieldInteger("id"));
+            Column tt_player_uuid = Column.of(new FieldString("player_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
+            Column tt_scope_type = Column.of(new FieldString("scope_type")).notNull().defaultSqlVal("'TOWN'");
+            Column tt_scope_id = Column.of(new FieldInteger("scope_id")).notNull().defaultSqlVal("-1");
+            Column tt_build = Column.of(new FieldBoolean("build")).notNull().defaultSqlVal("false");
+            Column tt_destroy = Column.of(new FieldBoolean("destroy")).notNull().defaultSqlVal("false");
+            Column tt_switch = Column.of(new FieldBoolean("switch")).notNull().defaultSqlVal("false");
+            Column tt_item_use = Column.of(new FieldBoolean("item_use")).notNull().defaultSqlVal("false");
+            Column tt_created_by = Column.of(new FieldString("created_by")).notNull().defaultSqlVal("'00000000-0000-0000-0000-000000000000'");
+            Column tt_created_at = Column.of(new FieldTimestamp("created_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Create.create().table("town_trust")
+                    .column(tt_town_id)
+                    .column(tt_player_uuid)
+                    .column(tt_scope_type)
+                    .column(tt_scope_id)
+                    .column(tt_build)
+                    .column(tt_destroy)
+                    .column(tt_switch)
+                    .column(tt_item_use)
+                    .column(tt_created_by)
+                    .column(tt_created_at)
+                    .execute();
+            try (Connection conn = DatabaseManager.instance.getConnection()) {
+                conn.createStatement().execute(
+                        "CREATE UNIQUE INDEX idx_town_trust_pk ON town_trust(town_id, player_uuid, scope_type, scope_id);");
+                conn.createStatement().execute(
+                        "CREATE INDEX idx_town_trust_player ON town_trust(player_uuid);");
+            } catch (Exception e) {
+                throw new SQLException("Failed to create town_trust indexes", e);
+            }
+        }
+
+        // 5.0.0 town era: dominion_member_archive
+        // Audit mirror of dominion_member rows consumed by town attachment.
+        // Deliberately NO foreign keys and NO unique constraints: archived
+        // rows must survive deletion of their town/dominion/player, and the
+        // same member row may be archived again after an admin restore.
+        if (!Show.show().tables().execute().contains("dominion_member_archive")) {
+            Column dma_id = Column.of(new FieldInteger("id")).notNull();
+            Column dma_player_uuid = Column.of(new FieldString("player_uuid")).notNull();
+            Column dma_dom_id = Column.of(new FieldInteger("dom_id")).notNull();
+            Column dma_group_id = Column.of(new FieldInteger("group_id")).notNull().defaultSqlVal("-1");
+            Column dma_admin = Column.of(new FieldBoolean("admin")).notNull().defaultSqlVal("false");
+            Column dma_town_id = Column.of(new FieldInteger("town_id")).notNull();
+            Column dma_archived_at = Column.of(new FieldTimestamp("archived_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Column dma_archive_reason = Column.of(new FieldString("archive_reason")).notNull().defaultSqlVal("'MERGED_INTO_TOWN'");
+            Create.create().table("dominion_member_archive")
+                    .column(dma_id)
+                    .column(dma_player_uuid)
+                    .column(dma_dom_id)
+                    .column(dma_group_id)
+                    .column(dma_admin)
+                    .column(dma_town_id)
+                    .column(dma_archived_at)
+                    .column(dma_archive_reason)
+                    .execute();
+            for (Flag flag : Flags.getAllPriFlags()) {
+                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+                Alter.alter().table("dominion_member_archive").add().column(column).execute();
+            }
+        }
+
+        // 5.0.0 town era: dominion attachment columns (all nullable except
+        // claim_kind; see FK note on the town table above)
+        if (!Show.show().columns().from("dominion").execute().containsKey("town_id")) {
+            Alter.alter().table("dominion").add().column(Column.of(new FieldInteger("town_id"))).execute();
+        }
+        if (!Show.show().columns().from("dominion").execute().containsKey("claim_kind")) {
+            Alter.alter().table("dominion").add()
+                    .column(Column.of(new FieldString("claim_kind")).notNull().defaultSqlVal("'NORMAL'")).execute();
+        }
+        if (!Show.show().columns().from("dominion").execute().containsKey("outpost_admin_uuid")) {
+            Alter.alter().table("dominion").add().column(Column.of(new FieldString("outpost_admin_uuid"))).execute();
+        }
+        if (!Show.show().columns().from("dominion").execute().containsKey("attached_by")) {
+            Alter.alter().table("dominion").add().column(Column.of(new FieldString("attached_by"))).execute();
+        }
+        if (!Show.show().columns().from("dominion").execute().containsKey("attached_at")) {
+            Alter.alter().table("dominion").add().column(Column.of(new FieldTimestamp("attached_at"))).execute();
+        }
+
+        // 5.0.0 town era: dominion_archive
+        // Full mirror of dominion rows dissolved by a town disband, for
+        // audit and admin recovery. Same column set as dominion (built by
+        // the same flag loops) plus archive metadata; NO foreign keys so
+        // rows survive every referenced entity.
+        if (!Show.show().tables().execute().contains("dominion_archive")) {
+            Column da_id = Column.of(new FieldInteger("id")).notNull();
+            Column da_owner = Column.of(new FieldString("owner")).notNull();
+            Column da_name = Column.of(new FieldString("name")).notNull().defaultSqlVal("'Unnamed'");
+            Column da_world_uid = Column.of(new FieldString("world_uid")).notNull();
+            Column da_x1 = Column.of(new FieldInteger("x1")).notNull().defaultSqlVal("0");
+            Column da_y1 = Column.of(new FieldInteger("y1")).notNull().defaultSqlVal("0");
+            Column da_z1 = Column.of(new FieldInteger("z1")).notNull().defaultSqlVal("0");
+            Column da_x2 = Column.of(new FieldInteger("x2")).notNull().defaultSqlVal("0");
+            Column da_y2 = Column.of(new FieldInteger("y2")).notNull().defaultSqlVal("0");
+            Column da_z2 = Column.of(new FieldInteger("z2")).notNull().defaultSqlVal("0");
+            Column da_parent = Column.of(new FieldInteger("parent_dom_id")).notNull().defaultSqlVal("-1");
+            Column da_join = Column.of(new FieldString("join_message")).notNull().defaultSqlVal("''");
+            Column da_leave = Column.of(new FieldString("leave_message")).notNull().defaultSqlVal("''");
+            Column da_tp = Column.of(new FieldString("tp_location")).notNull().defaultSqlVal("'default'");
+            Column da_color = Column.of(new FieldString("color")).notNull().defaultSqlVal("'#00BFFF'");
+            Column da_server_id = Column.of(new FieldInteger("server_id")).notNull().defaultSqlVal("-1");
+            Column da_town_id_col = Column.of(new FieldInteger("town_id"));
+            Column da_claim_kind = Column.of(new FieldString("claim_kind")).notNull().defaultSqlVal("'NORMAL'");
+            Column da_outpost_admin = Column.of(new FieldString("outpost_admin_uuid"));
+            Column da_attached_by = Column.of(new FieldString("attached_by"));
+            Column da_attached_at = Column.of(new FieldTimestamp("attached_at"));
+            Column da_archived_town_id = Column.of(new FieldInteger("archived_town_id")).notNull();
+            Column da_archived_at = Column.of(new FieldTimestamp("archived_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Column da_archive_reason = Column.of(new FieldString("archive_reason")).notNull().defaultSqlVal("'DISBANDED_TOWN'");
+            Create.create().table("dominion_archive")
+                    .column(da_id)
+                    .column(da_owner)
+                    .column(da_name)
+                    .column(da_world_uid)
+                    .column(da_x1)
+                    .column(da_y1)
+                    .column(da_z1)
+                    .column(da_x2)
+                    .column(da_y2)
+                    .column(da_z2)
+                    .column(da_parent)
+                    .column(da_join)
+                    .column(da_leave)
+                    .column(da_tp)
+                    .column(da_color)
+                    .column(da_server_id)
+                    .column(da_town_id_col)
+                    .column(da_claim_kind)
+                    .column(da_outpost_admin)
+                    .column(da_attached_by)
+                    .column(da_attached_at)
+                    .column(da_archived_town_id)
+                    .column(da_archived_at)
+                    .column(da_archive_reason)
+                    .execute();
+            for (Flag flag : Flags.getAllEnvFlags()) {
+                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+                Alter.alter().table("dominion_archive").add().column(column).execute();
+            }
+            for (Flag flag : Flags.getAllPriFlags()) {
+                Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
+                Alter.alter().table("dominion_archive").add().column(column).execute();
+            }
+        }
+
         // Remove orphaned member rows whose player record no longer exists
         // (e.g. left behind by a partially failed auto-clean); they crash member
         // list views and member management with a NullPointerException.
@@ -387,6 +592,7 @@ public class DatabaseTables {
             "town_member",
             "town_trust",
             "dominion_member_archive",
+            "dominion_archive",
             "town_claim"
     );
 
@@ -415,6 +621,7 @@ public class DatabaseTables {
             "town_member",
             "town_trust",
             "dominion_member_archive",
+            "dominion_archive",
             "town_claim"
     );
 

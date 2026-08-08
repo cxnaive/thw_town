@@ -35,6 +35,7 @@ public class MemberProviderHandler extends MemberProvider {
         public String setFlagFailed = "Failed to set flag, reason: {0}";
 
         public String addMemberSuccess = "Successfully added {0} to {1}.";
+        public String useTrustForTownOutposts = "This dominion belongs to a town; per-player grants are managed with /town trust instead of members.";
         public String alreadyMember = "{0} is already a member of {1}.";
         public String cantBeOwner = "You can't add dominion owner as a member.";
         public String addMemberFailed = "Failed to add member, reason: {0}";
@@ -91,6 +92,11 @@ public class MemberProviderHandler extends MemberProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 assertDominionAdmin(event.getOperator(), event.getDominion());
+                // plan §5.1: on town outposts the personal member overlay is
+                // gone for good — per-player grants go through TownTrust
+                if (event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+                    throw new DominionException(Language.memberProviderHandlerText.useTrustForTownOutposts);
+                }
                 if (event.getPlayer().getUuid().equals(event.getDominion().getOwner())) {
                     throw new DominionException(Language.memberProviderHandlerText.cantBeOwner);
                 }

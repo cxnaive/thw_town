@@ -89,7 +89,7 @@ public class Configuration extends ConfigurationFile {
     }
 
     @Comments("Do not modify this value.")
-    public static int version = 2;  // <<<<<< When you change the configuration, you should increment this value.
+    public static int version = 3;  // <<<<<< When you change the configuration, you should increment this value.
 
     @Comments("The settings of the database.")
     public static Database database = new Database();
@@ -146,14 +146,77 @@ public class Configuration extends ConfigurationFile {
     @Comments("Language of the plugin, see others in the plugins/Dominion/languages folder.")
     public static String language = "en_us";
 
-    @Comments("Radius of the auto create dominion. -1 to disable.")
-    public static int autoCreateRadius = 10;
+    @Comments({
+            "The land system rules of the town era.",
+    })
+    public static LandSystem landSystem = new LandSystem();
+
+    public static class LandSystem extends ConfigurationPart {
+        @Comments({
+                "Whether players can create new personal dominions.",
+                "Under the town model this stays false: new land only enters",
+                "the world through towns (founding/remote outposts)."
+        })
+        public boolean allowNewPersonalDominion = false;
+        @Comments({
+                "Whether players can create new sub dominions.",
+                "Frozen under the town model; existing sub dominions keep working."
+        })
+        public boolean allowNewSubDominion = false;
+        @Comments("Whether townless legacy dominions can be resized.")
+        public boolean legacyAllowResize = false;
+        @Comments("Whether townless legacy dominions can be deleted by their owner.")
+        public boolean legacyAllowDelete = true;
+    }
 
     @Comments({
-            "If player don't login for this days, his dominion will be auto cleaned.",
-            "Set to -1 to disable."
+            "The town system.",
+            "All existing dominions are outposts; a dominion with town_id set",
+            "belongs to a town and is governed by the town cascade."
     })
-    public static int autoCleanAfterDays = 180;
+    public static Town town = new Town();
+
+    public static class Town extends ConfigurationPart {
+        @Comments({
+                "Max number of towns a player may formally belong to.",
+                "Counts TownMember only (COUNT(DISTINCT town_id)); TownTrust,",
+                "invites and visitors are unaffected. -1 for unlimited."
+        })
+        public int maxMemberships = 1;
+        @Comments({
+                "When a player's dominions attach to a town, merge their old",
+                "dominion members into town members while capacity allows.",
+                "false: ALL old members become outpost-scoped TownTrust instead."
+        })
+        public boolean mergeMembersOnAttach = true;
+        @Comments("Whether players owning legacy land may join a town (their land attaches).")
+        public boolean allowJoinWithLegacyLand = true;
+        @Comments("Cost of the founding outpost charged from the town bank.")
+        public double foundingCost = 0;
+        @Comments("Max edge length of the founding outpost cube.")
+        public int foundingMaxSize = 32;
+        @Comments({
+                "Whether towns may create new remote outposts.",
+                "false: towns can only expand existing outposts (resize)."
+        })
+        public boolean outpostAllowRemote = true;
+        @Comments({
+                "What happens to outposts when a town disbands:",
+                "dissolve-all: every outpost is dissolved with the town;",
+                "return-contributed: contributed legacy land returns to its",
+                "contributor, only contributor-less outposts dissolve."
+        })
+        public String disbandPolicy = "dissolve-all";
+        @Comments("Enable the TownTrust system.")
+        public boolean trustEnabled = true;
+    }
+
+    @Comments({
+            "Radius of the auto create dominion. -1 to disable.",
+            "MUST stay -1 in the town era: personal dominion creation is banned",
+            "(see land-system.allow-new-personal-dominion)."
+    })
+    public static int autoCreateRadius = -1;
 
     @Comments("Prevent player from creating dominion around the spawn point.")
     public static int serverSpawnProtectionRadius = 10;
@@ -245,8 +308,21 @@ public class Configuration extends ConfigurationFile {
             autoCreateRadius = -1;
         }
 
-        if (autoCleanAfterDays < 0 && autoCleanAfterDays != -1) {
-            autoCleanAfterDays = -1;
+        if (town.maxMemberships < 0 && town.maxMemberships != -1) {
+            XLogger.warn("Invalid town max-memberships: {0}", town.maxMemberships);
+            town.maxMemberships = 1;
+        }
+        if (town.foundingMaxSize <= 0) {
+            XLogger.warn("Invalid town founding-max-size: {0}", town.foundingMaxSize);
+            town.foundingMaxSize = 32;
+        }
+        if (town.foundingCost < 0) {
+            XLogger.warn("Invalid town founding-cost: {0}", town.foundingCost);
+            town.foundingCost = 0;
+        }
+        if (!town.disbandPolicy.equals("dissolve-all") && !town.disbandPolicy.equals("return-contributed")) {
+            XLogger.warn("Invalid town disband-policy: {0}", town.disbandPolicy);
+            town.disbandPolicy = "dissolve-all";
         }
 
         if (Material.matchMaterial(selectTool) == null) {

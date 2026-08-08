@@ -6,6 +6,8 @@ import cn.lunadeer.dominion.api.dtos.MemberDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.doos.GroupDOO;
 import cn.lunadeer.dominion.doos.MemberDOO;
 import cn.lunadeer.dominion.events.group.*;
@@ -31,6 +33,7 @@ public class GroupProviderHandler extends GroupProvider {
         public String createGroupSuccess = "Group {0} created successfully.";
         public String createGroupFailed = "Failed to create group, reason: {0}";
 
+        public String townGroupReserved = "The @town group is managed by the town system and cannot be deleted or renamed.";
         public String deleteGroupSuccess = "Group {0} deleted successfully.";
         public String deleteGroupFailed = "Failed to delete group, reason: {0}";
 
@@ -61,7 +64,7 @@ public class GroupProviderHandler extends GroupProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 if (event.getFlag().equals(Flags.ADMIN)) {
-                    assertDominionOwner(event.getOperator(), event.getDominion());
+                    assertDominionManage(event.getOperator(), event.getDominion());
                 } else {
                     assertDominionAdmin(event.getOperator(), event.getDominion());
                 }
@@ -86,7 +89,7 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupName(event.getDominion(), event.getGroupNamePlain());
                 GroupDTO group = GroupDOO.create(event.getGroupNameColored(), event.getDominion());
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.createGroupSuccess,
@@ -108,8 +111,13 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return CompletableFuture.supplyAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
+                // the built-in @town group carries town-member default flags
+                // (plan §5.1); deleting it would silently strip residents
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)) {
+                    throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
+                }
                 GroupDOO.deleteById(event.getGroup().getId());
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.deleteGroupSuccess, event.getGroup().getNamePlain());
                 return event.getGroup();
@@ -130,8 +138,11 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                assertDominionOwner(event.getOperator(), event.getDominion());
+                assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)) {
+                    throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
+                }
                 assertGroupName(event.getDominion(), event.getNewNamePlain());
                 GroupDTO renamedGroup = event.getGroup().setName(event.getNewNameColored());
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.renameGroupSuccess,
@@ -155,7 +166,7 @@ public class GroupProviderHandler extends GroupProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 if (event.getGroup().getFlagValue(Flags.ADMIN) || event.getMember().getFlagValue(Flags.ADMIN)) {
-                    assertDominionOwner(event.getOperator(), event.getDominion());
+                    assertDominionManage(event.getOperator(), event.getDominion());
                 } else {
                     assertDominionAdmin(event.getOperator(), event.getDominion());
                 }
@@ -183,7 +194,7 @@ public class GroupProviderHandler extends GroupProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 if (event.getGroup().getFlagValue(Flags.ADMIN)) {
-                    assertDominionOwner(event.getOperator(), event.getDominion());
+                    assertDominionManage(event.getOperator(), event.getDominion());
                 } else {
                     assertDominionAdmin(event.getOperator(), event.getDominion());
                 }

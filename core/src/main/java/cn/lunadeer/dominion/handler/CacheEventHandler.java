@@ -3,6 +3,8 @@ package cn.lunadeer.dominion.handler;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
+import cn.lunadeer.dominion.api.dtos.DominionDTO;
+import org.jetbrains.annotations.NotNull;
 import cn.lunadeer.dominion.events.PlayerCrossDominionBorderEvent;
 import cn.lunadeer.dominion.events.PlayerMoveInDominionEvent;
 import cn.lunadeer.dominion.events.PlayerMoveOutDominionEvent;
@@ -18,6 +20,21 @@ import static cn.lunadeer.dominion.managers.HooksManager.setPlaceholder;
 
 public class CacheEventHandler implements Listener {
 
+    /**
+     * {OWNER} display (plan §12.2): a town outpost shows its town name;
+     * townless dominions show the owner player name as before.
+     */
+    private static @NotNull String ownerDisplay(@NotNull DominionDTO dominion) {
+        if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+            cn.lunadeer.dominion.doos.TownDOO town =
+                    CacheManager.instance.getTownCache().getTown(doo.getTownId());
+            if (town != null) {
+                return town.getName();
+            }
+        }
+        return CacheManager.instance.getPlayerName(dominion.getOwner());
+    }
+
     @EventHandler
     public void onPlayerMoveInDominion(PlayerMoveInDominionEvent event) {
         XLogger.debug("PlayerMoveInDominionEvent called.");
@@ -27,7 +44,7 @@ public class CacheEventHandler implements Listener {
                         event.getPlayer(),
                         event.getDominion().getJoinMessage()
                                 .replace("{DOM}", event.getDominion().getName())
-                                .replace("{OWNER}", CacheManager.instance.getPlayerName(event.getDominion().getOwner()))
+                                .replace("{OWNER}", ownerDisplay(event.getDominion()))
                                 .replace("{PLAYER}", event.getPlayer().getName())
                 )
         );
@@ -47,7 +64,7 @@ public class CacheEventHandler implements Listener {
                         event.getPlayer(),
                         event.getDominion().getLeaveMessage()
                                 .replace("{DOM}", event.getDominion().getName())
-                                .replace("{OWNER}", CacheManager.instance.getPlayerName(event.getDominion().getOwner()))
+                                .replace("{OWNER}", ownerDisplay(event.getDominion()))
                                 .replace("{PLAYER}", event.getPlayer().getName())
                 )
         );

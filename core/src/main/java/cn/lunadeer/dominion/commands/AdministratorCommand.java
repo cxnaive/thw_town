@@ -5,7 +5,9 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.managers.DatabaseMigration;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.DatabaseTables;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.uis.MainMenu;
@@ -41,6 +43,7 @@ public class AdministratorCommand {
         public String migrateDescription = "Migrate dominion data from another server export, merging with current data.";
         public String updateLanguageDescription = "Regenerate language files from plugin internal language files.";
         public String updateLanguageConfirm = "This will overwrite your current language files, please confirm by adding 'confirm' at the end of the command.";
+        public String townReleaseDescription = "Release a town outpost back to its contributor (arbitration).";
 
         public String reloadingDominionCache = "Reloading dominion cache...";
         public String reloadedDominionCache = "Reload dominion cache success!";
@@ -95,6 +98,34 @@ public class AdministratorCommand {
         }
     }.needPermission(adminPermission).register();
 
+    /**
+     * /dom town release <dominion> — admin arbitration channel (plan §3):
+     * detaches an outpost from its town and returns it to the contributor.
+     * Founding outposts can never be released (invariant 5).
+     */
+    public static SecondaryCommand townRelease = new SecondaryCommand("town", List.of(
+            new Option(List.of("release")),
+            new Argument("dominion_name", true, (commandSender, preArguments) ->
+                    CacheManager.instance.getAllDominionNames())
+    ), Language.administratorCommandText.townReleaseDescription) {
+        @Override
+        public void executeHandler(CommandSender sender) {
+            if (!getArgumentValue(0).equalsIgnoreCase("release")) {
+                Notification.warn(sender, getUsage());
+                return;
+            }
+            try {
+                DominionDTO dto = CacheManager.instance.getDominion(getArgumentValue(1));
+                if (!(dto instanceof DominionDOO doo)) {
+                    throw new DominionException(Language.townManagerText.townNotExist, getArgumentValue(1));
+                }
+                TownManager.releaseOutpost(sender, doo);
+            } catch (Exception e) {
+                Notification.error(sender, e);
+            }
+        }
+    }.needPermission(adminPermission).register();
+
     public static PermissionButton reloadCacheButton(CommandSender sender) {
         return new FunctionalButton(Language.administratorCommandText.reloadCacheButton) {
             @Override
@@ -106,6 +137,7 @@ public class AdministratorCommand {
 
     public static void reloadCache(CommandSender sender) {
         Notification.info(sender, Language.administratorCommandText.reloadingDominionCache);
+        CacheManager.instance.getTownCache().load();
         CacheManager.instance.getCache().getDominionCache().load();
         Notification.info(sender, Language.administratorCommandText.reloadedDominionCache);
 

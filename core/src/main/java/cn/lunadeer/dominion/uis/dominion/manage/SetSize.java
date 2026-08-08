@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
-import static cn.lunadeer.dominion.misc.Asserts.assertDominionOwner;
+import static cn.lunadeer.dominion.misc.Asserts.assertDominionManage;
 import static cn.lunadeer.dominion.misc.Converts.toDominionDTO;
 import static cn.lunadeer.dominion.utils.Misc.formatString;
 
@@ -74,7 +74,7 @@ public class SetSize extends AbstractUI {
     protected void showTUI(Player player, String... args) {
         String dominionName = args[0];
         DominionDTO dominion = toDominionDTO(dominionName);
-        assertDominionOwner(player, dominion);
+        assertDominionManage(player, dominion);
 
         ListView view = createTUIView(player, dominion);
         addDirectionButtons(view, player, dominion.getName());
@@ -271,7 +271,7 @@ public class SetSize extends AbstractUI {
     protected void showCUI(Player player, String... args) {
         String dominionName = args[0];
         DominionDTO dominion = toDominionDTO(dominionName);
-        assertDominionOwner(player, dominion);
+        assertDominionManage(player, dominion);
 
         ChestView view = createCUIView(player, dominion);
         setupCUIButtons(view, player, dominion);

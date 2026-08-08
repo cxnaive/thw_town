@@ -14,6 +14,7 @@ import cn.lunadeer.dominion.inputters.*;
 
 import cn.lunadeer.dominion.managers.DatabaseTables;
 import cn.lunadeer.dominion.managers.MultiServerManager;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.TeleportManager;
 import cn.lunadeer.dominion.misc.Asserts;
 import cn.lunadeer.dominion.misc.Converts;
@@ -109,6 +110,8 @@ public class Language extends ConfigurationFile {
     public static AbstractUI.UiCommandsDescription uiCommandsDescription = new AbstractUI.UiCommandsDescription();
 
     public static MultiServerManager.MultiServerManagerText multiServerManagerText = new MultiServerManager.MultiServerManagerText();
+    public static TownManager.TownManagerText townManagerText = new TownManager.TownManagerText();
+    public static TownCommand.TownCommandText townCommandText = new TownCommand.TownCommandText();
 
     public static Asserts.AssertsText assertsText = new Asserts.AssertsText();
     public static Converts.ConvertsText convertsText = new Converts.ConvertsText();

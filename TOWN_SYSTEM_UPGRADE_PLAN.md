@@ -1,6 +1,39 @@
 # Town 系统升级实现方案
 
-状态：设计稿 v3（镇所有制 + 全员 Outpost 模型）
+状态：设计稿 v3（镇所有制 + 全员 Outpost 模型）；**Phase 1 已实现（5.0.0）**
+
+Phase 1 实现落点（对照 §9）：
+
+- DDL：`town` / `town_member` / `town_trust` / `dominion_member_archive` /
+  `dominion_archive`（解散归档，§7.1）建表，`dominion` 加五列
+  （`town_id` / `claim_kind` / `outpost_admin_uuid` / `attached_by` /
+  `attached_at`），全部走 `DatabaseTables.migrate()` 幂等启动流程；
+  新表已入备份白名单（含 `dominion_archive`）；
+- DOO/缓存：`TownDOO` / `TownMemberDOO` / `TownTrustDOO` + 全局
+  `TownCache`（跨服实体，挂 CacheManager 直属，仿 PlayerCache）；
+  `town.balance` 以 BIGINT 分存储（ORM FieldFloat 在三种方言都是
+  32 位，大额会漂移）；
+- 命令：独立 `/town` TabExecutor（create/disband/invite/join/leave/
+  kick/transfer/trust/untrust/deposit/withdraw/outpost/admin/info/
+  list）；`/dom town release <dominion>` 管理员仲裁；
+  join 需要镇长/助理的邀请（内存邀请，5 分钟，对应 §7.1 威胁模型）；
+- 权限接管：`Others.checkPrivilegeFlagSilence` 单点注入镇级联
+  （127 个版本事件处理器自动覆盖）；管理路径由
+  `Asserts.checkDominionAdmin` 路由（镇属 Outpost 上 owner_uuid
+  不再给权）；镇成员默认 flags 由每 Outpost 内建组 `@town` 承载；
+- 闸门：个人/子区禁建在 `DominionProviderHandler.createDominion`；
+  legacy resize/delete 与镇属扣费（TownBank）在 resize/delete 内路由；
+  镇属领地转让硬禁（含管理员，仲裁走 release）；受让人在镇时
+  被转让地自动挂靠；
+- 偏差说明：
+  - 镇原生 Outpost（founding/remote）以 `attached_by IS NULL` 标记
+    （出生即镇属，无挂靠事件），dissolve-all 之外的
+    return-contributed 策略据此区分存量地；
+  - 解散归档新增 `dominion_archive` 镜像表（§6 未列，§7.1 要求）；
+  - `{OWNER}` 在镇属 Outpost 上显示镇名（§12.2 小改已做）；
+  - `autoCleanAfterDays` 已移除（§12.2）；`autoCreateRadius`
+    默认值改为 -1；
+  - 次级管理员退镇/被踢自动清空已实现。
 
 目标插件：Dominion（当前仓库）
 
@@ -376,12 +409,20 @@ town_claim (
 
 ### 7.4 多服同步
 
-`town_id`、成员、Trust、次级管理员变更全部走 CacheManager 事件广播，
-语义与现有 Dominion 变更一致。`multi-server.server-id` 不修改。
+`town_id`、成员、Trust、次级管理员变更的缓存语义与现有 Dominion 变更一致。
+`multi-server.server-id` 不修改。
 
-实现期验证点：现有跨服缓存失效传输未在代码中见到显式通道
-（Cache 按 ID 懒加载 + 防抖重载），Town 变更接入广播前必须先确认
-该传输的实际行为，必要时补失效通知。
+实现期验证结论（Phase 1 已落地）：
+
+- 现有跨服缓存**没有显式失效通道**（无 plugin-message 同步、无轮询），
+  Dominion 数据靠 DB 回退读 + 重启收敛；
+- Town 数据采用同代弱一致模型，并加两层缓解：所有重载入口
+  （`/dom reload cache`、`DominionInterface.reloadCache()`）包含
+  TownCache；CacheManager 启动一个 60s 周期异步全量刷新，把跨服
+  Town 变更的可见延迟从"重启"收敛到"最长约 60 秒"；
+- TownBank 余额更新为 SQL 原子自增（`balance = balance + ?`），
+  跨服并发存取/扣费不丢更新；
+- 若后续需要即时一致性，再引入跨服失效广播（不在 Phase 1 范围）。
 
 ## 8. 配置建议
 

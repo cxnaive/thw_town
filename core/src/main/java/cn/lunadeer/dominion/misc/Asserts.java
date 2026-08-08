@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.doos.DominionDOO;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.HooksManager;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
@@ -246,6 +247,11 @@ public class Asserts {
         if (bypassLimit(associatedPlayer)) {
             return true;
         }
+        // Town era: on a town outpost owner_uuid is a contributor record
+        // without permissions; management belongs to the town cascade.
+        if (dominion instanceof DominionDOO doo && doo.isTownOutpost()) {
+            return TownManager.isOutpostManager(associatedPlayer, doo);
+        }
         if (dominion.getOwner().equals(associatedPlayer.getUniqueId())) {
             return true;
         }
@@ -278,6 +284,19 @@ public class Asserts {
     public static void assertDominionAdmin(@NotNull CommandSender sender, @NotNull DominionDTO dominion) throws DominionException {
         if (sender instanceof Player) {
             assertDominionAdmin((Player) sender, dominion);
+        }
+    }
+
+    /**
+     * Management-permission assert that follows ownership for townless
+     * dominions and the town cascade for town outposts (where owner_uuid is
+     * only a contributor record). Console always passes.
+     */
+    public static void assertDominionManage(@NotNull CommandSender sender, @NotNull DominionDTO dominion) throws DominionException {
+        if (dominion instanceof DominionDOO doo && doo.isTownOutpost()) {
+            assertDominionAdmin(sender, dominion);
+        } else {
+            assertDominionOwner(sender, dominion);
         }
     }
 

@@ -13,6 +13,7 @@ import cn.lunadeer.dominion.configuration.WorldWide;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.MemberDOO;
 import cn.lunadeer.dominion.doos.PlayerDOO;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.utils.MessageDisplay;
 import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -35,9 +36,6 @@ import static cn.lunadeer.dominion.utils.Misc.formatString;
 public class Others {
 
     public static class OthersText extends ConfigurationPart {
-        public String autoCleanStart = "Start auto clean players who have not logged in for {0} days.";
-        public String autoCleaningPlayer = "Cleaned {0}'s data.";
-        public String autoCleanEnd = "Auto clean finished.";
         public String noPermissionForFlag = "&4&lYou do not have {0}({1}) permission.";
     }
 
@@ -82,45 +80,6 @@ public class Others {
             location2.setY(Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld()).noHigherThan - 1);
         }
         return new Location[]{location1, location2};
-    }
-
-    /**
-     * Automatically cleans up player data for players who have not logged in for a configured number of days.
-     * This method checks the last login time of each player and deletes their data if they have not logged in
-     * within the configured number of days. It logs the start, progress, and end of the cleaning process.
-     */
-    public static void autoClean() {
-        if (Configuration.autoCleanAfterDays == -1) {
-            return;
-        }
-        XLogger.info(Language.othersText.autoCleanStart, Configuration.autoCleanAfterDays);
-        int auto_clean_after_days = Configuration.autoCleanAfterDays;
-        try {
-            List<PlayerDTO> players = PlayerDOO.all();
-            for (PlayerDTO p : players) {
-                if (((PlayerDOO) p).getLastJoinAt() + (long) auto_clean_after_days * 24 * 60 * 60 * 1000 < System.currentTimeMillis()) {
-                    try {
-                        DominionDOO.deleteByPlayerUuid(p.getUuid());
-                    } catch (Exception e) {
-                        XLogger.error(e);
-                    }
-                    try {
-                        MemberDOO.deleteByPlayerUuid(p.getUuid());
-                    } catch (Exception e) {
-                        XLogger.error(e);
-                    }
-                    try {
-                        PlayerDOO.delete((PlayerDOO) p);
-                    } catch (Exception e) {
-                        XLogger.error(e);
-                    }
-                    XLogger.info(Language.othersText.autoCleaningPlayer, p.getLastKnownName());
-                }
-            }
-        } catch (Exception e) {
-            XLogger.error(e);
-        }
-        XLogger.info(Language.othersText.autoCleanEnd);
     }
 
     public static boolean checkPrivilegeFlag(@NotNull Location location, @NotNull PriFlag flag, @NotNull Player player, @Nullable Cancellable event) {
@@ -168,6 +127,20 @@ public class Others {
             if (checkDominionAdmin(player, dom)) {
                 return true;
             }
+            // Town era: town outposts resolve through the town cascade
+            // (member group flags / trust) before the legacy member chain.
+            if (dom instanceof DominionDOO doo && doo.isTownOutpost()) {
+                Boolean townResult = TownManager.checkTownOutpostPrivilege(doo, flag, player);
+                if (townResult != null) {
+                    if (townResult) {
+                        return true;
+                    }
+                    if (event != null) {
+                        event.setCancelled(true);
+                    }
+                    return false;
+                }
+            }
             MemberDTO member = CacheManager.instance.getMember(dom, player);
             if (member != null) {
                 GroupDTO group = CacheManager.instance.getGroup(member.getGroupId());
@@ -204,6 +177,20 @@ public class Others {
             return true;
         } else {
             boolean hasPrivilege;
+            // Town era: same cascade injection as the Location overload
+            // (TeleportManager and third-party plugins use this path).
+            if (dom instanceof DominionDOO doo && doo.isTownOutpost()) {
+                Boolean townResult = TownManager.checkTownOutpostPrivilege(doo, flag, player);
+                if (townResult != null) {
+                    if (townResult) {
+                        return true;
+                    }
+                    if (event != null) {
+                        event.setCancelled(true);
+                    }
+                    return false;
+                }
+            }
             MemberDTO member = CacheManager.instance.getMember(dom, player);
             if (member != null) {
                 GroupDTO group = CacheManager.instance.getGroup(member.getGroupId());

@@ -19,6 +19,7 @@ import cn.lunadeer.dominion.utils.XVersionManager;
 import cn.lunadeer.dominion.utils.holograme.HoloManager;
 import cn.lunadeer.dominion.nms.NMSManager;
 import cn.lunadeer.dominion.utils.bStatsMetrics;
+import cn.lunadeer.dominion.commands.TownCommand;
 import cn.lunadeer.dominion.utils.command.CommandManager;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
@@ -93,6 +94,11 @@ public final class Dominion extends JavaPlugin {
         CommandManager commandManager = new CommandManager(this, "dominion", (sender) -> {
             MainMenu.show(sender, "1");
         });
+        TownCommand townCommand = new TownCommand();
+        if (getCommand("town") != null) {
+            getCommand("town").setExecutor(townCommand);
+            getCommand("town").setTabCompleter(townCommand);
+        }
 
         bStatsMetrics metrics = new bStatsMetrics(this, 21445);
         metrics.addCustomChart(new bStatsMetrics.SimplePie("database", () -> Configuration.database.type));
@@ -101,8 +107,6 @@ public final class Dominion extends JavaPlugin {
         metrics.addCustomChart(new bStatsMetrics.SingleLineChart("member_count", () -> CacheManager.instance.memberCount()));
 
         XLogger.info(Language.dominionText.pluginEnabled);
-
-        Others.autoClean();
     }
 
     @Override
