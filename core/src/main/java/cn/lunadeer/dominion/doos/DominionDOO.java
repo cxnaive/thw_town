@@ -171,6 +171,44 @@ public class DominionDOO implements DominionDTO {
         return res.stream().map(DominionDOO::parse).toList();
     }
 
+    /**
+     * Direct children by parent id — a fresh DB query, unlike the
+     * cache-based {@code Others.getSubDominionsRecursive}. Disband uses
+     * this so sub-dominions created on other backend servers (or within
+     * the cache throttle window) are never silently cascade-deleted
+     * without an archive row.
+     */
+    public static @NotNull List<DominionDOO> selectByParentId(Integer parentId) throws SQLException {
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("dominion")
+                .where("parent_dom_id = ?", parentId)
+                .execute();
+        return res.stream().map(DominionDOO::parse).toList();
+    }
+
+    /**
+     * The whole sub-tree below this dominion, deepest first (safe delete
+     * order against the parent_dom_id FK cascade). DB-backed, see
+     * {@link #selectByParentId}. Cycle-guarded: a hand-crafted or
+     * corrupted import can create parent_dom_id loops that would
+     * otherwise recurse forever.
+     */
+    public @NotNull List<DominionDOO> selectSubTreeDeepestFirst() throws SQLException {
+        return selectSubTreeDeepestFirst(new java.util.HashSet<>());
+    }
+
+    private @NotNull List<DominionDOO> selectSubTreeDeepestFirst(@NotNull java.util.Set<Integer> visited) throws SQLException {
+        List<DominionDOO> result = new ArrayList<>();
+        for (DominionDOO child : selectByParentId(getId())) {
+            if (!visited.add(child.getId())) {
+                continue; // cycle in imported data — skip the loop edge
+            }
+            result.addAll(child.selectSubTreeDeepestFirst(visited));
+            result.add(child);
+        }
+        return result;
+    }
+
     public static @NotNull DominionDOO insert(DominionDOO dominion) throws SQLException {
         Map<String, Field<?>> res = Insert.insert()
                 .into("dominion")
@@ -322,6 +360,17 @@ public class DominionDOO implements DominionDTO {
 
     @Override
     public @NotNull DominionDOO setOwner(UUID owner) throws SQLException {
+        // town era: owner_uuid on a town outpost is the contributor record
+        // (restitution basis for disband-return), not a transferable title —
+        // third-party plugins must not rewrite it through the DTO. The only
+        // internal writers are the provider transfer/give paths, which
+        // already reject town outposts before reaching here.
+        if (isTownOutpost()) {
+            throw new IllegalStateException(
+                    "Dominion " + getId() + " (" + getName() + ") is a town outpost; "
+                            + "owner is a contributor record and cannot be transferred. "
+                            + "Use the town admin release flow instead.");
+        }
         this.owner.setValue(owner.toString());
         Update.update("dominion")
                 .set(this.owner)
@@ -407,6 +456,22 @@ public class DominionDOO implements DominionDTO {
                 .where("id = ?", id.getValue())
                 .execute();
         TownTrustDOO.deleteByOutpost(id.getValue());
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
+    /**
+     * Re-attach this sub-dominion to the root level (parent_dom_id = -1).
+     * Used by return-contributed disband: a contributed sub inside a
+     * town-native outpost being dissolved must survive its parent, and the
+     * FK cascade makes that impossible without reparenting first.
+     */
+    public @NotNull DominionDOO reparentToRoot() throws SQLException {
+        this.parentDomId.setValue(-1);
+        Update.update("dominion")
+                .set(this.parentDomId)
+                .where("id = ?", id.getValue())
+                .execute();
         CacheManager.instance.getCache().getDominionCache().load(id.getValue());
         return this;
     }

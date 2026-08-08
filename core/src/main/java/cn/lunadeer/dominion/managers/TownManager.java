@@ -293,17 +293,29 @@ public class TownManager {
         }
 
         TownDOO town = TownDOO.insert(name, founder.getUniqueId());
-        TownMemberDOO.insert(town.getId(), founder.getUniqueId(),
-                TownMemberDOO.TownRole.MAYOR, TownMemberDOO.MemberSource.FOUNDER);
         cache().reloadNow();
 
         DominionDOO foundingCreated = null;
         try {
+            TownMemberDOO.insert(town.getId(), founder.getUniqueId(),
+                    TownMemberDOO.TownRole.MAYOR, TownMemberDOO.MemberSource.FOUNDER);
             if (foundingToCreate != null) {
                 foundingCreated = DominionDOO.insert(foundingToCreate);
                 foundingCreated.bornIntoTown(town.getId());
                 foundingCreated.setClaimKind("FOUNDING");
                 ensureTownMemberGroup(foundingCreated);
+                // third-party visibility: town-driven creation bypasses the
+                // provider pipeline, so fire the lifecycle event explicitly
+                // (notification only — town operations are not vetoable)
+                cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
+                        new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
+                                founder, foundingCreated.getName(), founder.getUniqueId(),
+                                founder.getWorld(), foundingCuboid, null);
+                createEvent.setSkipEconomy(true);
+                createEvent.call();
+                // like the provider pipeline, complete the future so
+                // third-party afterCreated callbacks fire
+                createEvent.getFutureToComplete().complete(foundingCreated);
                 double cost = Configuration.town.foundingCost;
                 if (cost > 0 && !bypassLimit(founder)) {
                     // the town bank starts empty, so the founding cost is
@@ -317,14 +329,20 @@ public class TownManager {
             }
         } catch (Exception e) {
             // a failure after the town row was inserted must not leave
-            // orphans behind — roll every insert back before rethrowing,
-            // including the founding dominion whose town_id would
-            // otherwise dangle at the deleted town
+            // orphans behind — roll every insert back before rethrowing:
+            // the founding dominion, any dominions already attached to the
+            // town (their town_id would dangle at the deleted town and lock
+            // the owner out of their own land), and the town rows
+            // themselves. Member rows consumed by merge are preserved in
+            // dominion_member_archive for manual recovery.
             XLogger.error("createTown failed after town insert (town={0}); rolling back. {1}",
                     town.getId(), e.getMessage());
             try {
                 if (foundingCreated != null) {
                     DominionDOO.deleteById(foundingCreated.getId());
+                }
+                for (DominionDOO attachedDom : DominionDOO.selectByTownId(town.getId())) {
+                    attachedDom.detachFromTown();
                 }
                 TownMemberDOO.deleteByTown(town.getId());
                 TownTrustDOO.deleteByTown(town.getId());
@@ -360,22 +378,43 @@ public class TownManager {
             if (!processed.add(outpost.getId())) continue;
             boolean contributed = outpost.getAttachedBy() != null;
             if (dissolveAll || !contributed) {
-                // sub-dominions inside the dissolving outpost dissolve with
-                // it (§4.3 enclaves included) — archive children first,
-                // deepest last in the recursive list
-                List<DominionDTO> subs = cn.lunadeer.dominion.misc.Others.getSubDominionsRecursive(outpost);
-                for (int i = subs.size() - 1; i >= 0; i--) {
-                    DominionDOO sub = (DominionDOO) subs.get(i);
+                // Sub-dominions inside the dissolving outpost: enumerated
+                // from the DATABASE (not the per-server cache) so subs
+                // created on other backends are never cascade-deleted
+                // without an archive row. Contributed subs (attached_by
+                // set) are reparented to root and skipped — the outer loop
+                // returns them to their contributor; everything else
+                // (foreign enclaves, town-native subs) dissolves with the
+                // parent, deepest first.
+                for (DominionDOO sub : outpost.selectSubTreeDeepestFirst()) {
+                    if (sub.isTownOutpost() && sub.getAttachedBy() != null) {
+                        // contributed sub: detach it from the dissolving
+                        // parent but do NOT mark it processed — if it
+                        // belongs to THIS town the outer loop still has to
+                        // handle it per policy (dissolve-all archives and
+                        // deletes it; return-contributed returns it).
+                        // Cross-town enclave subs simply survive at root.
+                        sub.reparentToRoot();
+                        continue;
+                    }
                     if (!processed.add(sub.getId())) continue;
                     UUID enclaveOwner = sub.getOwner();
                     archiveDominion(sub, town.getId(), "DISBANDED_TOWN");
                     archiveMembers(sub, town.getId(), "DISBANDED_TOWN");
+                    cn.lunadeer.dominion.events.dominion.DominionDeleteEvent subDeleteEvent =
+                            new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, sub);
+                    subDeleteEvent.setSkipEconomy(true);
+                    subDeleteEvent.call(); // notification only; town disband is not vetoable
                     DominionDOO.deleteById(sub.getId());
                     notifyIfOnline(enclaveOwner, Language.townManagerText.disbandEnclaveDissolved,
                             sub.getName(), town.getName());
                 }
                 archiveDominion(outpost, town.getId(), "DISBANDED_TOWN");
                 archiveMembers(outpost, town.getId(), "DISBANDED_TOWN");
+                cn.lunadeer.dominion.events.dominion.DominionDeleteEvent deleteEvent =
+                        new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, outpost);
+                deleteEvent.setSkipEconomy(true);
+                deleteEvent.call(); // notification only
                 DominionDOO.deleteById(outpost.getId());
                 dissolved++;
             } else {
@@ -395,6 +434,9 @@ public class TownManager {
         cache().reloadNow();
         CacheManager.instance.getCache().getDominionCache().load();
         CacheManager.instance.getCache().getMemberCache().load();
+        // dissolved outposts' @town groups die with them via FK cascade
+        // (or orphan on SQLite); don't leave phantoms in the group cache
+        CacheManager.instance.getCache().getGroupCache().load();
         if (dissolveAll) {
             Notification.info(operator, Language.townManagerText.disbandSuccess, town.getName(), dissolved);
         } else {
@@ -425,7 +467,32 @@ public class TownManager {
             cache().reloadNow();
             throw new DominionException(Language.townManagerText.townNotExist, town.getName());
         }
-        int attached = attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
+        int attached;
+        try {
+            attached = attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
+        } catch (Exception e) {
+            // same compensation as createTown: a partially failed attach
+            // must not leave this player's land locked to a town they
+            // cannot manage (member rows consumed by merge are preserved
+            // in dominion_member_archive)
+            XLogger.error("joinTown failed mid-attach (town={0}, player={1}); rolling back. {2}",
+                    town.getId(), player.getUniqueId(), e.getMessage());
+            try {
+                for (DominionDOO attachedDom : DominionDOO.selectByTownId(town.getId())) {
+                    // only roll back what THIS join attached — the town may
+                    // hold other members' land
+                    if (player.getUniqueId().equals(attachedDom.getAttachedBy())) {
+                        attachedDom.detachFromTown();
+                    }
+                }
+                TownMemberDOO.delete(town.getId(), player.getUniqueId());
+                cache().reloadNow();
+            } catch (Exception rollbackError) {
+                XLogger.error("Rollback of failed joinTown ALSO failed (town={0}): {1}",
+                        town.getId(), rollbackError.getMessage());
+            }
+            throw e;
+        }
         cache().reloadNow();
         Notification.info(player, Language.townManagerText.joinSuccess, town.getName(), attached);
     }
@@ -663,16 +730,44 @@ public class TownManager {
         long cents = bypassLimit(operator) ? 0 : priceToCents(price);
         // insert first, charge after: a failed insert must never eat money
         DominionDOO created = DominionDOO.insert(toCreate);
-        if (cents > 0 && !town.tryChargeCents(cents)) {
-            // concurrent drain between the amount check and the charge:
-            // undo the insert rather than handing out free land
-            DominionDOO.deleteById(created.getId());
-            cache().reloadNow();
-            throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                    town.getName(), cents / 100.0, town.getBalance());
+        boolean charged = false;
+        try {
+            if (cents > 0) {
+                charged = town.tryChargeCents(cents);
+                if (!charged) {
+                    // concurrent drain between the amount check and the
+                    // charge: the loser lands here
+                    throw new DominionException(Language.townManagerText.insufficientTownFunds,
+                            town.getName(), cents / 100.0, town.getBalance());
+                }
+            }
+            created.bornIntoTown(town.getId());
+            ensureTownMemberGroup(created);
+            // third-party visibility (notification only, see createTown)
+            cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
+                    new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
+                            operator, dominionName, operator.getUniqueId(), world, cuboid, null);
+            createEvent.setSkipEconomy(true);
+            createEvent.call();
+            createEvent.getFutureToComplete().complete(created);
+        } catch (Exception e) {
+            // any failure after the insert must undo both legs: free the
+            // land and — only if the charge actually happened — put the
+            // money back into the town bank
+            XLogger.error("createRemoteOutpost failed after insert (town={0}, dominion={1}); rolling back. {2}",
+                    town.getId(), created.getId(), e.getMessage());
+            try {
+                DominionDOO.deleteById(created.getId());
+                if (charged) {
+                    town.adjustBalance(cents / 100.0);
+                }
+                cache().reloadNow();
+            } catch (Exception rollbackError) {
+                XLogger.error("Rollback of failed createRemoteOutpost ALSO failed (dominion={0}): {1}",
+                        created.getId(), rollbackError.getMessage());
+            }
+            throw e;
         }
-        created.bornIntoTown(town.getId());
-        ensureTownMemberGroup(created);
         cache().reloadNow();
         Notification.info(operator, Language.townManagerText.outpostCreateSuccess,
                 dominionName, town.getName(), Math.max(price, 0));
@@ -857,8 +952,10 @@ public class TownManager {
             try {
                 if (uuid.equals(dominion.getOwner())) {
                     // the contributor is covered by their own membership
-                } else if (cache().getMember(town.getId(), uuid) != null) {
-                    // already a member of this town
+                } else if (TownMemberDOO.select(town.getId(), uuid) != null) {
+                    // already a member of this town — DB truth, not the
+                    // cache: a cascade never reloads mid-loop, and a stale
+                    // snapshot would misroute this player to a trust grant
                 } else if (mergeEnabled && (max == -1 || TownMemberDOO.countTownsOf(uuid) < max)) {
                     TownMemberDOO.insert(town.getId(), uuid,
                             TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.MERGED);

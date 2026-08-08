@@ -22,6 +22,16 @@ Phase 1 实现落点（对照 §9）：
   归档表 flag 列幂等（新版本新增 flag 不击穿归档）、
   disband 子区先于父区归档删除（防 FK 级联击穿）、
   并入成员的自有 legacy 领地随之一并挂靠（§3 不变量 3）；
+- 第四轮 review 加固：createTown/joinTown/createRemoteOutpost 全链路
+  补偿回滚（含已挂靠领地 detach）；mergeMembers 成员判定改读 DB；
+  disband 子区枚举改走 DB（跨服可见）且贡献子区先改挂根再返还；
+  `DominionDOO.setOwner` 镇属硬禁（第三方不可改写 contributor）；
+  镇驱动的建/删地显式触发 DominionCreateEvent/DominionDeleteEvent
+  （仅通知，不可否决）；town.founder/mayor 不设 FK（防回滚灭镇）；
+  恢复镇前备份显式清空镇表并告警；跨服合并对镇数据丢弃告警；
+  `@town` 组保留名仅限镇属状态；resize UI 与 handler 门控一致；
+  Info UI owner 显示镇名、按钮按管理权归属；auto-create-radius
+  一律钳到 -1；
 - 命令：独立 `/town` TabExecutor（create/disband/invite/join/leave/
   kick/transfer/trust/untrust/deposit/withdraw/outpost/admin/info/
   list）；`/dom town release <dominion>` 管理员仲裁；
@@ -42,7 +52,16 @@ Phase 1 实现落点（对照 §9）：
   - `{OWNER}` 在镇属 Outpost 上显示镇名（§12.2 小改已做）；
   - `autoCleanAfterDays` 已移除（§12.2）；`autoCreateRadius`
     默认值改为 -1；
-  - 次级管理员退镇/被踢自动清空已实现。
+  - 次级管理员退镇/被踢自动清空已实现；
+  - `DominionDTO.getOwner()` 在镇属 Outpost 上返回 contributor
+    （第三方语义漂移已在 `setOwner` 硬禁兜底；Phase 2 补 TownDTO
+    让插件可区分，见 §9 Phase 2）；
+  - release/return 把地还给"已加入其他镇"的 contributor 时产生
+    无镇 Outpost（§3 操作矩阵设计内），Phase 1 无玩家自助再挂靠
+    命令，该地冻结至管理员介入或 Phase 2；
+  - 镇驱动的建/删地触发 DominionCreateEvent/DominionDeleteEvent
+    仅通知语义（不可否决）；attach/detach 无专属事件，Phase 2
+    以 Town 事件族统一补齐。
 
 目标插件：Dominion（当前仓库）
 
@@ -506,6 +525,18 @@ town:
    不在内——不补的话世界裁剪白名单会漏保新镇地。把 `town_claim` 的
    chunk 一并换算进 MCA 区域列表（LegacyBase 未迁移的 cuboid 已被
    现有逻辑覆盖）。
+6. **角色管理命令**：promote/demote（RESIDENT↔ASSISTANT）。Phase 1 里
+   助理只能由镇长转让产生，且镇长不能踢助理（仅管理员可）；
+7. **API 镇感知**：`TownDTO`/`getTownId` 或 `isTownOutpost` 暴露、
+   Town 事件族（attach/detach/disband 专属事件）、开发者文档登记
+   "getOwner 在镇属地返回 contributor"的语义变更；
+8. **PAPI 成员占位符映射**：`%dominion_is_member%/members/member_count%`
+   在镇属地上当前返回空，应映射到镇成员；
+9. **归档表 schema 纪律**：给 dominion/dominion_member 新增任何
+   非 flag 列时必须同步 dominion_archive/dominion_member_archive
+   的 DDL（归档 INSERT..SELECT 按列名动态生成，列缺失即 SQL 错误）；
+10. **多镇命令消歧**：`maxMemberships>1` 时给 deposit/withdraw/disband
+    等子命令加可选 `[town]` 参数（Phase 1 以角色优先排序缓解）。
 
 ## 10. 测试场景
 
@@ -600,9 +631,13 @@ tp_cache 与全部 town 新表），多服同时写入也是一致性快照。
 回滚：
 
 1. 换回旧 JAR（新表新列对旧代码透明）；
+   注：`town.founder_uuid/mayor_uuid` **不设外键**（5.0.0 起），
+   旧 JAR 的 autoClean 删除 player_name 行不会级联灭镇；
 2. 如需彻底回退：drop 四张新表 + `dominion` 新列，
    并从 `dominion_member_archive` 恢复被并入成员；
-3. 数据库级回退才需要恢复备份（优先恢复到新库名验证，不直接 DROP 原库）。
+3. 数据库级回退才需要恢复备份（优先恢复到新库名验证，不直接 DROP 原库）；
+   恢复镇时代之前的备份时，5.0.0 会显式告警并在同一事务内清空
+   town/town_member/town_trust 三表（不依赖 FK 级联，三方言终态一致）。
 
 ## 12. 传统配置融入分析
 

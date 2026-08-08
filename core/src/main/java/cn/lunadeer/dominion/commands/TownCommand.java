@@ -197,8 +197,16 @@ public class TownCommand implements TabExecutor {
                             String.join(", ", contributors));
                 }
             } else {
+                // the message announces the dissolution of town-NATIVE
+                // outposts only; contributed land is returned instead
+                List<DominionDOO> townNative = new ArrayList<>();
+                for (DominionDOO outpost : outposts) {
+                    if (outpost.getAttachedBy() == null) {
+                        townNative.add(outpost);
+                    }
+                }
                 Notification.warn(sender, Language.townCommandText.disbandConfirmReturn,
-                        town.getName(), outposts.size(), outpostNames(outposts));
+                        town.getName(), townNative.size(), outpostNames(townNative));
                 if (!contributors.isEmpty()) {
                     Notification.warn(sender, Language.townCommandText.disbandConfirmContributorsReturn,
                             String.join(", ", contributors));

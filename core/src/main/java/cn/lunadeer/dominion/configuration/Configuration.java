@@ -304,7 +304,11 @@ public class Configuration extends ConfigurationFile {
             multiServer.enable = false;
         }
 
-        if (autoCreateRadius < 0 && autoCreateRadius != -1) {
+        if (autoCreateRadius != -1) {
+            // town era: auto-create is a removed feature (personal
+            // creation is banned); any legacy value carried over from a
+            // pre-5.0 config is clamped to the disabled sentinel
+            XLogger.warn("auto-create-radius is retired in the town era; clamping {0} to -1.", autoCreateRadius);
             autoCreateRadius = -1;
         }
 

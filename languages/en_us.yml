@@ -266,6 +266,7 @@ limitation-text:
   load-world-setting-failed: 'Failed to world-settings of {0} reason: {1}'
   load-world-settings-success: 'Successfully loaded {0} world-settings: {1}.'
 database-manager-text:
+  import-drops-town-data: 'This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.'
   exporting-database-tables: Exporting database tables...
   export-table-fail: 'Export table failed, reason: {0}'
   export-database-success: Export database to {0} successfully.
@@ -678,3 +679,5 @@ town-command-text:
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
+migration-text:
+  town-data-dropped: 'The source server has town data; towns do NOT follow a server merge — imported dominions become townless.'

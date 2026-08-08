@@ -351,8 +351,12 @@ public class DatabaseTables {
         if (!Show.show().tables().execute().contains("town")) {
             Column town_id = Column.of(new FieldInteger("id")).primary().serial().notNull().unique();
             Column town_name = Column.of(new FieldString("name")).notNull().unique();
-            Column town_founder = Column.of(new FieldString("founder_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
-            Column town_mayor = Column.of(new FieldString("mayor_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
+            // NO foreign keys on founder/mayor: an FK to player_name renders
+            // ON DELETE CASCADE, and rolling back to a pre-town JAR (whose
+            // autoClean deletes player_name rows) would silently wipe whole
+            // towns with no archive (plan §11 rollback safety)
+            Column town_founder = Column.of(new FieldString("founder_uuid")).notNull();
+            Column town_mayor = Column.of(new FieldString("mayor_uuid")).notNull();
             Column town_balance = Column.of(new FieldLong("balance")).notNull().defaultSqlVal("0");
             Column town_status = Column.of(new FieldString("status")).notNull().defaultSqlVal("'ACTIVE'");
             Column town_created_at = Column.of(new FieldTimestamp("created_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
@@ -572,6 +576,7 @@ public class DatabaseTables {
         public String importDatabaseSuccess = "Import database successfully.";
         public String importTableSkipped = "Table {0} skipped: not restorable by this plugin (unknown or foreign table).";
         public String importCoreMissing = "Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.";
+        public String importDropsTownData = "This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.";
         public String exportTablesSummary = "Exported {0} table(s).";
     }
 
@@ -744,6 +749,21 @@ public class DatabaseTables {
                     return idx == -1 ? Integer.MAX_VALUE : idx;
                 }).thenComparing(Comparator.naturalOrder()));
 
+                // Restoring a pre-town backup over a town-era database:
+                // the backup has no town csv, so the wipe loop below never
+                // touches the town tables. MySQL/PG would then let the
+                // player_name FK cascade silently erase towns mid-restore
+                // (SQLite keeps them dangling) — dialect-dependent end
+                // states. Make it explicit and identical everywhere: warn,
+                // then clear the town tables in the same transaction.
+                boolean abandoningTownData = existingTables.contains("town")
+                        && !toImport.contains("town")
+                        && !cn.lunadeer.dominion.doos.TownDOO.selectAll().isEmpty();
+                if (abandoningTownData) {
+                    Notification.warn(sender, Language.databaseManagerText.importDropsTownData);
+                    XLogger.warn("Restore drops all town data: backup predates the town era.");
+                }
+
                 // Parse every csv BEFORE touching the database: the same
                 // strict parser is used for validation and insertion, so a
                 // corrupt file aborts the restore before the wipe.
@@ -760,6 +780,16 @@ public class DatabaseTables {
                     boolean oldAutoCommit = conn.getAutoCommit();
                     conn.setAutoCommit(false);
                     try {
+                        if (abandoningTownData) {
+                            // restored dominions come from the pre-town
+                            // backup with NULL town columns anyway; only
+                            // the town tables themselves need clearing
+                            for (String townTable : List.of("town_member", "town_trust", "town")) {
+                                if (existingTables.contains(townTable)) {
+                                    conn.createStatement().execute("DELETE FROM " + townTable);
+                                }
+                            }
+                        }
                         for (int i = toImport.size() - 1; i >= 0; i--) {
                             conn.createStatement().execute("DELETE FROM " + toImport.get(i));
                         }

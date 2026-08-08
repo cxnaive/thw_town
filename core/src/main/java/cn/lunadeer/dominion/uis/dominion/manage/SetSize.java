@@ -75,10 +75,30 @@ public class SetSize extends AbstractUI {
         String dominionName = args[0];
         DominionDTO dominion = toDominionDTO(dominionName);
         assertDominionManage(player, dominion);
+        assertResizeAuthority(player, dominion);
 
         ListView view = createTUIView(player, dominion);
         addDirectionButtons(view, player, dominion.getName());
         view.showOn(player, 1);
+    }
+
+    /**
+     * The resize handler charges town outposts to the town bank and
+     * restricts them to mayor/assistant (outpost admins cannot resize) —
+     * mirror that at the UI entry so an outpost admin is not walked
+     * through a flow that always fails.
+     */
+    private static void assertResizeAuthority(Player player, DominionDTO dominion) {
+        if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+            try {
+                cn.lunadeer.dominion.managers.TownManager.assertManager(player,
+                        cn.lunadeer.dominion.managers.TownManager.requireTown(doo.getTownId()));
+            } catch (cn.lunadeer.dominion.misc.DominionException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new cn.lunadeer.dominion.misc.DominionException(e.getMessage());
+            }
+        }
     }
 
     private ListView createTUIView(Player player, DominionDTO dominion) {
@@ -272,6 +292,7 @@ public class SetSize extends AbstractUI {
         String dominionName = args[0];
         DominionDTO dominion = toDominionDTO(dominionName);
         assertDominionManage(player, dominion);
+        assertResizeAuthority(player, dominion);
 
         ChestView view = createCUIView(player, dominion);
         setupCUIButtons(view, player, dominion);

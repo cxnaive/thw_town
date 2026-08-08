@@ -6,6 +6,7 @@ public class MigrationText extends ConfigurationPart {
     public String folderNotFound = "Migration folder not found: {0}";
     public String fileMissing = "Missing required file: {0}";
     public String importing = "Migrating database from {0} with server_id {1}...";
+    public String townDataDropped = "The source server has town data; towns do NOT follow a server merge — imported dominions become townless.";
     public String phaseProgress = "[Phase {0}] {1}: {2}/{3} ({4}%)";
     public String phaseDone = "[Phase {0}] {1} completed, {2} records processed.";
     public String worldUidRemap = "World UID remapped: {0} -> {1}";

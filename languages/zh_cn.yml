@@ -220,6 +220,7 @@ limitation-text:
   load-world-setting-failed: 加载 {0} 设置失败，原因：{1}
   load-world-settings-success: 成功加载了 {0} 个世界设置：{1}
 database-manager-text:
+  import-drops-town-data: '该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。'
   exporting-database-tables: 正在导出数据库备份...
   export-table-fail: 导出数据库备份失败，原因：{0}
   export-database-success: 成功导出数据库备份文件至 {0}
@@ -678,3 +679,5 @@ town-command-text:
   need-points: 请先用选点工具选择两个点。
   player-not-found: 找不到玩家 {0}。
   member-list: '{0} 的成员：{1}'
+migration-text:
+  town-data-dropped: '源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。'

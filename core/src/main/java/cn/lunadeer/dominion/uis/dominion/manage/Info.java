@@ -8,6 +8,7 @@ import cn.lunadeer.dominion.uis.MainMenu;
 import cn.lunadeer.dominion.uis.dominion.DominionList;
 import cn.lunadeer.dominion.uis.dominion.DominionManage;
 import cn.lunadeer.dominion.utils.Notification;
+import static cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin;
 import cn.lunadeer.dominion.utils.BorderRenderUtil;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.stui.ListView;
@@ -44,17 +45,28 @@ public class Info {
     public static void show(Player player, String dominionName) {
         try {
             DominionDTO dominion = toDominionDTO(dominionName);
-            String ownerName = CacheManager.instance.getPlayerName(dominion.getOwner());
+            // town era: on a town outpost the displayed owner is the town
+            // (matching {OWNER} in enter/leave messages), and the manager
+            // shortcuts follow actual management authority — the
+            // contributor keeps no privileges, managers of other towns do
+            String ownerName;
+            if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+                cn.lunadeer.dominion.doos.TownDOO town =
+                        CacheManager.instance.getTownCache().getTown(doo.getTownId());
+                ownerName = town != null ? town.getName()
+                        : CacheManager.instance.getPlayerName(dominion.getOwner());
+            } else {
+                ownerName = CacheManager.instance.getPlayerName(dominion.getOwner());
+            }
             ListView view = ListView.create(10, button(player, dominionName));
             view.title(formatString(TextUserInterface.sizeInfoTuiText.title, dominion.getName()));
 
-            boolean isOwner = false;
-            if (player.getUniqueId().equals(dominion.getOwner())) {
-                isOwner = true;
+            boolean isManager = checkDominionAdmin(player, dominion);
+            if (isManager) {
                 BorderRenderUtil.showBorder(player, dominion);
             }
 
-            if (!isOwner) {
+            if (!isManager) {
                 view.subtitle(Line.create().append(formatString(TextUserInterface.sizeInfoTuiText.ownerName, ownerName)));
             } else {
                 view.subtitle(Line.create()

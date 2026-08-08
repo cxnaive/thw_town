@@ -51,6 +51,16 @@ public class DatabaseMigration {
 
         Notification.info(sender, Language.migrationText.importing, folderName, String.valueOf(newServerId));
 
+        // Town structures do not follow a server merge: town/town_member/
+        // town_trust rows are never read, and the dominion town columns are
+        // deliberately not copied (a copied town_id would dangle). Make the
+        // loss visible instead of silently de-towning every imported
+        // dominion.
+        if (new File(folder, "town.csv").exists()) {
+            Notification.warn(sender, Language.migrationText.townDataDropped);
+            XLogger.warn("Server merge from {0}: town structures are NOT migrated; imported dominions become townless.", folderName);
+        }
+
         // Build world UID remap from source export
         Map<String, String> worldUidRemap = buildWorldUidRemap(sender, folder);
 

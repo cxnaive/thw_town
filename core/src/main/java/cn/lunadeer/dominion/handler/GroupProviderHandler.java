@@ -123,8 +123,13 @@ public class GroupProviderHandler extends GroupProvider {
                 assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
                 // the built-in @town group carries town-member default flags
-                // (plan §5.1); deleting it would silently strip residents
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)) {
+                // (plan §5.1); deleting it would silently strip residents.
+                // Only protected while the dominion IS a town outpost —
+                // after a release the leftover group is ordinary dead
+                // weight the owner may clean up
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
+                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                        && doo.isTownOutpost()) {
                     throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
                 }
                 GroupDOO.deleteById(event.getGroup().getId());
@@ -149,7 +154,9 @@ public class GroupProviderHandler extends GroupProvider {
             try {
                 assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)) {
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
+                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                        && doo.isTownOutpost()) {
                     throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
                 }
                 assertGroupName(event.getDominion(), event.getNewNamePlain());

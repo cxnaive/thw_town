@@ -31,6 +31,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -368,9 +369,17 @@ public class DominionProviderHandler extends DominionProvider {
                         event.getDominion().getName(), newOwnerBukkit.getName());
                 // Town era (operation matrix): a townless outpost transferred
                 // to a town member attaches to their town automatically.
-                List<TownMemberDOO> memberships = CacheManager.instance.getTownCache()
-                        .getMembershipsOf(newOwnerBukkit.getUniqueId());
+                List<TownMemberDOO> memberships = new ArrayList<>(CacheManager.instance.getTownCache()
+                        .getMembershipsOf(newOwnerBukkit.getUniqueId()));
                 if (!memberships.isEmpty()) {
+                    // multi-town: prefer the town the new owner actually
+                    // leads (mayor over assistant over resident), matching
+                    // TownCommand resolution
+                    memberships.sort(java.util.Comparator.comparingInt(m -> switch (m.getRole()) {
+                        case MAYOR -> 0;
+                        case ASSISTANT -> 1;
+                        case RESIDENT -> 2;
+                    }));
                     TownDOO town = CacheManager.instance.getTownCache().getTown(memberships.get(0).getTownId());
                     if (town != null) {
                         UUID attachOperator = event.getOperator() instanceof Player p
@@ -379,6 +388,10 @@ public class DominionProviderHandler extends DominionProvider {
                             TownManager.attachOutpost(town, (DominionDOO) sub, attachOperator);
                         }
                         TownManager.attachOutpost(town, (DominionDOO) event.getDominion(), attachOperator);
+                        // merged members/trusts are written directly; make
+                        // them visible immediately instead of within the
+                        // 4s throttle window
+                        CacheManager.instance.getTownCache().reloadNow();
                         Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
                                 event.getDominion().getName(), town.getName());
                         Notification.info(newOwnerBukkit, Language.dominionProviderHandlerText.autoAttachedToTown,
