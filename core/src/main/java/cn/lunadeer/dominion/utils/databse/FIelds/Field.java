@@ -43,23 +43,30 @@ public abstract class Field<T> {
 
     public static Field<?> getFromResultSet(@NotNull Field<?> column, ResultSet resultSet) {
         try {
+            String name = column.getName();
             if (column instanceof FieldString) {
-                return new FieldString(column.getName(), resultSet.getString(column.getName()));
+                return new FieldString(name, resultSet.getString(name));
             }
+            // Wrapper getters + wasNull: SQL NULL must stay null, not become
+            // 0/false (nullable columns like dominion.town_id depend on it).
             if (column instanceof FieldInteger) {
-                return new FieldInteger(column.getName(), resultSet.getInt(column.getName()));
+                int v = resultSet.getInt(name);
+                return new FieldInteger(name, resultSet.wasNull() ? null : v);
             }
             if (column instanceof FieldLong) {
-                return new FieldLong(column.getName(), resultSet.getLong(column.getName()));
+                long v = resultSet.getLong(name);
+                return new FieldLong(name, resultSet.wasNull() ? null : v);
             }
             if (column instanceof FieldFloat) {
-                return new FieldFloat(column.getName(), resultSet.getFloat(column.getName()));
+                float v = resultSet.getFloat(name);
+                return new FieldFloat(name, resultSet.wasNull() ? null : v);
             }
             if (column instanceof FieldBoolean) {
-                return new FieldBoolean(column.getName(), resultSet.getBoolean(column.getName()));
+                boolean v = resultSet.getBoolean(name);
+                return new FieldBoolean(name, resultSet.wasNull() ? null : v);
             }
             if (column instanceof FieldTimestamp) {
-                return new FieldTimestamp(column.getName(), resultSet.getTimestamp(column.getName()));
+                return new FieldTimestamp(name, resultSet.getTimestamp(name));
             }
             throw new IllegalArgumentException("Unsupported field type: " + column.getClass().getSimpleName());
         } catch (Exception e) {

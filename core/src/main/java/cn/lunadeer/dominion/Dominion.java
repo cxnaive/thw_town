@@ -4,9 +4,11 @@ import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.events.EventsRegister;
+import cn.lunadeer.dominion.handler.WorldLoadHandler;
 import cn.lunadeer.dominion.managers.HooksManager;
 import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TeleportManager;
+import cn.lunadeer.dominion.managers.WorldMapManager;
 import cn.lunadeer.dominion.misc.InitCommands;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.uis.MainMenu;
@@ -67,6 +69,11 @@ public final class Dominion extends JavaPlugin {
             Bukkit.getServer().shutdown();  // Fatal error, shutdown server
             return;
         }
+        // Heal world UID drift (regenerated worlds) before caches load;
+        // each backend server reconciles only its own rows.
+        WorldMapManager.reconcile();
+        // Worlds loaded after plugin enable (Multiverse etc.) reconcile on load.
+        WorldLoadHandler.getInstance().addRunner(WorldMapManager::reconcileWorld);
         Notification.instance.setPrefix(Language.dominionText.notificationPrefix);
         XVersionManager.VERSION = XVersionManager.GetVersion(this);
         NMSManager.initialize();

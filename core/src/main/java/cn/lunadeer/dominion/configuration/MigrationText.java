@@ -10,6 +10,7 @@ public class MigrationText extends ConfigurationPart {
     public String phaseDone = "[Phase {0}] {1} completed, {2} records processed.";
     public String worldUidRemap = "World UID remapped: {0} -> {1}";
     public String worldNotFound = "World {0} ({1}) not found on this server, skipping UID remap.";
+    public String worldMappingMissing = "No world mapping found in the export (world_map.csv or world_uid_mapping.yml); world UIDs will not be remapped.";
     public String migrateSuccess = "Database migration completed successfully. {0} players, {1} dominions, {2} groups, {3} members migrated.";
     public String migrateFailed = "Database migration failed: {0}";
     public String playerIdMap = "Player ID map: {0} entries";

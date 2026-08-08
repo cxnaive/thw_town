@@ -39,8 +39,9 @@ public class DatabaseMigration {
             return;
         }
 
-        // Validate all required files
-        String[] requiredFiles = {"player_name.csv", "privilege_template.csv", "dominion.csv", "dominion_group.csv", "dominion_member.csv", "world_uid_mapping.yml"};
+        // Validate all required files (world mapping is optional: handled
+        // by buildWorldUidRemap when present, skipped with a warning when not)
+        String[] requiredFiles = {"player_name.csv", "privilege_template.csv", "dominion.csv", "dominion_group.csv", "dominion_member.csv"};
         for (String fileName : requiredFiles) {
             if (!new File(folder, fileName).exists()) {
                 Notification.error(sender, Language.migrationText.fileMissing, fileName);
@@ -88,16 +89,26 @@ public class DatabaseMigration {
                 String.valueOf(memberCount));
     }
 
+    /**
+     * Build old-UID -> new-UID remap from the source export's world anchor:
+     * world_map.csv (4.7.8+, rows of server_id/name/uid) preferred, the
+     * legacy world_uid_mapping.yml as fallback. Missing mapping is NOT
+     * fatal: dominions simply keep their exported world_uid values.
+     */
     private static Map<String, String> buildWorldUidRemap(CommandSender sender, File folder) {
         Map<String, String> remap = new HashMap<>();
-        File mappingFile = new File(folder, "world_uid_mapping.yml");
-        YamlConfiguration sourceMapping = YamlConfiguration.loadConfiguration(mappingFile);
+        Map<String, String> sourceMapping = loadSourceWorldMapping(folder);
+        if (sourceMapping.isEmpty()) {
+            Notification.warn(sender, Language.migrationText.worldMappingMissing);
+            return remap;
+        }
         Map<String, String> currentWorlds = new HashMap<>();
         for (World w : Dominion.instance.getServer().getWorlds()) {
             currentWorlds.put(w.getName(), w.getUID().toString());
         }
-        for (String worldName : sourceMapping.getKeys(false)) {
-            String oldUid = sourceMapping.getString(worldName);
+        for (Map.Entry<String, String> entry : sourceMapping.entrySet()) {
+            String worldName = entry.getKey();
+            String oldUid = entry.getValue();
             if (currentWorlds.containsKey(worldName)) {
                 String newUid = currentWorlds.get(worldName);
                 if (!oldUid.equals(newUid)) {
@@ -109,6 +120,47 @@ public class DatabaseMigration {
             }
         }
         return remap;
+    }
+
+    /**
+     * Load the source export's world-name -> UID anchor. world_map.csv may
+     * contain rows from several source servers; on world-name collisions
+     * the last row wins (same-named worlds across source servers cannot be
+     * distinguished on this server anyway).
+     */
+    private static Map<String, String> loadSourceWorldMapping(File folder) {
+        File csv = new File(folder, "world_map.csv");
+        if (csv.exists()) {
+            try {
+                Map<String, String> mapping = new HashMap<>();
+                for (Map<String, Field<?>> row : Backup.parseCsvToRows(csv)) {
+                    String name = getStringValue(row, "name");
+                    String uid = getStringValue(row, "uid");
+                    if (!name.isEmpty() && !uid.isEmpty()) {
+                        mapping.put(name, uid);
+                    }
+                }
+                return mapping;
+            } catch (Exception e) {
+                // A corrupt mapping file must not kill the migration;
+                // dominions just keep their exported world_uid values.
+                XLogger.warn("Failed to parse world_map.csv, world UIDs will not be remapped: {0}", e.getMessage());
+                return Map.of();
+            }
+        }
+        File yml = new File(folder, "world_uid_mapping.yml");
+        if (yml.exists()) {
+            Map<String, String> mapping = new HashMap<>();
+            YamlConfiguration legacy = YamlConfiguration.loadConfiguration(yml);
+            for (String worldName : legacy.getKeys(false)) {
+                String uid = legacy.getString(worldName);
+                if (uid != null) {
+                    mapping.put(worldName, uid);
+                }
+            }
+            return mapping;
+        }
+        return Map.of();
     }
 
     private static int getIntValue(Map<String, Field<?>> row, String column) {

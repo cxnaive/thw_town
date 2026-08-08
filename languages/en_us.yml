@@ -260,14 +260,15 @@ limitation-text:
 database-manager-text:
   exporting-database-tables: Exporting database tables...
   export-table-fail: 'Export table failed, reason: {0}'
-  export-world-mapping-fail: 'Export world uid mapping failed, reason: {0}'
   export-database-success: Export database to {0} successfully.
   file-not-found: Database table file path {0} not found.
   importing-database: Importing database...
   file-corrupted: Some database table file is missing, please re-export the database tables.
   import-database-fail: 'Import database failed, reason: {0}'
   import-database-success: Import database successfully.
-  convert-world-failed: The old world {0}({1}) is unable to find in current save, please make sure the world name is exist in current save.
+  import-table-skipped: 'Table {0} skipped: not restorable by this plugin (unknown or foreign table).'
+  import-core-missing: 'Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.'
+  export-tables-summary: 'Exported {0} table(s).'
 teleport-manager-text:
   cooling-down: Please wait for {0} seconds before teleporting again.
   disabled: Teleportation is disabled for your permission group.

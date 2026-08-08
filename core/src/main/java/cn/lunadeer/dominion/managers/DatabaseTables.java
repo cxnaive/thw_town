@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
+import cn.lunadeer.dominion.utils.databse.DatabaseType;
 import cn.lunadeer.dominion.utils.databse.FIelds.*;
 import cn.lunadeer.dominion.utils.databse.syntax.Alter.Alter;
 import cn.lunadeer.dominion.utils.databse.syntax.Delete;
@@ -18,18 +19,21 @@ import cn.lunadeer.dominion.utils.databse.syntax.Show.Show;
 import cn.lunadeer.dominion.utils.databse.syntax.Table.Column;
 import cn.lunadeer.dominion.utils.databse.syntax.Table.Create;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static cn.lunadeer.dominion.utils.databse.Backup.exportCsv;
-import static cn.lunadeer.dominion.utils.databse.Backup.importCsv;
+import static cn.lunadeer.dominion.utils.databse.Backup.insertRows;
+import static cn.lunadeer.dominion.utils.databse.Backup.parseTable;
 
 public class DatabaseTables {
     public static void migrate() throws Exception {
@@ -320,6 +324,21 @@ public class DatabaseTables {
                     .column(tp_cache_dom_id)
                     .execute();
         }
+        // world_map: stable world-name -> UID anchor per server, used by
+        // WorldMapManager to heal dominion world_uid drift when a world is
+        // regenerated under the same name. No primary key: the ORM only
+        // supports single-column primaries; (server_id, name) uniqueness is
+        // upheld by WorldMapManager's single-writer select-then-write path.
+        if (!Show.show().tables().execute().contains("world_map")) {
+            Column world_map_server_id = Column.of(new FieldInteger("server_id")).notNull();
+            Column world_map_name = Column.of(new FieldString("name")).notNull();
+            Column world_map_uid = Column.of(new FieldString("uid")).notNull();
+            Create.create().table("world_map")
+                    .column(world_map_server_id)
+                    .column(world_map_name)
+                    .column(world_map_uid)
+                    .execute();
+        }
 
         // Remove orphaned member rows whose player record no longer exists
         // (e.g. left behind by a partially failed auto-clean); they crash member
@@ -335,18 +354,82 @@ public class DatabaseTables {
     public static class DatabaseManagerText extends ConfigurationPart {
         public String exportingDatabaseTables = "Exporting database tables...";
         public String exportTableFail = "Export table failed, reason: {0}";
-        public String exportWorldMappingFail = "Export world uid mapping failed, reason: {0}";
         public String exportDatabaseSuccess = "Export database to {0} successfully.";
 
         public String fileNotFound = "Database table file path {0} not found.";
         public String importingDatabase = "Importing database...";
         public String fileCorrupted = "Some database table file is missing, please re-export the database tables.";
-        public String convertWorldFailed = "The old world {0}({1}) is unable to find in current save, please make sure the world name is exist in current save.";
         public String importDatabaseFail = "Import database failed, reason: {0}";
         public String importDatabaseSuccess = "Import database successfully.";
+        public String importTableSkipped = "Table {0} skipped: not restorable by this plugin (unknown or foreign table).";
+        public String importCoreMissing = "Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.";
+        public String exportTablesSummary = "Exported {0} table(s).";
     }
 
     private static final File export_path = new File(Dominion.instance.getDataFolder(), "backup");
+
+    /**
+     * Tables owned by this plugin. Backup operates ONLY on these, in both
+     * directions: on shared MySQL/PgSQL databases (one schema serving many
+     * plugins) a schema-wide export would wipe and overwrite foreign tables
+     * on restore, and a stray csv in the backup folder could do the same.
+     * New plugin tables (town era) must be added here AND to IMPORT_ORDER.
+     */
+    private static final List<String> PLUGIN_TABLES = List.of(
+            "player_name",
+            "privilege_template",
+            "dominion",
+            "dominion_group",
+            "dominion_member",
+            "server_info",
+            "world_map",
+            "town",
+            "town_member",
+            "town_trust",
+            "dominion_member_archive",
+            "town_claim"
+    );
+
+    /**
+     * Plugin tables that exist in the database but must NOT be exported:
+     * pure runtime state (cross-server teleport handoff rows are
+     * meaningless across a restore).
+     */
+    private static boolean isExcludedFromBackup(String table) {
+        return table.equals("tp_cache");
+    }
+
+    /**
+     * Known dependency order for import (parents before children).
+     * Tables not listed here are imported afterwards in name order.
+     */
+    private static final List<String> IMPORT_ORDER = List.of(
+            "player_name",
+            "privilege_template",
+            "dominion",
+            "dominion_group",
+            "dominion_member",
+            "server_info",
+            "world_map",
+            "town",
+            "town_member",
+            "town_trust",
+            "dominion_member_archive",
+            "town_claim"
+    );
+
+    /**
+     * Core tables whose csv files must all be present for a restore: their
+     * FK graph is closed, so a partial set would fail the wipe on FK
+     * violations. Optional tables (server_info, town era) may be absent.
+     */
+    private static final List<String> REQUIRED_CORE = List.of(
+            "player_name",
+            "privilege_template",
+            "dominion",
+            "dominion_group",
+            "dominion_member"
+    );
 
     public static void exportTables(CommandSender sender) {
         Scheduler.runTaskAsync(() -> {
@@ -355,26 +438,45 @@ public class DatabaseTables {
                 boolean re = export_path.mkdirs();
             }
             try {
-                exportCsv("player_name", new File(export_path, "player_name.csv"), "id");
-                exportCsv("privilege_template", new File(export_path, "privilege_template.csv"), "id");
-                exportCsv("dominion", new File(export_path, "dominion.csv"), "id");
-                exportCsv("dominion_group", new File(export_path, "dominion_group.csv"), "id");
-                exportCsv("dominion_member", new File(export_path, "dominion_member.csv"), "id");
+                // Export every PLUGIN-OWNED table present in the database.
+                int exported = 0;
+                for (String table : Show.show().tables().execute()) {
+                    if (!PLUGIN_TABLES.contains(table)) {
+                        if (!isExcludedFromBackup(table)
+                                && (table.startsWith("dominion") || table.startsWith("town"))) {
+                            // Looks like ours but missing from PLUGIN_TABLES:
+                            // the whitelist is stale, warn instead of silently
+                            // losing it from every future backup.
+                            XLogger.warn("Table " + table + " is not in the backup whitelist, skipped."
+                                    + " Add it to PLUGIN_TABLES in DatabaseTables.");
+                        }
+                        continue;
+                    }
+                    if (isExcludedFromBackup(table)) {
+                        continue;
+                    }
+                    Map<String, Field<?>> columns = Show.show().columns().from(table).execute();
+                    if (columns.isEmpty()) {
+                        continue;
+                    }
+                    // Prefer "id" as the export order key: dominion's
+                    // self-referencing parent_dom_id requires parents
+                    // (lower serial ids) to be imported before children.
+                    // Columns come from a HashMap, so fall back to the
+                    // lexicographically first column for determinism.
+                    String orderKey = columns.containsKey("id")
+                            ? "id"
+                            : columns.keySet().stream().min(String::compareTo).orElseThrow();
+                    exportCsv(table, new File(export_path, table + ".csv"), orderKey);
+                    exported++;
+                }
+                Notification.info(sender, Language.databaseManagerText.exportTablesSummary, exported);
             } catch (Exception e) {
                 Notification.error(sender, Language.databaseManagerText.exportTableFail, e.getMessage());
                 return;
             }
-            try {
-                Map<String, String> world_uid_map = Dominion.instance.getServer().getWorlds().stream().collect(HashMap::new, (m, w) -> m.put(w.getName(), w.getUID().toString()), HashMap::putAll);
-                YamlConfiguration world_uid = new YamlConfiguration();
-                for (Map.Entry<String, String> entry : world_uid_map.entrySet()) {
-                    world_uid.set(entry.getKey(), entry.getValue());
-                }
-                world_uid.save(new File(export_path, "world_uid_mapping.yml"));
-            } catch (Exception e) {
-                Notification.error(sender, Language.databaseManagerText.exportWorldMappingFail, e.getMessage());
-                return;
-            }
+            // world UID mapping lives in the world_map table (exported like
+            // any other table); startup reconciliation heals UID drift.
             Notification.info(sender, Language.databaseManagerText.exportDatabaseSuccess, export_path.getAbsolutePath());
         });
     }
@@ -386,52 +488,134 @@ public class DatabaseTables {
                 return;
             }
             Notification.info(sender, Language.databaseManagerText.importingDatabase);
-            Map<String, String> world_uid_map = Dominion.instance.getServer().getWorlds().stream().collect(HashMap::new, (m, w) -> m.put(w.getName(), w.getUID().toString()), HashMap::putAll);
-            File player_name_csv = new File(export_path, "player_name.csv");
-            File privilege_template_csv = new File(export_path, "privilege_template.csv");
-            File dominion_csv = new File(export_path, "dominion.csv");
-            File world_uid_mapping = new File(export_path, "world_uid_mapping.yml");
-            File dominion_group_csv = new File(export_path, "dominion_group.csv");
-            File dominion_member_csv = new File(export_path, "dominion_member.csv");
-            if (!player_name_csv.exists() || !privilege_template_csv.exists() || !dominion_csv.exists() || !world_uid_mapping.exists() || !dominion_group_csv.exists() || !dominion_member_csv.exists()) {
+            File[] csvFiles = export_path.listFiles((dir, name) -> name.endsWith(".csv"));
+            if (csvFiles == null || csvFiles.length == 0) {
                 Notification.error(sender, Language.databaseManagerText.fileCorrupted);
                 return;
             }
+            List<String> toImport = new ArrayList<>();
             try {
-                importCsv("player_name", player_name_csv, "id");
-                importCsv("privilege_template", privilege_template_csv, "id");
-                importCsv("dominion", dominion_csv, "id");
-                importCsv("dominion_group", dominion_group_csv, "id");
-                importCsv("dominion_member", dominion_member_csv, "id");
+                List<String> existingTables = Show.show().tables().execute();
 
-                YamlConfiguration world_uid = YamlConfiguration.loadConfiguration(world_uid_mapping);
-                for (String key : world_uid.getKeys(false)) {
-                    if (world_uid_map.containsKey(key)) {
-                        String old_uid = world_uid.getString(key);
-                        World newWorld = Dominion.instance.getServer().getWorld(key);
-                        if (newWorld == null) {
-                            Notification.warn(sender, Language.databaseManagerText.convertWorldFailed, key, old_uid);
-                            continue;
+                // Map csv files to tables; skip tables unknown to the current
+                // schema (e.g. importing a newer backup into an older schema).
+                // The whitelist applies here too: a stray csv named like a
+                // FOREIGN table that happens to exist in this database must
+                // never be wiped and re-imported by us.
+                for (File csv : csvFiles) {
+                    String table = csv.getName().substring(0, csv.getName().length() - ".csv".length());
+                    if (!PLUGIN_TABLES.contains(table)) {
+                        Notification.warn(sender, Language.databaseManagerText.importTableSkipped, table);
+                        continue;
+                    }
+                    if (!existingTables.contains(table)) {
+                        Notification.warn(sender, Language.databaseManagerText.importTableSkipped, table);
+                        continue;
+                    }
+                    toImport.add(table);
+                }
+                if (toImport.isEmpty()) {
+                    Notification.error(sender, Language.databaseManagerText.fileCorrupted);
+                    return;
+                }
+                List<String> missingCore = REQUIRED_CORE.stream()
+                        .filter(existingTables::contains)
+                        .filter(t -> !toImport.contains(t))
+                        .toList();
+                if (!missingCore.isEmpty()) {
+                    Notification.error(sender, Language.databaseManagerText.importCoreMissing, missingCore);
+                    return;
+                }
+                // Parents before children (FK safety without touching session
+                // settings, which would not survive the connection pool anyway).
+                toImport.sort(Comparator.<String>comparingInt(t -> {
+                    int idx = IMPORT_ORDER.indexOf(t);
+                    return idx == -1 ? Integer.MAX_VALUE : idx;
+                }).thenComparing(Comparator.naturalOrder()));
+
+                // Parse every csv BEFORE touching the database: the same
+                // strict parser is used for validation and insertion, so a
+                // corrupt file aborts the restore before the wipe.
+                Map<String, List<Field<?>[]>> parsed = new LinkedHashMap<>();
+                for (String table : toImport) {
+                    parsed.put(table, parseTable(table, new File(export_path, table + ".csv")));
+                }
+
+                // One connection, one transaction: wipe in reverse order
+                // (children before parents), insert in forward order
+                // (self-references satisfied by id-ascending export), commit
+                // only when every table succeeded, rollback otherwise.
+                try (Connection conn = DatabaseManager.instance.getConnection()) {
+                    boolean oldAutoCommit = conn.getAutoCommit();
+                    conn.setAutoCommit(false);
+                    try {
+                        for (int i = toImport.size() - 1; i >= 0; i--) {
+                            conn.createStatement().execute("DELETE FROM " + toImport.get(i));
                         }
-                        String new_uid = newWorld.getUID().toString();
-                        if (new_uid == null) {
-                            Notification.warn(sender, Language.databaseManagerText.convertWorldFailed, key, old_uid);
-                            continue;
+                        for (String table : toImport) {
+                            insertRows(conn, table, parsed.get(table));
                         }
-                        String sql = String.format("UPDATE dominion SET world_uid = '%s' WHERE world_uid = '%s';", new_uid, old_uid);
-                        try (Connection conn = DatabaseManager.instance.getConnection()) {
-                            conn.createStatement().executeUpdate(sql);
-                        } catch (Exception ignored) {
-                        }
+                        conn.commit();
+                    } catch (Exception e) {
+                        conn.rollback();
+                        throw e;
+                    } finally {
+                        conn.setAutoCommit(oldAutoCommit);
                     }
                 }
+
             } catch (Exception e) {
                 Notification.error(sender, Language.databaseManagerText.importDatabaseFail, e.getMessage());
                 XLogger.error(e);
                 return;
             }
+            // Post-commit maintenance: the import has COMMITTED, so failures
+            // here must never report it as failed.
+            try {
+                // Pre-4.7.8 backups carry world anchors only as a yml file;
+                // bridge it into world_map so the reconcile pass heals
+                // dominions of worlds regenerated since the backup.
+                File legacyMapping = new File(export_path, "world_uid_mapping.yml");
+                if (legacyMapping.exists() && !new File(export_path, "world_map.csv").exists()) {
+                    WorldMapManager.bridgeLegacyMapping(legacyMapping);
+                }
+                // Heal world UID drift for this server's rows (regenerated
+                // worlds); other backend servers self-heal on their restart.
+                WorldMapManager.reconcile();
+                resyncPgSequences(toImport);
+            } catch (Exception e) {
+                XLogger.warn("Post-import maintenance failed (import itself committed): {0}", e.getMessage());
+                XLogger.error(e);
+            }
             Notification.info(sender, Language.databaseManagerText.importDatabaseSuccess);
+            // Only the local server's cache is refreshed; other backend
+            // servers reload on restart (imports are a maintenance action).
             CacheManager.instance.reloadCache();
         });
+    }
+
+    /**
+     * PostgreSQL sequences are not advanced by explicit-id inserts: after a
+     * restore, every serial table whose max id exceeds nextval breaks later
+     * real inserts with duplicate keys. Resync them.
+     */
+    private static void resyncPgSequences(List<String> importedTables) {
+        if (DatabaseManager.instance.getType() != DatabaseType.PGSQL) {
+            return;
+        }
+        for (String table : importedTables) {
+            try {
+                if (!Show.show().columns().from(table).execute().containsKey("id")) {
+                    continue;
+                }
+                try (Connection conn = DatabaseManager.instance.getConnection()) {
+                    conn.createStatement().execute(
+                            "SELECT setval(pg_get_serial_sequence('" + table + "','id'),"
+                                    + " COALESCE((SELECT MAX(id) FROM " + table + "), 1))");
+                }
+            } catch (Exception e) {
+                XLogger.warn("Failed to resync sequence of table {0}: {1}", table, e.getMessage());
+            }
+        }
     }
 }

@@ -1,0 +1,591 @@
+# Town 系统升级实现方案
+
+状态：设计稿 v3（镇所有制 + 全员 Outpost 模型）
+
+目标插件：Dominion（当前仓库）
+
+## 1. 目标与边界
+
+本次升级在 Dominion 上增加 Town 社会层。**所有存量 Dominion 统一视为 Outpost**（暂时无镇的 Outpost），区域模型保持 Cuboid 不变；区块（Chunk）化属于 Phase 2。
+
+```text
+旧模式：  玩家 -> 多个个人 Dominion Cuboid
+Phase 1： 无镇玩家 -> 无镇 Outpost（存量 Cuboid，只减不增，旧权限链不变）
+         Town     -> 镇属 Outpost（挂靠的存量 Cuboid）
+                  -> Founding Outpost（新镇首个免费 Cuboid）
+Phase 2： Town     -> TownClaim（16x16 Chunk）+ 未迁移的 Outpost
+```
+
+目标：
+
+- 新玩家只能创建或加入 Town，不能创建个人领地；
+- 老玩家可以无镇保留领地（存量特例），但任何人不能再新建个人领地；
+- 玩家建镇或入镇时，其名下全部 Dominion 自动挂靠为该镇 Outpost，**所有权转移给 Town**；
+- 挂靠时旧成员默认去重并入 Town（见 §4.2）；
+- 每个 Outpost 保留独立 flags；权限管理由 Town 层面接管；每个 Outpost 可任命一名次级管理员；
+- 子 Dominion 冻结新建，随 Phase 2 迁移逐渐消亡。
+
+非目标：
+
+- Phase 1 不做批量数据迁移，不强制老玩家入镇；
+- Phase 1 不改变区域模型（仍 Cuboid），不做 Chunk 圈地；
+- 个人新建任何领地永远禁止；远程 Outpost 仅镇级、付费、限量（§4.6）。
+
+## 2. 核心概念
+
+```text
+Town
+├── TownMember：正式成员（MAYOR / ASSISTANT / RESIDENT），受 max-memberships 限制
+├── TownTrust：独立授权，不占成员名额，scope = TOWN / OUTPOST
+├── Founding Outpost：建镇时创建的免费 Cuboid（仅无存量领地的玩家）
+└── Outpost：挂靠的存量 Dominion Cuboid，镇所有，保留独立 flags
+
+无镇玩家（老玩家特例）
+└── 无镇 Outpost：town_id = NULL 的 Dominion，旧权限链一字不改
+```
+
+### 2.1 Outpost 统一模型
+
+所有 Dominion 都是 Outpost，用 `town_id` 区分归属：
+
+- `town_id IS NULL`：无镇 Outpost，权限判定完全沿用 Dominion 旧链
+  （owner → dominion_member → dominion_group → guest flags）；
+- `town_id = T`：镇属 Outpost，`owner_uuid` 降级为 contributor 历史记录，
+  不再参与判定，权限由镇级级联接管（见 §5）。
+
+### 2.2 TownMember
+
+角色：`MAYOR` / `ASSISTANT` / `RESIDENT`。
+
+主键 `(town_id, player_uuid)`。`source` 取值：
+
+- `FOUNDER`：建镇者；
+- `JOINED`：主动入镇者；
+- `MERGED`：挂靠时从 dominion_member 并入者。
+
+不设计 grandfathered：成员并入受 max-memberships 容量约束（§4.2），
+不存在任何产生超额成员的路径。`max-memberships` 统计
+`COUNT(DISTINCT town_id)`，对所有玩家统一生效。
+
+### 2.3 TownTrust
+
+独立授权关系：被 Trust 者无需入镇、可被任意多镇 Trust、不占成员名额、
+可与 TownMember 并存。scope 支持整镇（TOWN）和单个 Outpost（OUTPOST）。
+Trust 判定从 Phase 1 起即生效（镇属 Outpost 的级联中包含 Trust 层）。
+
+### 2.4 次级管理员（Outpost Admin）
+
+每个镇属 Outpost 可由 MAYOR / ASSISTANT 任命一名次级管理员：
+
+- 必须是本镇成员；
+- 拥有该 Outpost 的 owner 级管理权：改 flags、管理该 Outpost 的成员覆盖与 Trust；
+- 不能 release Outpost、不能删除领地；
+- 其退镇/被踢时自动清空。
+
+典型用途：任命原主（contributor）继续日常管理自己的旧领地，迁移体验平滑。
+
+## 3. 全局不变量与操作矩阵
+
+不变量：
+
+1. `town_id` 只跟随 Town，不跟随任何玩家；只在显式事件中改变；
+2. 镇成员名下不存在无镇 Outpost（在镇期间获得的 Dominion 自动挂靠本镇）；
+3. 无镇 Outpost 的 owner 必是无镇玩家；
+4. 子 Dominion 无独立挂靠规则——它是普通 Dominion，owner 是谁就随谁的事件
+   （owner 不同的子区不随父挂靠，成为过渡态"飞地"，见 §4.3）；
+5. **无镇 Outpost 全部来自 legacy 存量**：个人领地禁新建 + Founding 随镇消亡，
+   不存在任何产生新无镇领地的路径，新人无法带领地入镇。
+
+操作矩阵：
+
+| 操作 | 效果 |
+|---|---|
+| `/town create` | 玩家全部存量 Dominion 挂靠为 Outpost；无存量者在当前位置获得免费 Founding Outpost |
+| `/town join` | 列出将被转为镇所有的 Dominion 清单，二次确认后全部挂靠 |
+| 退出 / 被踢 | 领地留在镇里（镇所有，不随人走）；contributor 记录保留 |
+| mayor 转让 | 纯 `town_member` 角色变更，零 Dominion 行写入；Founding 不受影响 |
+| `/town outpost create`（MAYOR/ASSISTANT） | 新建远程镇属 Outpost（§4.6），TownBank 扣费；数量/尺寸受上限；个人不可创建 |
+| 镇属 Outpost resize | 允许并扣费（§4.6）；无镇 legacy 地 resize 仍被拒绝 |
+| 解散 Town | **全部 Outpost 同步解散**（删除保护数据，不碰方块），写入归档供 admin 恢复；Founding 一并解散——任何镇属领地都不转化为个人领地 |
+| 无镇 Outpost 个人转让 | 受让人在镇 → 自动挂靠其镇并通知；受让人无镇 → 保持无镇 |
+| 镇属 Outpost | 个人不可转让（镇财产）；仅管理员 release |
+| `/dom town release <dominion>` | （管理员）Outpost → 无镇，返还 contributor，用于仲裁 |
+
+## 4. 数据迁移与成员并入
+
+### 4.1 无批量迁移
+
+Phase 1 上线 = 幂等 DDL（建表加列）+ 新命令，随插件启动执行，
+无维护窗口，无 report/apply 流程。老玩家不入镇则数据和权限零变化。
+
+### 4.2 挂靠时的成员并入（默认行为）
+
+玩家建镇/入镇导致 Dominion 挂靠时，对每块被挂靠的 Dominion：
+
+1. 收集其全部 `dominion_member`；
+2. 按 `player_uuid` 去重；
+3. 若该玩家当前 Town 数 < `max-memberships`
+   → 并入 `town_member`（role=RESIDENT，source=MERGED）；
+4. 若已达上限（如已属他镇）
+   → **不并入**，转为该 Outpost 的 TownTrust（scope=OUTPOST），
+     四布尔按 §4.5 映射表从旧 member flags 生成；
+5. 被并入/被转换者的原 `dominion_member` 行全部移入
+   `dominion_member_archive`（归档不物理删除，支持回滚与审计）。
+   挂靠完成后该 Outpost 不再存在 dominion_member 个人覆盖层。
+
+注意：
+
+- 并入意味着旧成员获得镇级 RESIDENT 权限（覆盖该镇全部 Outpost），
+  权限范围比原来单块领地更大——这是有意设计的默认行为，
+  可用 `town.merge-members-on-attach: false` 关闭（关闭时**全部**旧成员
+  转为 Trust，不并入成员）；
+- 转为 Trust 是有损映射（§4.5）：FLY / TELEPORT / PVP 等特殊 flags
+  不带入，镇长事后可调整或改走正常邀请入镇；
+- `dominion_group` 不并入不转换，保留为 Outpost 覆盖层，镇级可管理和清除。
+
+### 4.5 旧 member flags → Trust 四布尔映射
+
+来源 flag 任一为 true，对应布尔即置 true：
+
+| Trust 布尔 | 来源 PriFlag |
+|---|---|
+| `build` | PLACE, SOWING, VEHICLE_SPAWN |
+| `destroy` | BREAK_BLOCK, HARVEST, VEHICLE_DESTROY |
+| `switch` | DOOR, BUTTON, LEVER, PRESSURE, REPEATER, COMPARER, NOTE_BLOCK, CONTAINER, HOPPER, ITEM_FRAME_INTERACTIVE, EDIT_SIGN, DRAGON_EGG, JUKEBOX, LECTERN, BOOKSHELF, BED, ANCHOR, CAKE |
+| `item_use` | CRAFT, CRAFTER, ANVIL, ENCHANT, BREW, BEACON, USE_MAP, IGNITE, SHOOT, EGG, HOOK, TRADE, FEED, SHEAR, LEASH, DYE, HONEY, PICK_UP, DROP_ITEM |
+
+不映射（直接丢弃）：ADMIN（安全：永不自动转换）、TELEPORT、FLY、
+RIDING、ENDER_PEARL、PVP、MONSTER_KILLING、ANIMAL_KILLING、
+VILLAGER_KILLING、GLOW。MOVE 不映射但 guest flags 默认 true，
+日常移动不受影响。
+
+### 4.3 跨 owner 子 Dominion
+
+挂靠按 `owner_uuid = 玩家本人` 逐块匹配。owner 不同的子 Dominion
+不随父挂靠，成为镇属 Outpost 内的"飞地"，权限判定不变（innermost wins）。
+这是过渡态：子 Dominion 冻结新建（§5.3），并随 Phase 2 迁移消亡，
+飞地集合单调收敛，不需要主动清理逻辑。
+
+### 4.4 Founding Outpost
+
+无存量领地的玩家（新玩家）`/town create` 时，在当前位置复用现有
+Cuboid 创建管线生成 Founding Outpost：
+
+- 免费（`town.founding-cost: 0`）；
+- 尺寸受 `town.founding-max-size` 约束；
+- `claim_kind = FOUNDING`，无 contributor；解散时随镇一并解散，**永不返还**——
+  新人无法把免费 Founding 洗成个人领地再带往他镇（不变量 5）。
+
+老玩家建镇不另发新地（已有存量）。
+
+### 4.6 镇扩张：扩建与远程 Outpost（Phase 1 唯一的新建路径）
+
+个人新建 Dominion 全局禁止后，镇扩张是 Phase 1 唯一合法的新增领地路径。
+"相邻"是区块网格概念，不属于 Cuboid 阶段——Cuboid 下连续生长 = resize，
+"新建 Outpost"天然是远程的（前哨）。镇扩张因此有两个操作：
+
+两者共用同一套约束——**直接复用现有领地配置（limitations）管线**，
+不设独立的 town 尺寸/数量配置：
+
+- 尺寸与 Y 范围：过所在世界 `world-limitations` 的 `sizeMax/MinXYZ`、
+  `noHigherThan/noLowerThan`、`autoIncludeVertical` 校验
+  （与个人创建同一校验函数）；
+- 数量：复用 `amountAllOverTheWorld` 与 per-world `amount`，
+  计数主体从"玩家的 Dominion"变为"镇的 Outpost"
+  （Founding/贡献/新建全部计入；只闸新建与扩建，不闸挂靠——
+  挂靠是存量转移，不是创建）；
+- 取哪份 limitation 文件：执行操作者（MAYOR/ASSISTANT）的
+  `getPlayerLimitation()`——VIP 阶梯机制自然延续；
+- 不与任何 Dominion 重叠（常规重叠检查）；
+- 计费：复用现有 `Limitation.Economy` 按方块定价（`pricePerBlock`、
+  `squareOnly`），但**计费主体为 TownBank** 而非玩家钱包；
+  缩小/删除按 `refundRate` 退 TownBank；解散不退款；
+- `town.outpost-allow-remote: false` 可整体关闭远程新建，镇只剩扩建一条路。
+
+防插旗论证：原禁令防的是**个人**到处圈地。远程 Outpost 只能由镇创建，
+受三重闸——max-memberships 限制镇数量、max-count 限制每镇前哨数、
+cost 提供经济闸。个人依旧没有任何新建路径。
+
+出生即镇属：`town_id = T`、`claim_kind = NORMAL`、无 contributor、
+`owner_uuid` 仅记录创建者。个人不可转让、退镇不涉及、解散随镇消亡
+（不变量 5 不受影响——它从不处于无镇状态）。
+
+Founding Outpost 即其免费特例（建镇时第一个）；Phase 2 与 legacy
+Outpost 走同一条 `migrate-base` 管线转 chunk。
+"相邻"概念在 Phase 2 的 chunk claim 才回归（连片 Town proper 的网格生长）。
+
+## 5. 权限判定
+
+### 5.1 镇属 Outpost（Town 接管后的级联）
+
+```text
+服务器管理员 bypass
+  ↓
+Town MAYOR / ASSISTANT           —— 全权：改 flags、任命次级管理员、管理 Trust
+  ↓
+Outpost 次级管理员                —— 该 Outpost 的 owner 级管理（不可 release/删除）
+  ↓
+TownMember                       —— 按该 Outpost 的"镇成员默认 flags"
+  ↓
+TownTrust（scope=TOWN 或 scope=该 OUTPOST；含挂靠时转换的旧成员）
+  ↓
+保留的 dominion_group            —— 旧群组覆盖层，镇级可管理和清除
+  ↓
+该 Outpost 的 guest flags
+  ↓
+Outsider
+```
+
+- 每个 Outpost 的独立 flags 零成本：Dominion 本来就带 env flags + guest flags。
+  新增的"镇成员默认 flags"每 Outpost 一份，实现时复用现有 group/template
+  机制（每 Outpost 一个内置组承载），不新建 flags 存储；
+- 挂靠后 dominion_member 个人覆盖层不复存在（§4.2），此后对单人的
+  特殊授权一律走 TownTrust（scope=OUTPOST）——授权路径统一；
+- owner_uuid 在镇属 Outpost 上仅作 contributor 展示与解散返还依据。
+
+### 5.2 无镇 Outpost
+
+判定链与升级前逐点一致，一字不改。
+
+### 5.3 子 Dominion 冻结
+
+- `land-system.allow-new-sub-dominion: false`（默认），禁止新建子 Dominion；
+- 存量子区判定不变（innermost wins），包括镇属 Outpost 内的飞地；
+- Phase 2 `migrate-base` 转 Chunk 时摊平，preview 报告中列出被摊平的子区。
+
+## 6. 数据库结构
+
+现有 `dominion`、`dominion_member`、`dominion_group` 表保留。
+
+### 6.1 Town
+
+```sql
+town (
+    id,
+    name,
+    founder_uuid,
+    mayor_uuid,
+    balance,
+    status,              -- ACTIVE / DISBANDED
+    created_at
+)
+```
+
+### 6.2 TownMember
+
+```sql
+town_member (
+    town_id,
+    player_uuid,
+    role,                -- MAYOR / ASSISTANT / RESIDENT
+    source,              -- FOUNDER / JOINED / MERGED
+    joined_at,
+    PRIMARY KEY (town_id, player_uuid)
+)
+CREATE INDEX idx_town_member_player ON town_member(player_uuid);
+```
+
+### 6.3 TownTrust
+
+```sql
+town_trust (
+    town_id,
+    player_uuid,
+    scope_type,          -- TOWN / OUTPOST
+    scope_id,            -- town.id 或 dominion.id
+    build,
+    destroy,
+    switch,
+    item_use,
+    created_by,
+    created_at,
+    PRIMARY KEY (town_id, player_uuid, scope_type, scope_id)
+)
+```
+
+无全局玩家唯一约束。
+
+### 6.4 Dominion 加列
+
+```sql
+ALTER TABLE dominion ADD COLUMN town_id BIGINT NULL;
+ALTER TABLE dominion ADD COLUMN claim_kind VARCHAR(32) DEFAULT 'NORMAL';
+                             -- NORMAL / FOUNDING
+ALTER TABLE dominion ADD COLUMN outpost_admin_uuid VARCHAR(36) NULL;
+ALTER TABLE dominion ADD COLUMN attached_by VARCHAR(36) NULL;
+ALTER TABLE dominion ADD COLUMN attached_at TIMESTAMP NULL;
+```
+
+`owner_uuid` 不改名不迁移；在镇属 Outpost 上语义为 contributor。
+
+### 6.5 成员归档表
+
+```sql
+dominion_member_archive (
+    -- dominion_member 原列镜像
+    town_id,             -- 并入目标镇
+    archived_at,
+    archive_reason       -- MERGED_INTO_TOWN
+)
+```
+
+### 6.6 TownClaim（Phase 2 才建）
+
+```sql
+town_claim (
+    town_id,
+    world_uid,
+    chunk_x,
+    chunk_z,
+    claim_kind,          -- FOUNDING_BASE / NORMAL_CLAIM / MIGRATED
+    source_dominion_id,
+    claimed_by,
+    claimed_at,
+    PRIMARY KEY (world_uid, chunk_x, chunk_z)
+)
+```
+
+推迟到 Phase 2 建表，避免空表语义漂移。
+
+## 7. 风险与缓解
+
+### 7.1 邀请-踢人圈地（镇所有制固有攻击面）
+
+恶意镇长邀请老玩家入镇 → 对方全部领地转镇所有 → 踢人 → 白得土地。缓解：
+
+- 入镇确认列出**将被转为镇所有的全部 Dominion 清单与数量**，二次确认；
+- attach / detach / kick / leave / release 全部写审计
+  （`attached_by` / `attached_at` + 操作日志）；
+- 管理员 `/dom town release` 仲裁通道；
+- 配置 `town.allow-join-with-legacy-land: false` 可整体禁止带地入镇；
+- **解散同步删地是最高危操作**（含他人贡献的 legacy 地一并解散）：
+  解散确认强制列出将解散的 Outpost 数量与贡献者名单、二次确认、
+  全量 Outpost 数据写入归档，admin 可恢复（防盗号/冲动解散）。
+
+### 7.2 Town 覆盖率靠自愿驱动
+
+老玩家不建镇就永远无镇有地，收敛慢但方向单调。Phase 1 不加软压力；
+后续可考虑无镇领地数量/面积上限，不在本期范围。
+
+### 7.3 回滚语义
+
+回滚 = 换回旧 JAR。新表新列对旧代码透明；无镇 Outpost 数据从未改变。
+已并入成员的原始 `dominion_member` 行在 `dominion_member_archive` 中
+可恢复。镇属 Outpost 在旧代码下按 owner_uuid 回到旧链判定（owner 从未被
+修改），行为可预期。
+
+### 7.4 多服同步
+
+`town_id`、成员、Trust、次级管理员变更全部走 CacheManager 事件广播，
+语义与现有 Dominion 变更一致。`multi-server.server-id` 不修改。
+
+实现期验证点：现有跨服缓存失效传输未在代码中见到显式通道
+（Cache 按 ID 懒加载 + 防抖重载），Town 变更接入广播前必须先确认
+该传输的实际行为，必要时补失效通知。
+
+## 8. 配置建议
+
+```yaml
+land-system:
+  allow-new-personal-dominion: false     # 任何人不得新建个人领地
+  allow-new-sub-dominion: false          # 子 Dominion 冻结
+  legacy-allow-resize: false
+  legacy-allow-delete: true
+
+town:
+  max-memberships: 1
+  merge-members-on-attach: true          # true: 有容量并入成员、无容量转 Trust
+                                         # false: 旧成员全部转 Trust
+  allow-join-with-legacy-land: true      # §7.1 开关
+
+  founding-cost: 0
+  founding-max-size: 32                  # Founding Outpost 单边上限
+
+  outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
+  # 数量/尺寸/定价不设 town 专属配置，复用现有 limitations 管线：
+  #   数量 = amountAllOverTheWorld + per-world amount（计数主体改为镇）
+  #   尺寸 = world-limitations 的 sizeMax/MinXYZ、noHigherThan/noLowerThan
+  #   定价 = economy（per-block，计费主体改为 TownBank）
+
+  disband-policy: dissolve-all           # dissolve-all: 全部 Outpost 随镇解散（默认）
+                                         # return-contributed: 仅无 contributor 的解散，
+                                         #   存量地返还 contributor
+
+  trust:
+    enabled: true
+```
+
+`max-memberships` 只检查 TownMember，不检查 TownTrust、邀请中玩家或访客。
+
+## 9. 实施顺序
+
+### Phase 1（一次发布）
+
+1. 幂等 DDL：`town` / `town_member` / `town_trust` /
+   `dominion_member_archive` 建表，`dominion` 加列，
+   走现有 `DatabaseMigration` 启动流程；
+2. Town 命令组：create / disband / join / leave / kick / transfer /
+   trust / untrust / release（admin）；
+3. 挂靠与成员并入逻辑（§3 操作矩阵 + §4.2）；
+4. 镇属 Outpost 判定链接管（§5.1）+ 次级管理员；
+5. 全局禁建个人领地 + 禁建子 Dominion + `max-memberships`；
+   同步移除 `autoCleanAfterDays` 自动清理功能（§12.2）；
+6. **前置项：TownBank（镇账户存取命令）**——Vault 集成已存在
+   （`VaultConnect`），新增的只是镇余额与镇账户扣费路径，镇扩张计费已需要；
+   ~~内建备份扩展~~ **已完成**：内建 CSV 备份已重写为动态全表导出 +
+   schema 漂移容错导入（见 §11），town 新表自动纳入备份，无需逐表登记；
+7. 镇扩张：远程新建 + 镇属 Outpost resize（§4.6，扣费与上限校验）；
+8. 无镇 Outpost 判定链零改动。
+
+### Phase 2（后续发布）
+
+1. `town_claim` 建表；
+2. Chunk 圈地：首块免费、四方向相邻扩张、TownBank 扣费、
+   新 Chunk 不与任何 Outpost 占用 Chunk 重叠；
+3. Chunk 判定链复用镇级级联（无"保留成员覆盖"层）；
+4. `/town migrate-base`：preview（Chunk 数、边界扩大、子区摊平、冲突）
+   → 事务转换 → 保留 `source_dominion_id` 可回滚。
+   Outpost 与 Founding Outpost 走同一管线。
+5. **扩展 `/dom export mca`**：现实现只遍历 dominion cuboid，chunk 领地
+   不在内——不补的话世界裁剪白名单会漏保新镇地。把 `town_claim` 的
+   chunk 一并换算进 MCA 区域列表（LegacyBase 未迁移的 cuboid 已被
+   现有逻辑覆盖）。
+
+## 10. 测试场景
+
+挂靠与生命周期：
+
+- 建镇/入镇确认清单完整，确认后全部 Dominion 树转为镇所有；
+- 退镇/被踢后领地留镇、contributor 记录完整、admin release 可返还；
+- mayor 转让后 Founding 与 Outpost 判定不变、零 Dominion 写入；
+- 镇解散后全部 Outpost（Founding + 他人贡献的 legacy 地）同步解散、
+  不碰方块、归档可恢复；新人无任何路径持有无镇领地（不变量 5）；
+- 无镇 Outpost 转让：受让人在镇则自动挂靠，无镇则保持无镇。
+
+成员并入：
+
+- 同一玩家在多块领地的成员记录并入后只计一个 TownMember；
+- 已达 max-memberships 的旧成员不并入，转为该 Outpost 的 Trust，
+  四布尔与 §4.5 映射表逐点一致，旧 ADMIN flag 不被转换；
+- 被并入/被转换者的原成员行进入 archive，可恢复；
+- 挂靠后该 Outpost 的 dominion_member 覆盖层为空；
+- `merge-members-on-attach: false` 时旧成员全部转为 Trust。
+
+权限：
+
+- 镇属 Outpost：mayor/assistant 全权，次级管理员边界正确
+  （能改 flags、不能 release/删除），次级管理员退镇自动清空；
+- Trust 不占名额，scope=TOWN 与 scope=OUTPOST 判定正确；
+- 未挂靠无镇 Outpost 判定链与升级前逐点一致；
+- 飞地（他人子 Dominion 在镇属 Outpost 内）判定不变；
+- 禁止新建个人领地/子 Dominion；系统（root）Dominion 豁免挂靠。
+
+扩张：
+
+- 镇属 Outpost resize 生效并扣费；无镇 legacy 地 resize 仍被拒绝；
+- 远程新建 Outpost 成功并扣 TownBank；重叠/超尺寸/超数量/余额不足被拒绝；
+- `outpost-allow-remote: false` 时新建被拒、扩建仍可用；
+- 新建 Outpost 出生即镇属：个人不可转让、解散随镇消亡；
+- Phase 2 chunk claim 仍要求相邻（网格概念回归）。
+
+一致性：
+
+- 重启后 Town/成员/Trust/挂靠与数据库一致；
+- 多服环境下 town_id 变更同步生效（先验证 §7.4 的失效传输行为）；
+- 内建 CSV 导出/导入往返后 town 全部新表数据完整、外键顺序正确；
+- 回滚旧 JAR 后无镇 Outpost 行为不变，镇属 Outpost 退回旧链可预期。
+
+## 11. 上线与回滚
+
+Phase 1 无维护窗口。上线前常规整库备份：
+
+```bash
+mysqldump --single-transaction --routines --triggers \
+  --hex-blob --no-tablespaces --default-character-set=utf8mb4 \
+  --databases <db> > dominion_pre_town_$(date +%Y%m%d).sql
+```
+
+上线（多服环境）：
+
+1. 先只更新并启动**一台**后端服，等启动 DDL 完成
+   （避免多服并发 ALTER 互踩；大表加列短暂锁表，建议低峰）；
+2. 确认新表新列就绪后，再滚动更新其余后端服
+   （旧版代码对新列新表透明，滚动期间可共存）。
+
+备份：文档 §11 的 mysqldump 命令覆盖整库——所有后端服共享一个数据库，
+`--databases` + `--single-transaction` 一次导出全部表（含 server_info、
+tp_cache 与全部 town 新表），多服同时写入也是一致性快照。
+
+注意（内建 CSV 备份新语义，已实现并经两轮独立 review）：
+
+- 导出：白名单制，只导出插件自有表（PLUGIN_TABLES，含 town 时代预置名），
+  共享库上其他插件的表永不触碰；排除瞬态 tp_cache；
+  优先按 id 列升序（dominion 自引用 FK 的父先子后保证）；
+- 导入 = 真正的恢复，且**单连接单事务原子执行**：先全量严格解析
+  （唯一严格入口 parseTable，损坏文件在碰库前中止），再同事务内
+  逆序清空 + 正序插入，失败整体回滚；
+- 导入侧同一张白名单：备份目录里的外来/未知 csv 一律跳过；
+  核心表（player_name/dominion/dominion_group/dominion_member/
+  privilege_template）缺文件直接中止；
+- 跨版本容错：未知表/未知列警告跳过；SQL NULL 以 \N 标记往返
+  （字面 "\N" 强制加引号区分）；旧格式裸引号值原样还原，
+  未闭合引号响亮中止；PG 序列导入后自动 setval 重同步；
+- 世界 UID 锚点改为 **`world_map(server_id, name, uid)` 表**（白名单
+  备份内含）：各后端服启动时登记自己加载的世界，共享库自动攒齐全网
+  映射；启动/WorldLoadEvent（晚加载世界）/导入后三处对账，发现世界
+  同名重建（实际 UID ≠ 库存 UID）即自动把本服名下领地改写到新
+  UID——UID 漂移"重启即修复"，与备份恢复解耦；其余服重启时各自
+  对账（server_id 隔离）；旧备份（仅 yml 锚点）导入时先桥接进
+  world_map 再走同一自愈路径；`migrate_db` 映射源改为
+  world_map.csv 优先、yml 兜底、缺失仅告警不中止；
+  Phase 2 需把 `town_claim` 加入 `WorldMapManager.WORLD_UID_TABLES`；
+- 只刷新本服缓存，其余后端服不管——多服环境请在维护模式执行导入。
+
+回滚：
+
+1. 换回旧 JAR（新表新列对旧代码透明）；
+2. 如需彻底回退：drop 四张新表 + `dominion` 新列，
+   并从 `dominion_member_archive` 恢复被并入成员；
+3. 数据库级回退才需要恢复备份（优先恢复到新库名验证，不直接 DROP 原库）。
+
+## 12. 传统配置融入分析
+
+现有配置逐项对照新模型。总原则：**几何约束与计费管线原样复用，
+只换计数/计费主体；个人创建类配额作废；少数设置必须改默认值。**
+
+### 12.1 Limitation（world-limitations）
+
+| 字段 | 传统作用 | 新模型 |
+|---|---|---|
+| `noHigherThan` / `noLowerThan` | Y 范围约束 | 保留，直接套用 Founding/新建/resize（与个人创建同一校验函数） |
+| `sizeMax/MinXYZ`、`autoIncludeVertical` | 尺寸约束 | 保留复用；不设 town 专属尺寸上限 |
+| `amount`（per-world）、`amountAllOverTheWorld` | 每玩家创建配额 | 字段保留，**计数主体玩家→镇**（§4.6）；个人侧因禁建自然失效 |
+| `maxSubDominionDepth`、`doNotCountSubs` | 子区深度/计数 | 作废（子区冻结新建） |
+| `priority`（多 limitation 文件优先级） | VIP 阶梯选择 | 保留；镇土地操作取**操作者**的 limitation 文件，阶梯机制延续 |
+| `economy`（pricePerBlock/squareOnly/refundRate） | 个人创建计费 | 管线复用，**计费主体玩家钱包→TownBank**；Founding 走已有 skipEconomy 路径免费；`freeForSubs` 作废 |
+| `teleportation` | /dom tp 冷却 | 正交不动；`/town spawn` 类为后续特性 |
+
+Vault 集成已存在（`utils/VaultConnect/`，支持 Vault 与 VaultUnlocked），
+Phase 1 只需新增 TownBank（镇余额 + 存取命令 + 镇账户扣费），无需新 hook。
+
+### 12.2 Configuration（主配置）
+
+| 设置 | 新模型 |
+|---|---|
+| `autoCreateRadius`（新玩家自动圈地） | **必须设为 -1**：它创建的是个人领地，不禁会击穿不变量 5；加入上线检查清单 |
+| `autoCleanAfterDays`（不活跃清理） | **Phase 1 直接移除该功能**（配置项 + `Others.autoClean()` +
+  启动调用 + 语言文本）：以后不存在按日期自动清理，镇模型无需任何跳过逻辑；
+  无镇 legacy 之后仅靠玩家手动删除收敛（§7.2 的慢收敛预期不变） |
+| `serverSpawnProtectionRadius` | 保留，镇创建/新建同样校验 |
+| `adminBypass` | 保留，`bypassLimit` 对 max-memberships 与禁建规则同样生效 |
+| `groupTitle` | 正交；镇名进 tab 为后续可选 |
+| `pluginMessage` | 镇属 Outpost 的 `{OWNER}` 显示镇名（小改） |
+| `residenceMigration` | 上线后建议关闭；若开放，导入产物按 legacy 无镇地处理 |
+| `defaultUiType` / `selectTool` / `infoTool` / `flyPermissionNodes` / `checkUpdate` | 正交不动 |
+
+### 12.3 不动的部分
+
+- **WorldWide**（per-world 荒野 flags）：正交，判定顺序不变；
+- **flags.yml**：flag 默认值/启用不变，兼作 Outpost"镇成员默认 flags"
+  的初始模板来源；
+- **multi-server / database**：不动，server-id 语义不改。
