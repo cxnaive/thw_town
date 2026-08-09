@@ -644,8 +644,7 @@ town-manager-text:
   outpost-admin-set: 已将前哨 {0} 的次级管理员设为 {1}。
   outpost-admin-cleared: 已清除前哨 {0} 的次级管理员。
   outpost-admin-not-member: 次级管理员必须是城镇 {0} 的成员。
-  merge-member-merged: '{0} 已作为居民并入城镇 {1}。'
-  merge-member-trusted: '{0} 已超加入上限，已转为前哨 {1} 的信任授权。'
+  merge-member-trusted: 你在 {1} 的成员身份已转为该属地的 Trust 授权（该领地已挂靠小镇）。
 town-command-text:
   disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
   disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。
@@ -692,7 +691,7 @@ town-command-text:
   join-confirm: 加入 {0} 将把 {1} 块领地转为城镇所有：{2}。加 'confirm' 重新执行以确认。
   join-confirm-no-land: 加入 {0} 将成为其居民。加 'confirm' 重新执行以确认。
   create-confirm: 创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。
-  attach-member-note: 被挂靠领地的成员列表将归档保存；受影响的成员会按规则并入小镇成为居民、或转为该属地的 Trust 授权，并会收到通知。
+  attach-member-note: 被挂靠领地的成员列表将归档保存；原成员会按原旗子获得该属地的 Trust 授权，并会收到通知。
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。
   no-managed-town: 你不是任何城镇的镇长或助理。

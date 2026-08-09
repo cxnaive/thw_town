@@ -71,7 +71,7 @@ public class TownCommand implements TabExecutor {
         public String joinConfirm = "Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with 'confirm' to proceed.";
         public String joinConfirmNoLand = "Joining {0} makes you a resident. Re-run with 'confirm' to proceed.";
         public String createConfirm = "Creating town {0} will attach your {1} dominion(s) to it: {2}. Re-run with 'confirm' to proceed.";
-        public String attachMemberNote = "Member lists of attached dominions are archived; affected members become residents or per-outpost trust by policy and are notified.";
+        public String attachMemberNote = "Member lists of attached dominions are archived; affected members receive a per-outpost trust grant mapped from their flags and are notified.";
         public String disbandConfirm = "Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with 'confirm' to proceed.";
         public String disbandConfirmContributors = "Contributed land of these players will be dissolved: {0}.";
         public String disbandConfirmReturn = "Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with 'confirm' to proceed.";

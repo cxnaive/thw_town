@@ -183,12 +183,6 @@ public class Configuration extends ConfigurationFile {
                 "invites and visitors are unaffected. -1 for unlimited."
         })
         public int maxMemberships = 1;
-        @Comments({
-                "When a player's dominions attach to a town, merge their old",
-                "dominion members into town members while capacity allows.",
-                "false: ALL old members become outpost-scoped TownTrust instead."
-        })
-        public boolean mergeMembersOnAttach = true;
         @Comments("Whether players owning legacy land may join a town (their land attaches).")
         public boolean allowJoinWithLegacyLand = true;
         @Comments("Cost of the founding outpost charged from the founder's wallet.")

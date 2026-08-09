@@ -643,7 +643,6 @@ town-manager-text:
   outpost-admin-set: Outpost admin of {0} set to {1}.
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
-  merge-member-merged: '{0} merged into town {1} as resident.'
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'

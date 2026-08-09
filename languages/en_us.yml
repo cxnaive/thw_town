@@ -99,7 +99,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: Set guest flag {0} to {1} success.
   set-guest-flag-failed: 'Set guest flag {0} to {1} failed, reason: {2}'
 member-provider-handler-text:
-  use-trust-for-town-outposts: 'This dominion belongs to a town; per-player grants are managed with /town trust instead of members.'
+  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
   set-flag-success: Successfully set flag {0} for {1} in {2}.
   owner-only: Only owner can manage admin member.
   group-already: This member belong to group {0} so you can't manage it separately.
@@ -111,8 +111,8 @@ member-provider-handler-text:
   remove-member-success: Successfully removed {0} from {1}.
   remove-member-failed: 'Failed to remove member, reason: {0}'
 group-provider-handler-text:
-  town-outpost-no-custom-groups: 'Custom groups have no effect on town outposts; use the @town group or /town trust instead.'
-  town-group-reserved: 'The @town group is managed by the town system and cannot be deleted or renamed.'
+  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: Only the owner can manage admin group.
   set-flag-success: Set group {0} flag {1} to {2} successfully.
   set-flag-failed: 'Failed to set group flag, reason: {3}'
@@ -277,7 +277,7 @@ database-manager-text:
   import-database-success: Import database successfully.
   import-table-skipped: 'Table {0} skipped: not restorable by this plugin (unknown or foreign table).'
   import-core-missing: 'Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.'
-  export-tables-summary: 'Exported {0} table(s).'
+  export-tables-summary: Exported {0} table(s).
 teleport-manager-text:
   cooling-down: Please wait for {0} seconds before teleporting again.
   disabled: Teleportation is disabled for your permission group.
@@ -600,13 +600,13 @@ ui-commands-description:
   environment-flags: Manage environment flags of a dominion.
   guest-flags: Manage guest privilege flags of a dominion.
 town-manager-text:
-  use-transfer-for-mayor: 'The mayor role can only change hands via /town transfer.'
-  set-role-notify: 'Your role in town {1} is now {0}.'
-  set-role-success: 'Set {0}''s role to {1} in town {2}.'
-  disband-enclave-dissolved: 'Your dominion {0} was dissolved together with town {1}.'
-  only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
+  use-transfer-for-mayor: The mayor role can only change hands via /town transfer.
+  set-role-notify: Your role in town {1} is now {0}.
+  set-role-success: Set {0}'s role to {1} in town {2}.
+  disband-enclave-dissolved: Your dominion {0} was dissolved together with town {1}.
+  only-mayor-can-transfer: Only the current mayor of {0} can transfer the mayor role.
   town-name-should-not-empty: Town name should not be empty.
-  town-name-invalid: 'Town name should not contain space, dot, section sign, ampersand, tilde or comma.'
+  town-name-invalid: Town name should not contain space, dot, section sign, ampersand, tilde or comma.
   town-name-exist: Town name {0} already exists.
   town-not-exist: Town {0} does not exist.
   already-in-town: You are already a member of town {0}.
@@ -644,36 +644,49 @@ town-manager-text:
   outpost-admin-set: Outpost admin of {0} set to {1}.
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
-  merge-member-merged: '{0} merged into town {1} as resident.'
-  merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
+  merge-member-trusted: Your membership of {1} was converted to a trust grant for that outpost (the land was attached to a town).
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
-  dominion-not-exist: 'Dominion {0} does not exist.'
+  dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: |-
-    &b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+  usage: '&b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+
     &b/town invite <player> &7- invite a player (mayor/assistant)
+
     &b/town join <town> [confirm] &7- join an invited town
+
     &b/town leave &7- leave your town (land stays with the town)
+
     &b/town kick <player> &7- kick a resident (mayor/assistant)
+
     &b/town transfer <player> &7- transfer the mayor role
+
     &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
+
     &b/town disband [confirm] &7- disband the town (dissolves outposts)
+
     &b/town deposit <amount> &7- deposit into the town bank
+
     &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
+
     &b/town outpost create <name> &7- create a remote outpost (selected points)
+
     &b/town admin <outpost> [player] &7- set/clear the outpost admin
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
+
     &b/town untrust <player> [town|outpost <name>]
+
     &b/town info [town] &7- town information
-    &b/town list &7- list towns
+
+    &b/town list &7- list towns'
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
   join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with ''confirm'' to proceed.'
-  join-confirm-no-land: 'Joining {0} makes you a resident. Re-run with ''confirm'' to proceed.'
+  join-confirm-no-land: Joining {0} makes you a resident. Re-run with 'confirm' to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
@@ -682,19 +695,17 @@ town-command-text:
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
+  attach-member-note: Member lists of attached dominions are archived; affected members receive a per-outpost trust grant mapped from their flags and are notified.
 migration-text:
-  town-data-dropped: 'The source server has town data; towns do NOT follow a server merge — imported dominions become townless.'
-
+  town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:
-  button: 'CREATE TOWN'
-  hint: 'Enter the new town name.'
+  button: CREATE TOWN
+  hint: Enter the new town name.
   description: 'Create a town: your land attaches, or a founding outpost is created from your selection.'
-
 town-outpost-admin-inputter-text:
-  button: 'OUTPOST ADMIN'
-  hint: 'Enter the player name to appoint, or ''clear'' to remove.'
-  description: 'Appoint or clear the outpost admin.'
-
+  button: OUTPOST ADMIN
+  hint: Enter the player name to appoint, or 'clear' to remove.
+  description: Appoint or clear the outpost admin.
 town-disband-confirm-inputter-text:
-  button: 'DISBAND'
-  hint: 'Type ''confirm'' to disband the town.'
+  button: DISBAND
+  hint: Type 'confirm' to disband the town.

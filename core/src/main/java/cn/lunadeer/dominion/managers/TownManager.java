@@ -105,8 +105,7 @@ public class TownManager {
         public String outpostAdminSet = "Outpost admin of {0} set to {1}.";
         public String outpostAdminCleared = "Outpost admin of {0} cleared.";
         public String outpostAdminNotMember = "Outpost admin must be a member of town {0}.";
-        public String mergeMemberMerged = "{0} merged into town {1} as resident.";
-        public String mergeMemberTrusted = "{0} exceeded max-memberships; converted to outpost trust on {1}.";
+        public String mergeMemberTrusted = "Your membership of {1} was converted to a trust grant for that outpost (the land was attached to a town).";
     }
 
     /**
@@ -1008,9 +1007,12 @@ public class TownManager {
     }
 
     /**
-     * Merge the dominion's member overlay into the town (plan §4.2):
-     * archive every member row, then per distinct player either merge as
-     * RESIDENT (capacity allowing) or convert to an outpost-scoped trust.
+     * Convert the dominion's member overlay on attach (plan §4.2, revised):
+     * archive every member row, then convert each non-owner member to an
+     * OUTPOST-scoped trust grant mapped from their member flags. Members
+     * are never auto-enrolled as town residents — town membership requires
+     * the person's own consent (/town join), and a resident whose own land
+     * sits outside the town is exactly the inconsistency this avoids.
      * The live dominion_member rows are then deleted.
      */
     private static void mergeMembers(@NotNull TownDOO town, @NotNull DominionDOO dominion,
@@ -1018,29 +1020,15 @@ public class TownManager {
         List<MemberDOO> members = MemberDOO.selectByDominionId(dominion.getId());
         if (members.isEmpty()) return;
         archiveMembers(dominion, town.getId(), "MERGED_INTO_TOWN");
-        boolean mergeEnabled = Configuration.town.mergeMembersOnAttach;
-        int max = Configuration.town.maxMemberships;
         for (MemberDOO member : members) {
             UUID uuid = member.getPlayerUUID();
             try {
                 if (uuid.equals(dominion.getOwner())) {
                     // the contributor is covered by their own membership
                 } else if (TownMemberDOO.select(town.getId(), uuid) != null) {
-                    // already a member of this town — DB truth, not the
-                    // cache: a cascade never reloads mid-loop, and a stale
-                    // snapshot would misroute this player to a trust grant
-                } else if (mergeEnabled && (max == -1 || TownMemberDOO.countTownsOf(uuid) < max)) {
-                    TownMemberDOO.insert(town.getId(), uuid,
-                            TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.MERGED);
-                    notifyIfOnline(uuid, Language.townManagerText.mergeMemberMerged,
-                            CacheManager.instance.getPlayerName(uuid), town.getName());
-                    // NOTE: deliberately NOT attaching the merged member's own
-                    // dominions here. An earlier revision did that recursively
-                    // (plan §3 invariant 3) and a single /town create walked the
-                    // whole server's member graph, attaching ~800 dominions to
-                    // one town. Land attachment requires the owner's own
-                    // consent via /town create or /town join — never a
-                    // side effect of someone else's town operation.
+                    // already a member of this town — the member cascade
+                    // covers them, no trust grant needed. DB truth, not the
+                    // cache: a stale snapshot would double-grant
                 } else {
                     boolean[] mapped = mapMemberFlagsToTrust(member);
                     TownTrustDOO.delete(town.getId(), uuid, TownTrustDOO.TrustScope.OUTPOST, dominion.getId());
