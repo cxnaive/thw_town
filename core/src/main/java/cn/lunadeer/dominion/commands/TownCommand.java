@@ -569,16 +569,16 @@ public class TownCommand implements TabExecutor {
      * autoCreateRadius, which is -1 in the town era.
      */
     private static @NotNull CuboidDTO foundingCuboidAt(@NotNull Player player) {
-        int max = Configuration.town.foundingSize;
-        int half = max / 2;
+        // a literal foundingSize^3 cube centered on the player (e.g.
+        // 32x32x32 by default) — deliberately NOT the world's full
+        // vertical span; expansion is what town resize is for
+        int size = Configuration.town.foundingSize;
+        int half = size / 2;
         Location loc = player.getLocation();
-        Limitation.WorldLimitationSetting worldSettings =
-                Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld());
-        int y1 = worldSettings.autoIncludeVertical ? worldSettings.noLowerThan : loc.getBlockY() - half;
-        int y2 = worldSettings.autoIncludeVertical ? worldSettings.noHigherThan - 1 : loc.getBlockY() + half;
-        return new CuboidDTO(
-                loc.getBlockX() - half, y1, loc.getBlockZ() - half,
-                loc.getBlockX() + (max - half - 1), y2, loc.getBlockZ() + (max - half - 1));
+        int x1 = loc.getBlockX() - half;
+        int y1 = loc.getBlockY() - half;
+        int z1 = loc.getBlockZ() - half;
+        return new CuboidDTO(x1, y1, z1, x1 + size - 1, y1 + size - 1, z1 + size - 1);
     }
 
     // ------------------------------------------------------------------

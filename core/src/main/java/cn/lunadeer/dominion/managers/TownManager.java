@@ -301,11 +301,11 @@ public class TownManager {
             if (foundingCuboid == null) {
                 throw new DominionException(Language.townManagerText.foundingRequired);
             }
-            // The founding outpost is exactly town.foundingSize across and
-            // full world height (both baked into the auto cuboid) — there is
-            // no separate size cap and no personal-limitation check: town
-            // land is governed by its own knobs (foundingSize, foundingCost),
-            // and expansion afterwards follows normal town-outpost resize.
+            // The founding outpost is a literal town.foundingSize cube
+            // centered on the founder (baked into the auto cuboid) — no
+            // size cap check and no personal-limitation check: town land
+            // answers to town knobs (foundingSize, foundingCost), and
+            // expansion afterwards follows normal town-outpost resize.
             foundingToCreate = new DominionDOO(founder.getUniqueId(), uniqueDominionName(name),
                     founder.getWorld().getUID(), foundingCuboid, -1);
             assertDominionIntersect(founder, foundingToCreate, foundingCuboid);
@@ -874,6 +874,10 @@ public class TownManager {
     /**
      * Town-subject amount check: outposts of the town count against the
      * OPERATOR's limitation file (VIP ladder preserved, plan §4.6).
+     * TODO(town-era): decouple from the operator — a town's outpost
+     * capacity is server/economy policy, not a property of whoever
+     * happens to run the command. Revisit when outpost economics get
+     * their own config section (global cap + per-world amounts).
      */
     private static void assertTownOutpostAmount(@NotNull Player operator, @NotNull TownDOO town,
                                                 @NotNull UUID worldUid) throws Exception {

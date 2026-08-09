@@ -195,11 +195,12 @@ public class Configuration extends ConfigurationFile {
         public double foundingCost = 0;
         @Comments({
                 "Edge length of the auto-created founding outpost — the town's",
-                "first plot, centered on the founder. foundingCost is the flat",
-                "price of exactly this plot (0 = free starter land).",
-                "Later expansion uses normal town-outpost resize rules."
+                "first plot, a cube centered on the founder (e.g. 32 =",
+                "32x32x32). foundingCost is the flat price of exactly this",
+                "plot (0 = free starter land). Later expansion uses normal",
+                "town-outpost resize rules."
         })
-        public int foundingSize = 500;
+        public int foundingSize = 32;
         @Comments({
                 "Whether towns may create new remote outposts.",
                 "false: towns can only expand existing outposts (resize)."
@@ -329,7 +330,7 @@ public class Configuration extends ConfigurationFile {
         }
         if (town.foundingSize <= 0) {
             XLogger.warn("Invalid town founding-size: {0}", town.foundingSize);
-            town.foundingSize = 500;
+            town.foundingSize = 32;
         }
         if (town.foundingCost < 0) {
             XLogger.warn("Invalid town founding-cost: {0}", town.foundingCost);
