@@ -1143,13 +1143,17 @@ public class TownManager {
     /**
      * All dominions owned by the player (excluding the virtual root).
      */
-    public static @NotNull List<DominionDOO> ownedDominions(@NotNull UUID player) {
+    /**
+     * Every dominion the player owns, across all backend servers. Deliberately
+     * DB-backed (not the cache aggregate): attachment decisions must see
+     * land created on another backend seconds ago, before its row reaches
+     * the local cross-server replica.
+     */
+    public static @NotNull List<DominionDOO> ownedDominions(@NotNull UUID player) throws SQLException {
         List<DominionDOO> res = new ArrayList<>();
-        for (DominionDTO dto : CacheManager.instance.getPlayerOwnDominionDTOs(player)) {
-            if (dto.getId() == -1) continue;
-            if (dto instanceof DominionDOO doo) {
-                res.add(doo);
-            }
+        for (DominionDOO doo : DominionDOO.selectByOwner(player)) {
+            if (doo.getId() == -1) continue; // the virtual root
+            res.add(doo);
         }
         return res;
     }

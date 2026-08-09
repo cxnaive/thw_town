@@ -200,6 +200,21 @@ public class DominionDOO implements DominionDTO {
     }
 
     /**
+     * Every dominion owned by a player, across ALL backend servers, from
+     * the database. Town attachment must not rely on the cross-server
+     * cache replicas: a dominion created on another backend seconds ago
+     * may be missing from the local replica and would silently skip
+     * attachment (plan §3 invariant 3).
+     */
+    public static @NotNull List<DominionDOO> selectByOwner(@NotNull UUID owner) throws SQLException {
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("dominion")
+                .where("owner = ?", owner.toString())
+                .execute();
+        return res.stream().map(DominionDOO::parse).toList();
+    }
+
+    /**
      * Direct children by parent id — a fresh DB query, unlike the
      * cache-based {@code Others.getSubDominionsRecursive}. Disband uses
      * this so sub-dominions created on other backend servers (or within
