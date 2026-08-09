@@ -673,6 +673,9 @@ town-command-text:
   unknown-sub-command: 未知的城镇命令：{0}
   no-invite: 需要 {0} 的镇长或助理邀请才能加入。
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
+  no-invite-remote: '你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。'
+  invite-received: '你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】执行 /town join {0} 接受邀请。'
+  invite-not-local: '{0} 当前不在本服务器。邀请按服务器隔离：对方需要切换到本服务器（或在其所在服重新邀请）后才能加入。'
   join-confirm: 加入 {0} 将把 {1} 块领地转为城镇所有：{2}。加 'confirm' 重新执行以确认。
   join-confirm-no-land: 加入 {0} 将成为其居民。加 'confirm' 重新执行以确认。
   create-confirm: '创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。'

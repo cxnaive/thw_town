@@ -64,7 +64,10 @@ public class TownCommand implements TabExecutor {
                 + "&b/town list &7- list towns";
         public String unknownSubCommand = "Unknown town command: {0}";
         public String noInvite = "You need an invite from the mayor or an assistant of {0} to join.";
+        public String noInviteRemote = "You need an invite from the mayor or an assistant of {0} to join. Invites are per-server: if you were invited on another server, switch to it and retry.";
         public String inviteSent = "Invited {0} to join {1} (valid for 5 minutes).";
+        public String inviteReceived = "You have been invited to join {0} (valid for 5 minutes). Run /town join {0} on THIS server to accept.";
+        public String inviteNotLocal = "{0} is not playing on this server right now. Invites are per-server: they must switch here (or be invited again on their server) before /town join works.";
         public String joinConfirm = "Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with 'confirm' to proceed.";
         public String joinConfirmNoLand = "Joining {0} makes you a resident. Re-run with 'confirm' to proceed.";
         public String createConfirm = "Creating town {0} will attach your {1} dominion(s) to it: {2}. Re-run with 'confirm' to proceed.";
@@ -298,7 +301,13 @@ public class TownCommand implements TabExecutor {
         Notification.info(sender, Language.townCommandText.inviteSent, target.getLastKnownName(), town.getName());
         Player online = Dominion.instance.getServer().getPlayer(target.getUuid());
         if (online != null) {
-            Notification.info(online, Language.townCommandText.inviteSent, target.getLastKnownName(), town.getName());
+            // the invitee gets their own message — with the per-server
+            // accept instruction baked in
+            Notification.info(online, Language.townCommandText.inviteReceived, town.getName());
+        } else if (Configuration.multiServer.enable) {
+            // invites live in this server's memory: a join attempt on
+            // another backend would find nothing
+            Notification.warn(sender, Language.townCommandText.inviteNotLocal, target.getLastKnownName());
         }
     }
 
@@ -324,7 +333,11 @@ public class TownCommand implements TabExecutor {
         TownManager.assertCanJoinNewTown(player);
         boolean bypass = Others.bypassLimit(player);
         if (!bypass && !hasInvite(town.getName(), player.getUniqueId())) {
-            throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.noInvite, town.getName());
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                        Configuration.multiServer.enable
+                                ? Language.townCommandText.noInviteRemote
+                                : Language.townCommandText.noInvite,
+                        town.getName());
         }
         if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
             if (attachable.isEmpty()) {
@@ -337,7 +350,11 @@ public class TownCommand implements TabExecutor {
             return;
         }
         if (!bypass && !consumeInvite(town.getName(), player.getUniqueId())) {
-            throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.noInvite, town.getName());
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                        Configuration.multiServer.enable
+                                ? Language.townCommandText.noInviteRemote
+                                : Language.townCommandText.noInvite,
+                        town.getName());
         }
         TownManager.joinTown(player, town);
     }
