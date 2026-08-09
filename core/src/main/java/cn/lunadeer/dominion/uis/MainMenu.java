@@ -88,19 +88,13 @@ public class MainMenu extends AbstractUI {
         int page = toIntegrity(args[0], 1);
 
         boolean admin = player.hasPermission(adminPermission);
-        // town era: personal dominion creation is retired for players —
-        // the create line becomes the town entry (admins keep the old one)
-        Line create;
-        if (admin) {
-            create = Line.create()
-                    .append(CreateDominionInputter.createTuiButtonOn(player).needPermission(defaultPermission).build())
-                    .append(Language.createDominionInputterText.description);
-        } else {
-            create = Line.create()
-                    .append(cn.lunadeer.dominion.inputters.town.TownCreateInputter.createTuiButtonOn(player)
-                            .needPermission(defaultPermission).build())
-                    .append(Language.townCreateInputterText.description);
-        }
+        // town era: the create line is town-first for EVERYONE (admin
+        // included); the retired personal-dominion create survives as an
+        // extra button in the admin section below
+        Line create = Line.create()
+                .append(cn.lunadeer.dominion.inputters.town.TownCreateInputter.createTuiButtonOn(player)
+                        .needPermission(defaultPermission).build())
+                .append(Language.townCreateInputterText.description);
         Line myTown = Line.create()
                 .append(new FunctionalButton(TextUserInterface.menuTuiText.myTownButton) {
                     @Override
@@ -176,6 +170,10 @@ public class MainMenu extends AbstractUI {
         if (player.hasPermission(adminPermission)) {
             view.add(Line.create().append(""));
             view.add(Line.create().append(Component.text(TextUserInterface.menuTuiText.adminOnlySection, ViewStyles.PRIMARY)));
+            // retired personal-dominion creation, kept as an admin tool
+            view.add(Line.create()
+                    .append(CreateDominionInputter.createTuiButtonOn(player).needPermission(adminPermission).build())
+                    .append(Language.createDominionInputterText.description));
             view.add(all);
             view.add(reload_cache);
             view.add(reload_config);
@@ -190,9 +188,9 @@ public class MainMenu extends AbstractUI {
         public String title = "§b✦ §6§lDominion Main Menu §b✦";
         public List<String> adminLayout = List.of(
                 "#########",
-                "##A#B#C##",
+                "##G#B#C##",
                 "##D#E#F##",
-                "##G#H####",
+                "##A#H####",
                 "####S####"
         );
         public List<String> userLayout = List.of(
