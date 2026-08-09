@@ -113,7 +113,8 @@ public class MainMenu extends AbstractUI {
                 .append(TextUserInterface.townListTuiText.description);
         Line list = Line.create()
                 .append(DominionList.button(player).build())
-                .append(TextUserInterface.dominionListTuiText.description);
+                .append(TextUserInterface.dominionListTuiText.description)
+                .append(Component.text(TextUserInterface.dominionListTuiText.legacyTag, ViewStyles.SEVERE));
         Line title = Line.create()
                 .append(TitleList.button(player).build())
                 .append(TextUserInterface.titleListTuiText.description);
@@ -228,7 +229,10 @@ public class MainMenu extends AbstractUI {
                         "§b▶ Click to view list",
                         "",
                         "§8Includes: Your dominions &",
-                        "§8dominions you're admin of!"
+                        "§8dominions you're admin of!",
+                        "",
+                        "§c⚠ Legacy system - create a town",
+                        "§cand migrate your land to it!"
                 )
         );
         public ButtonConfiguration titleButton = ButtonConfiguration.createMaterial(

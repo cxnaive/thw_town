@@ -40,6 +40,9 @@ main-menu-cui:
     - ''
     - '§8含まれるもの: 自分のドミニオン＆'
     - §8管理者のドミニオン！
+    - ''
+    - §c⚠ Legacy system - create a town
+    - §cand migrate your land to it!
     material: BOOKSHELF
   title-button:
     symbol: C

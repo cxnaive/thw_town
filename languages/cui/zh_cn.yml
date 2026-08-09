@@ -37,7 +37,10 @@ main-menu-cui:
     - §b▶ 点击查看列表
     - ''
     - '§8包括: 你的领地和'
-    - §8你是管理员的领地！'
+    - §8你是管理员的领地！
+    - ''
+    - §c⚠ 旧系统——请尽快创建小镇
+    - §c并将领地迁移为镇属地
     material: BOOKSHELF
   title-button:
     symbol: C

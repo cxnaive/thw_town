@@ -95,6 +95,8 @@ public class DominionList extends AbstractUI {
         public String townManagedLine = "§b{0} §7- town: {1}, server {2}";
         public String remoteOwnedSection = "Your dominions on other servers.";
         public String remoteOwnedLine = "§b{0} §7- server {1}";
+        public String legacyTag = " (legacy - migrate to a town!)";
+        public String legacyNotice = "Personal dominions are a legacy system - create a town soon (/town create or the main menu); your land will attach as town outposts.";
     }
 
     public static ListViewButton button(CommandSender sender) {
@@ -165,6 +167,12 @@ public class DominionList extends AbstractUI {
                 .append(MainMenu.button(player).build())
                 .append(TextUserInterface.dominionListTuiText.button));
         List<DominionNode> dominionNodes = CacheManager.instance.getCache().getDominionCache().getPlayerDominionNodes(player.getUniqueId());
+        // town era: nag owners of personal (non-town) land to migrate —
+        // personal dominions are frozen legacy
+        if (hasLegacyDominion(player)) {
+            view.add(Line.create().append(Component.text(
+                    TextUserInterface.dominionListTuiText.legacyNotice, ViewStyles.SEVERE)));
+        }
         // Show dominions on current server
         view.addLines(BuildTreeLines(player, dominionNodes, 0));
         // Show admin dominions on this server
@@ -186,6 +194,19 @@ public class DominionList extends AbstractUI {
         // and teleport are same-server operations).
         view.addLines(buildRemoteOwnedLines(player));
         view.showOn(player, page);
+    }
+
+    /** True while the player still owns any personal (non-town) dominion. */
+    private static boolean hasLegacyDominion(Player player) {
+        List<DominionDTO> own = Configuration.multiServer.enable
+                ? CacheManager.instance.getPlayerOwnDominionDTOs(player.getUniqueId())
+                : CacheManager.instance.getCache().getDominionCache().getPlayerOwnDominionDTOs(player.getUniqueId());
+        for (DominionDTO dominion : own) {
+            if (!(dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo) || !doo.isTownOutpost()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Owned dominions living on other backend servers (aggregate view). */
@@ -361,6 +382,13 @@ public class DominionList extends AbstractUI {
 
     @Override
     protected void showCUI(Player player, String... args) {
+        // town era: same migration nag as the TUI notice line — CUI
+        // layouts are config files, so a chat warning is the reliable
+        // channel that works on every server regardless of layout
+        if (hasLegacyDominion(player)) {
+            cn.lunadeer.dominion.utils.Notification.warn(
+                    player, TextUserInterface.dominionListTuiText.legacyNotice);
+        }
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
         view.setTitle(ChestUserInterface.dominionListCui.title);
         view.applyListConfiguration(ChestUserInterface.dominionListCui.listConfiguration, toIntegrity(args[0]));

@@ -41,6 +41,9 @@ main-menu-cui:
     - ''
     - '§8包含: 你的領地 及'
     - §8你管理的領地!
+    - ''
+    - §c⚠ Legacy system - create a town
+    - §cand migrate your land to it!
     material: BOOKSHELF
   title-button:
     symbol: C
