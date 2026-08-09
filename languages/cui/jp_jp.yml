@@ -1656,6 +1656,7 @@ town-outposts-cui:
     - '§7Server: §b{2}'
     - ''
     - '§a▶ Left Click: manage (this server)'
+    - '§b▶ Right Click: teleport (this server)'
     material: FILLED_MAP
   back-button:
     symbol: <

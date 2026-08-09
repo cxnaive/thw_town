@@ -1636,6 +1636,7 @@ town-outposts-cui:
     - §7服务器：§b{2}
     - ''
     - §a▶ 左键：管理（限本服务器）
+    - §b▶ 右键：传送（限本服务器）
     material: FILLED_MAP
   back-button:
     symbol: <

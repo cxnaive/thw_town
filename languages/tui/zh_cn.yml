@@ -214,3 +214,4 @@ town-outposts-tui-text:
   button: 前哨
   outpost-line: §b{0} §7- {1} ({2}, 服务器 {3})
   remote-hint: §8（在另一个服务器）
+  teleport-button: 传送

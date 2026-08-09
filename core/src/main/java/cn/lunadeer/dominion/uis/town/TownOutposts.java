@@ -86,6 +86,7 @@ public class TownOutposts extends AbstractUI {
         public String button = "OUTPOSTS";
         public String outpostLine = "§b{0} §7- {1} ({2}, server {3})";
         public String remoteHint = "§8(on another server)";
+        public String teleportButton = "TELEPORT";
     }
 
     @Override
@@ -118,6 +119,15 @@ public class TownOutposts extends AbstractUI {
                         "", worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId()));
                 if (!isLocal(outpost)) {
                     line.append(TextUserInterface.townOutpostsTuiText.remoteHint);
+                } else {
+                    // same-server only: TeleportManager enforces the
+                    // town-cascade TELEPORT flag, cooldown and delay
+                    line.append(new FunctionalButton(TextUserInterface.townOutpostsTuiText.teleportButton) {
+                        @Override
+                        public void function() {
+                            cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
+                        }
+                    }.needPermission(defaultPermission).build());
                 }
                 view.add(line);
             }
@@ -149,7 +159,8 @@ public class TownOutposts extends AbstractUI {
                         "§7Kind: §b{1}",
                         "§7Server: §b{2}",
                         "",
-                        "§a▶ Left Click: manage (this server)"
+                        "§a▶ Left Click: manage (this server)",
+                        "§b▶ Right Click: teleport (this server)"
                 )
         );
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
@@ -173,6 +184,10 @@ public class TownOutposts extends AbstractUI {
                         if (type.isLeftClick() && local
                                 && cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, outpost)) {
                             DominionManage.show(player, outpost.getName(), "1");
+                        } else if (type.isRightClick() && local) {
+                            // same-server only; TeleportManager enforces the
+                            // town-cascade TELEPORT flag, cooldown and delay
+                            cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
                         }
                     }
                 };
