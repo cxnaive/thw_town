@@ -680,3 +680,99 @@ Phase 1 只需新增 TownBank（镇余额 + 存取命令 + 镇账户扣费），
 - **flags.yml**：flag 默认值/启用不变，兼作 Outpost"镇成员默认 flags"
   的初始模板来源；
 - **multi-server / database**：不动，server-id 语义不改。
+
+## 13. 镇时代 UI 设计(TUI/CUI 改造,设计稿,未实施)
+
+### 13.1 现状问题
+
+1. **DominionList 只显本服**:数据源是本服 DominionCache
+   (`getPlayerOwnDominionDTOs(owner)` + `getPlayerAdminDominionDTOs`
+   member-ADMIN 行),跨服领地不可见;
+2. **镇属地混入"我的领地"**:contributor 仍是 owner,老列表照列,
+   但点进去所有管理操作被 handler 拒(死路);
+3. **次级管理员的前哨不出现**:非 owner、无 member 行,任何列表
+   都看不到自己管的地;
+4. **镇零 UI**:镇列表/信息/成员/Trust/银行/前哨/解散全部只有命令;
+5. **MainMenu"创建领地"是死路**(personalCreationDisabled);
+6. MemberList/GroupList 在镇属地上是空列表死路(Info/SetSize 已在
+   Phase 1 适配)。
+
+### 13.2 设计原则
+
+- **TUI/CUI 镜像**:沿用 AbstractUI 双轨,不引入第三套;
+- **按角色渲染,不按错误拦截**:渲染前统一过一次角色判定
+  (mayor / assistant / outpost-admin / member / outsider),按钮集
+  由角色决定,消灭"点进去才报错"的死路;
+- **老路径零改动**:无镇领地的所有 UI 逐像素不变;
+- **UI 只是入口**:一切写操作仍走现有命令/handler 路径,UI 层不
+  新增写通道、不绕过二次确认(解散确认清单在 UI 同样强制)。
+
+### 13.3 信息架构
+
+```text
+MainMenu
+├── [我的小镇]      ← 新增;多镇时先进 TownList 选择
+│   └── TownInfo(镇名/镇长/余额/成员数/前哨数)
+│       ├── MemberList(town)   成员:邀请/踢出/转让镇长(角色过滤)
+│       ├── TrustList          按 scope 分组:镇级 | 各前哨;trust/untrust
+│       ├── Bank               余额 + 存/取(取仅镇长/助理)
+│       ├── OutpostList        全镇前哨(跨服,DB 分页)→ OutpostManage
+│       └── Disband            红色确认页(列贡献者清单,同命令口径)
+├── [小镇列表]      ← 新增;全服分页,只读信息入口
+├── [我的领地]      ← DominionList 改造(§13.4)
+└── 其余行不变(头衔/模板/迁移/管理员工具)
+```
+
+OutpostManage = 现有 DominionManage 的镇属变体:
+
+| 行 | 无镇 | 镇属 Outpost |
+|---|---|---|
+| Info / EnvFlags / GuestFlags | 不变 | 不变(env/guest flags 仍挂在 dominion 上,有效) |
+| SetSize | owner/admin | 仅镇长/助理(handler 口径) |
+| MemberList | 正常 | **隐藏**,替换为 [Trust 管理] 入口 |
+| GroupList | 正常 | 只读:`@town` 组可进 GroupFlags 改 flags(镇长/助理);建组/改名/删除按钮隐藏 |
+| SetTp / Rename / 进出消息 | 不变 | 不变(仍 dominion 级属性) |
+| Delete / Transfer | 正常 | **隐藏**(镇属不可删不可转;admin 仲裁走命令) |
+| — | — | 新增 [次级管理员] 行(镇长/助理:任命/清除) |
+
+### 13.4 DominionList 三段式
+
+| 分组 | 数据源 | 行内操作 |
+|---|---|---|
+| 我管理的镇属地 | TownCache 反查(mayor/assistant 的镇 + 任次级管理员的前哨),跨服 | 进 OutpostManage(角色过滤) |
+| 我的无镇领地 | 原 owner 查询,过滤 `isTownOutpost()` | 不变 |
+| 我贡献的镇属地 | owner 查询中 `isTownOutpost()` 的部分 | 只读:Info/传送;行尾标 `[已挂靠:镇名]` |
+
+行后缀统一标 `[镇名]` / `[无镇]`;跨服条目加服务器标签
+(`server_id`;如需友好名,另立 server-name 映射,不在本期)。
+
+### 13.5 跨服数据策略
+
+- 镇列表/镇信息/成员/Trust:读本服 TownCache 副本(60s 收敛)即可,
+  不为 UI 加实时通道;
+- 前哨清单:`selectByTownId` 无分页 → 新增 DB 分页查询
+  (按 id 排序 offset/limit),总数用现有 COUNT 查询;
+- UI 打开时不触发写后刷新以外的额外 reload,避免镇长连点刷库。
+
+### 13.6 角色 × 可见性矩阵(镇属地)
+
+| 功能 | 镇长/助理 | 次级管理员 | 成员 | 游客 |
+|---|---|---|---|---|
+| Info/Env/Guest 查看 | ✓ | ✓ | ✓ | ✓ |
+| flags 编辑(@town 组/guest/env) | ✓ | ✗ | ✗ | ✗ |
+| resize | ✓ | ✗ | ✗ | ✗ |
+| Trust(本前哨) | ✓ | ✓ | ✗ | ✗ |
+| Trust(镇级)/成员/银行取/任命/解散 | ✓ | ✗ | ✗ | ✗ |
+| 删除/转让 | 无人(命令层 admin 仲裁) | ✗ | ✗ | ✗ |
+
+### 13.7 依赖与拆分
+
+- **UI-1**:TownList + TownInfo 只读骨架(无操作,纯展示);
+- **UI-2**:DominionList 三段式 + OutpostManage 镇属变体;
+- **UI-3**:成员/Trust/银行操作页;promote/demote 按钮依赖 §9
+  Phase 2 第 6 项命令先落地(否则 UI 只读);
+- **UI-4**:MainMenu 入口替换([创建领地]→[创建小镇] 引导:
+  有地→显示挂靠确认清单;无地→提示先选区;admin 保留旧入口);
+- 文案:`town-*` 系列进 TextUserInterface/ChestUserInterface,
+  四语言(jp/zh_tw 英文兜底惯例);
+- 每步独立可发布,互不阻塞。
