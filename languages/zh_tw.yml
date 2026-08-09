@@ -3,12 +3,10 @@ dominion-text:
   plugin-enabled: 插件已啟用！
   plugin-version: 插件版本：{0}
   notification-prefix: '&6[&e領地&6]&f'
-
 multi-server-manager-text:
   get-id-by-name-error: 伺服器名稱({0})不存在。
   get-name-by-id-error: 伺服器 ID({0})不存在。
   warn-update-server-name: 資料庫中 ID 為 {0}、名稱為「{1}」的伺服器，現行設定為「{2}」，已更新資料庫名稱為「{2}」。
-
 asserts-text:
   dom-name-should-not-empty: 領地名稱不可空白。
   dom-name-invalid: 領地名稱不可包含空格、句點、§、&、~ 或逗號。
@@ -38,7 +36,6 @@ asserts-text:
   with-draw-money: 已成功支付 {0} 給領地。
   deposit-money: 已從領地獲得退款 {0}。
   group-not-belong-dominion: 權限組 {0} 不屬於領地 {1}。
-
 converts-text:
   must-be-player: 此指令或操作必須由玩家執行。
   must-be-online: 玩家 {0} 必須在線上。
@@ -56,15 +53,12 @@ converts-text:
   unknown-player: 找不到玩家 {0} 資料(可能安裝後未曾上線)。
   not-member: 玩家 {0} 不是領地 {1} 的成員。
   no-group-found: 在領地 {0} 中找不到權限組 {1}。
-
 others-text:
   no-permission-for-flag: 你沒有 {0}({1})權限。
-
 vault-connect-text:
   vault-unavailable: 找不到 Vault 前置，請安裝 Vault 或 VaultUnlock 及經濟插件以啟用經濟功能。
   economy-unavailable: 未偵測到經濟插件，請安裝至少一個經濟插件以啟用經濟功能。
   insufficient-funds: 餘額不足，需要 {0}{1}，但你僅有 {2}{1}。
-
 dominion-provider-handler-text:
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
@@ -104,9 +98,8 @@ dominion-provider-handler-text:
   set-env-flag-failed: 設定環境權限 {0} 為 {1} 失敗，原因：{2}。
   set-guest-flag-success: 成功將通用權限 {0} 設定為 {1}。
   set-guest-flag-failed: 設定通用權限 {0} 為 {1} 失敗，原因：{2}。
-
 member-provider-handler-text:
-  use-trust-for-town-outposts: 'This dominion belongs to a town; per-player grants are managed with /town trust instead of members.'
+  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
   set-flag-success: 已成功在領地 {2} 為 {1} 設定權限 {0}。
   owner-only: 僅有領地擁有者可管理管理員。
   group-already: 該成員已屬於權限組 {0}，無法重複設定。
@@ -117,10 +110,9 @@ member-provider-handler-text:
   add-member-failed: 新增成員失敗，原因：{0}。
   remove-member-success: 成功將成員 {0} 從領地 {1} 移除。
   remove-member-failed: 移除成員失敗，原因：{0}。
-
 group-provider-handler-text:
-  town-outpost-no-custom-groups: 'Custom groups have no effect on town outposts; use the @town group or /town trust instead.'
-  town-group-reserved: 'The @town group is managed by the town system and cannot be deleted or renamed.'
+  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: 僅有領地擁有者可管理管理員群組。
   set-flag-success: 成功將群組 {0} 的權限 {1} 設定為 {2}。
   set-flag-failed: 設定群組權限失敗，原因：{0}。
@@ -134,7 +126,6 @@ group-provider-handler-text:
   add-member-failed: 新增成員至群組失敗，原因：{0}。
   remove-member-success: 成功將成員 {0} 從群組 {1} 移除。
   remove-member-failed: 從群組移除成員失敗，原因：{0}。
-
 select-point-events-handler-text:
   first-point: 第一個選取點：{0}, {1}, {2}。
   second-point: 第二個選取點：{0}, {1}, {2}。
@@ -146,21 +137,17 @@ select-point-events-handler-text:
   volume: 體積：{0}。
   no-dominion: 座標 {0}, {1}, {2} 未在任何領地內。
   found-dominion: 座標 {0}, {1}, {2} 位於領地 {3}。
-
 create-dominion-inputter-text:
   button: 建立
   description: 建立新的領地。
   hint: 輸入名稱後，將以你為中心建立領地。
-
 create-group-inputter-text:
   button: 建立
   hint: 輸入欲建立的新權限組名稱。
-
 rename-dominion-inputter-text:
   button: 重新命名
   hint: 輸入新的領地名稱。
   description: 將此領地重新命名。
-
 edit-message-inputter-text:
   enter-button: 進入訊息
   enter-description: 進入領地時顯示的訊息。
@@ -168,26 +155,21 @@ edit-message-inputter-text:
   leave-button: 離開訊息
   leave-description: 離開領地時顯示的訊息。
   leave-hint: 輸入新的離開訊息。
-
 create-template-inputter-text:
   button: 建立
   hint: 輸入新範本的名稱。
-
 rename-group-inputter-text:
   button: 重新命名
   hint: 輸入新的權限組名稱。
   description: 重新命名此權限組。
-
 resize-dominion-inputter-text:
   expand: 擴張
   contract: 縮小
   expand-hint: 輸入將 {0} 擴張到 {1} 的新尺寸。
   contract-hint: 輸入將 {0} 縮小到 {1} 的新尺寸。
-
 search-player-inputter-text:
   button: 搜尋
   hint: 輸入欲搜尋的玩家精確名稱。
-
 set-map-color-inputter-text:
   button: 顏色
   hint: 輸入十六進位色碼(例如：#FF5733)以設定地圖顏色。
@@ -219,7 +201,6 @@ administrator-command-text:
   import-description: 匯入資料庫資料
   update-language-description: 由內建語系檔重新產生語系檔
   update-language-confirm: 這將覆蓋現有語系檔；請在指令末尾加上 confirm 以確認
-
 migration-command-text:
   create-player-failed: 建立玩家快取 {0} 失敗
   migrate-success: 已成功將 Residence 的領地 {0} 遷移至 Dominion
@@ -228,7 +209,6 @@ migration-command-text:
   not-your-residence: Residence 領地 {0} 不屬於你
   migrate-description: 將指定的 Residence 領地遷移至 Dominion
   migrate-all-description: 將所有 Residence 領地遷移至 Dominion
-
 template-command-text:
   name-not-valid: 範本名稱不可包含空格
   template-name-exist: 範本 {0} 已存在
@@ -248,13 +228,11 @@ template-command-text:
   set-template-flag-description: 在範本中設定權限權限
   member-apply-template-description: 將權限範本套用至成員
   rename-template-description: 重新命名現有的權限範本
-
 group-title-command-text:
   group-not-belonging: 不屬於群組 {0}
   using-title-success: 已成功套用稱號 {0}
   using-title-fail: 套用稱號失敗，原因：{0}
   use-title-description: 使用群組稱號或停用目前稱號
-
 copy-command-text:
   copy-env-success: 已成功從 {0} 複製環境權限至 {1}
   copy-guest-success: 已成功從 {0} 複製通用權限至 {1}
@@ -264,7 +242,6 @@ copy-command-text:
   copy-guest-description: 將通用權限從一個領地複製到另一個
   copy-member-description: 將成員從一個領地複製到另一個
   copy-group-description: 將群組從一個領地複製到另一個
-
 configuration-text:
   loading-language: 正在載入語系 {0}…
   load-language-fail: 載入語系 {0} 失敗，原因：{1}，使用預設 en_us
@@ -283,13 +260,11 @@ configuration-text:
   database-connected: 資料庫已成功連線
   multi-server-sqlite: SQLite 不支援多伺服器模式，已停用多伺服器
   server-id-invalid: 伺服器 ID 必須為正整數 (>0)，已停用多伺服器模式
-
 limitation-text:
   loading-world-settings: 正在載入世界設定…
   loading-world-setting: 正在載入世界 {0} 的設定…
   load-world-setting-failed: 載入 {0} 的世界設定失敗，原因：{1}
   load-world-settings-success: 已成功載入 {0} 的世界設定：{1}
-
 database-manager-text:
   import-drops-town-data: 'This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.'
   exporting-database-tables: 正在匯出資料庫資料表…
@@ -302,32 +277,26 @@ database-manager-text:
   import-database-fail: 匯入資料庫失敗，原因：{0}
   import-database-success: 資料庫匯入成功
   convert-world-failed: 找不到舊世界 {0}({1})，請確認世界名稱存在於存檔中
-
 teleport-manager-text:
   cooling-down: 請等待 {0} 秒後再傳送
   disabled: 你所屬權限組已停用傳送功能
   delay: 將在 {0} 秒後傳送，請勿移動…
   unfinished-cancelled: 已取消先前未完成的傳送
   cancel-move: 因移動而取消傳送
-
 blue-map-connect-text:
   register-fail: 註冊 BlueMap API 失敗
   info-label: <div>{0}</div><div>擁有者：{1}</div>
-
 dynmap-connect-text:
   register-success: 已成功註冊 Dynmap
   register-fail: 註冊 Dynmap 失敗
   info-label: <div>{0}</div><div>擁有者：{1}</div>
-
 command-exception-text:
   no-permission: 你沒有 {0} 權限
   invalid-arguments: 參數錯誤，範例用法：{0}
-
 inputter-text:
   only-player: 僅玩家可使用此文字介面
   cancel: ' [傳送 C 以取消輸入]'
   inputter-cancelled: 輸入已取消
-
 flags:
   tnt_explode:
     display-name: TNT 爆炸
@@ -630,13 +599,13 @@ ui-commands-description:
   environment-flags: 管理領地環境權限
   guest-flags: 管理領地通用權限權限
 town-manager-text:
-  use-transfer-for-mayor: 'The mayor role can only change hands via /town transfer.'
-  set-role-notify: 'Your role in town {1} is now {0}.'
-  set-role-success: 'Set {0}''s role to {1} in town {2}.'
-  disband-enclave-dissolved: 'Your dominion {0} was dissolved together with town {1}.'
-  only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
+  use-transfer-for-mayor: The mayor role can only change hands via /town transfer.
+  set-role-notify: Your role in town {1} is now {0}.
+  set-role-success: Set {0}'s role to {1} in town {2}.
+  disband-enclave-dissolved: Your dominion {0} was dissolved together with town {1}.
+  only-mayor-can-transfer: Only the current mayor of {0} can transfer the mayor role.
   town-name-should-not-empty: Town name should not be empty.
-  town-name-invalid: 'Town name should not contain space, dot, section sign, ampersand, tilde or comma.'
+  town-name-invalid: Town name should not contain space, dot, section sign, ampersand, tilde or comma.
   town-name-exist: Town name {0} already exists.
   town-not-exist: Town {0} does not exist.
   already-in-town: You are already a member of town {0}.
@@ -678,31 +647,45 @@ town-manager-text:
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
-  dominion-not-exist: 'Dominion {0} does not exist.'
+  dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: |-
-    &b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+  usage: '&b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+
     &b/town invite <player> &7- invite a player (mayor/assistant)
+
     &b/town join <town> [confirm] &7- join an invited town
+
     &b/town leave &7- leave your town (land stays with the town)
+
     &b/town kick <player> &7- kick a resident (mayor/assistant)
+
     &b/town transfer <player> &7- transfer the mayor role
+
     &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
+
     &b/town disband [confirm] &7- disband the town (dissolves outposts)
+
     &b/town deposit <amount> &7- deposit into the town bank
+
     &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
+
     &b/town outpost create <name> &7- create a remote outpost (selected points)
+
     &b/town admin <outpost> [player] &7- set/clear the outpost admin
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
+
     &b/town untrust <player> [town|outpost <name>]
+
     &b/town info [town] &7- town information
-    &b/town list &7- list towns
+
+    &b/town list &7- list towns'
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
-  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with ''confirm'' to proceed.'
-  join-confirm-no-land: 'Joining {0} makes you a resident. Re-run with ''confirm'' to proceed.'
+  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Run /town join {0} confirm to proceed.'
+  join-confirm-no-land: Joining {0} makes you a resident. Run /town join {0} confirm to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
@@ -711,19 +694,17 @@ town-command-text:
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
+  create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
 migration-text:
-  town-data-dropped: 'The source server has town data; towns do NOT follow a server merge — imported dominions become townless.'
-
+  town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:
-  button: 'CREATE TOWN'
-  hint: 'Enter the new town name.'
+  button: CREATE TOWN
+  hint: Enter the new town name.
   description: 'Create a town: your land attaches, or a founding outpost is created from your selection.'
-
 town-outpost-admin-inputter-text:
-  button: 'OUTPOST ADMIN'
-  hint: 'Enter the player name to appoint, or ''clear'' to remove.'
-  description: 'Appoint or clear the outpost admin.'
-
+  button: OUTPOST ADMIN
+  hint: Enter the player name to appoint, or 'clear' to remove.
+  description: Appoint or clear the outpost admin.
 town-disband-confirm-inputter-text:
-  button: 'DISBAND'
-  hint: 'Type ''confirm'' to disband the town.'
+  button: DISBAND
+  hint: Type 'confirm' to disband the town.

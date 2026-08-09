@@ -688,9 +688,9 @@ town-command-text:
   no-invite-remote: 你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。
   invite-received: 你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】执行 /town join {0} 接受邀请。
   invite-not-local: '{0} 当前不在本服务器。邀请按服务器隔离：对方需要切换到本服务器（或在其所在服重新邀请）后才能加入。'
-  join-confirm: 加入 {0} 将把 {1} 块领地转为城镇所有：{2}。加 'confirm' 重新执行以确认。
-  join-confirm-no-land: 加入 {0} 将成为其居民。加 'confirm' 重新执行以确认。
-  create-confirm: 创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。
+  join-confirm: 加入 {0} 将把你的 {1} 块领地挂靠给它：{2}。请执行 /town join {0} confirm 确认。
+  join-confirm-no-land: 加入 {0} 后你将成为居民。请执行 /town join {0} confirm 确认。
+  create-confirm: 创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。请执行 /town create {0} confirm 确认。
   attach-member-note: 被挂靠领地的成员列表将归档保存；原成员会按原旗子获得该属地的 Trust 授权，并会收到通知。
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。

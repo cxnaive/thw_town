@@ -685,8 +685,8 @@ town-command-text:
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
-  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with ''confirm'' to proceed.'
-  join-confirm-no-land: Joining {0} makes you a resident. Re-run with 'confirm' to proceed.
+  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Run /town join {0} confirm to proceed.'
+  join-confirm-no-land: Joining {0} makes you a resident. Run /town join {0} confirm to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
@@ -696,6 +696,7 @@ town-command-text:
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
   attach-member-note: Member lists of attached dominions are archived; affected members receive a per-outpost trust grant mapped from their flags and are notified.
+  create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
 migration-text:
   town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:

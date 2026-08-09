@@ -99,7 +99,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: ゲストフラグ {0} を {1} に設定しました。
   set-guest-flag-failed: 'ゲストフラグ {0} を {1} に設定するのに失敗しました。理由: {2}'
 member-provider-handler-text:
-  use-trust-for-town-outposts: 'This dominion belongs to a town; per-player grants are managed with /town trust instead of members.'
+  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
   set-flag-success: '{1} の {2} にフラグ {0} を正常に設定しました。'
   owner-only: オーナーのみが管理メンバーを管理できます。
   group-already: このメンバーはグループ {0} に属しているため、個別に管理することはできません。
@@ -111,8 +111,8 @@ member-provider-handler-text:
   remove-member-success: '{0} を {1} から正常に削除しました。'
   remove-member-failed: 'メンバーの削除に失敗しました。理由: {0}'
 group-provider-handler-text:
-  town-outpost-no-custom-groups: 'Custom groups have no effect on town outposts; use the @town group or /town trust instead.'
-  town-group-reserved: 'The @town group is managed by the town system and cannot be deleted or renamed.'
+  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: オーナーのみが管理グループを管理できます。
   set-flag-success: グループ {0} のフラグ {1} を {2} に正常に設定しました。
   set-flag-failed: 'グループフラグの設定に失敗しました。理由: {3}'
@@ -599,13 +599,13 @@ ui-commands-description:
   environment-flags: ドミニオンの環境フラグを管理します。
   guest-flags: ドミニオンのゲスト特権フラグを管理します。
 town-manager-text:
-  use-transfer-for-mayor: 'The mayor role can only change hands via /town transfer.'
-  set-role-notify: 'Your role in town {1} is now {0}.'
-  set-role-success: 'Set {0}''s role to {1} in town {2}.'
-  disband-enclave-dissolved: 'Your dominion {0} was dissolved together with town {1}.'
-  only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
+  use-transfer-for-mayor: The mayor role can only change hands via /town transfer.
+  set-role-notify: Your role in town {1} is now {0}.
+  set-role-success: Set {0}'s role to {1} in town {2}.
+  disband-enclave-dissolved: Your dominion {0} was dissolved together with town {1}.
+  only-mayor-can-transfer: Only the current mayor of {0} can transfer the mayor role.
   town-name-should-not-empty: Town name should not be empty.
-  town-name-invalid: 'Town name should not contain space, dot, section sign, ampersand, tilde or comma.'
+  town-name-invalid: Town name should not contain space, dot, section sign, ampersand, tilde or comma.
   town-name-exist: Town name {0} already exists.
   town-not-exist: Town {0} does not exist.
   already-in-town: You are already a member of town {0}.
@@ -647,31 +647,45 @@ town-manager-text:
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
-  dominion-not-exist: 'Dominion {0} does not exist.'
+  dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: |-
-    &b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+  usage: '&b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+
     &b/town invite <player> &7- invite a player (mayor/assistant)
+
     &b/town join <town> [confirm] &7- join an invited town
+
     &b/town leave &7- leave your town (land stays with the town)
+
     &b/town kick <player> &7- kick a resident (mayor/assistant)
+
     &b/town transfer <player> &7- transfer the mayor role
+
     &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
+
     &b/town disband [confirm] &7- disband the town (dissolves outposts)
+
     &b/town deposit <amount> &7- deposit into the town bank
+
     &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
+
     &b/town outpost create <name> &7- create a remote outpost (selected points)
+
     &b/town admin <outpost> [player] &7- set/clear the outpost admin
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
+
     &b/town untrust <player> [town|outpost <name>]
+
     &b/town info [town] &7- town information
-    &b/town list &7- list towns
+
+    &b/town list &7- list towns'
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
-  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with ''confirm'' to proceed.'
-  join-confirm-no-land: 'Joining {0} makes you a resident. Re-run with ''confirm'' to proceed.'
+  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Run /town join {0} confirm to proceed.'
+  join-confirm-no-land: Joining {0} makes you a resident. Run /town join {0} confirm to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
@@ -680,19 +694,17 @@ town-command-text:
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
+  create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
 migration-text:
-  town-data-dropped: 'The source server has town data; towns do NOT follow a server merge — imported dominions become townless.'
-
+  town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:
-  button: 'CREATE TOWN'
-  hint: 'Enter the new town name.'
+  button: CREATE TOWN
+  hint: Enter the new town name.
   description: 'Create a town: your land attaches, or a founding outpost is created from your selection.'
-
 town-outpost-admin-inputter-text:
-  button: 'OUTPOST ADMIN'
-  hint: 'Enter the player name to appoint, or ''clear'' to remove.'
-  description: 'Appoint or clear the outpost admin.'
-
+  button: OUTPOST ADMIN
+  hint: Enter the player name to appoint, or 'clear' to remove.
+  description: Appoint or clear the outpost admin.
 town-disband-confirm-inputter-text:
-  button: 'DISBAND'
-  hint: 'Type ''confirm'' to disband the town.'
+  button: DISBAND
+  hint: Type 'confirm' to disband the town.
