@@ -1034,10 +1034,13 @@ public class TownManager {
                             TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.MERGED);
                     notifyIfOnline(uuid, Language.townManagerText.mergeMemberMerged,
                             CacheManager.instance.getPlayerName(uuid), town.getName());
-                    // plan §3 invariant 3: a town member's land must belong
-                    // to a town — merge their own legacy dominions too,
-                    // otherwise it strands townless with no attach path
-                    attachPlayerDominions(town, uuid, operator);
+                    // NOTE: deliberately NOT attaching the merged member's own
+                    // dominions here. An earlier revision did that recursively
+                    // (plan §3 invariant 3) and a single /town create walked the
+                    // whole server's member graph, attaching ~800 dominions to
+                    // one town. Land attachment requires the owner's own
+                    // consent via /town create or /town join — never a
+                    // side effect of someone else's town operation.
                 } else {
                     boolean[] mapped = mapMemberFlagsToTrust(member);
                     TownTrustDOO.delete(town.getId(), uuid, TownTrustDOO.TrustScope.OUTPOST, dominion.getId());
