@@ -342,7 +342,14 @@ public class DominionProviderHandler extends DominionProvider {
                     throw new DominionException(Language.dominionProviderHandlerText.alreadyBelong,
                             event.getDominion().getName(), newOwnerBukkit.getName());
                 }
-                assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid(), false);
+                // the receiver's self-serve amount cap applies only to
+                // player-to-player gives; an admin forcing the transfer
+                // (or the console) is arbitration, not self-service
+                boolean operatorBypasses = !(event.getOperator() instanceof Player opPlayer)
+                        || Others.bypassLimit(opPlayer);
+                if (!operatorBypasses) {
+                    assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid(), false);
+                }
                 List<DominionDTO> sub_dominions = getSubDominionsRecursive(event.getDominion());
                 if (!event.isForce()) {
                     if (!sub_dominions.isEmpty()) {
