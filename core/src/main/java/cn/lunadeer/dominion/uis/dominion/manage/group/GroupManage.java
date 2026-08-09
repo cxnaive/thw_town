@@ -126,6 +126,19 @@ public class GroupManage extends AbstractUI {
                 "§c▶ Click to remove from group",
                 "§8  They'll return to default group"
         );
+
+        public ButtonConfiguration townGroupHintButton = ButtonConfiguration.createMaterial(
+                'i', Material.BOOK,
+                "§6⛨ §eImplicit Town Membership",
+                List.of(
+                        "§7Every member of the town holds this",
+                        "§7group's permissions on this outpost.",
+                        "§7No member list exists — membership",
+                        "§7is implicit in being a town member.",
+                        "",
+                        "§8Managed by the town system."
+                )
+        );
     }
 
     @Override
@@ -174,14 +187,30 @@ public class GroupManage extends AbstractUI {
                 }
         );
 
-        view.addItem(new ChestButton(ChestUserInterface.groupManageCUI.addMemberButton) {
-            @Override
-            public void onClick(ClickType type) {
-                SelectMember.show(player, dominion.getName(), group.getNamePlain(), "1", "1");
-            }
-        });
+        // the built-in @town group has no member list: town members hold
+        // its flags implicitly (TownManager.townMemberFlagValue). Show an
+        // explainer instead of a meaningless empty list / add-member button
+        // (a member row added here would be archived away on re-attach).
+        boolean isTownGroup = group.getNamePlain().equals(cn.lunadeer.dominion.managers.TownManager.TOWN_MEMBER_GROUP_NAME)
+                && dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                && doo.isTownOutpost();
+        if (isTownGroup) {
+            view.addItem(new ChestButton(ChestUserInterface.groupManageCUI.townGroupHintButton) {
+                @Override
+                public void onClick(ClickType type) {
+                    // info only
+                }
+            });
+        } else {
+            view.addItem(new ChestButton(ChestUserInterface.groupManageCUI.addMemberButton) {
+                @Override
+                public void onClick(ClickType type) {
+                    SelectMember.show(player, dominion.getName(), group.getNamePlain(), "1", "1");
+                }
+            });
+        }
 
-        for (int i = 0; i < group.getMembers().size(); i++) {
+        for (int i = 0; !isTownGroup && i < group.getMembers().size(); i++) {
             MemberDTO m = group.getMembers().get(i);
             Integer page = (int) Math.ceil((double) (i + 2) / view.getPageSize());
             ButtonConfiguration item = ButtonConfiguration.createHeadByName(

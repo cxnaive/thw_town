@@ -1105,6 +1105,17 @@ group-manage-cui:
   - ''
   - §c▶ Click to remove from group
   - §8  They'll return to default group
+  town-group-hint-button:
+    symbol: i
+    name: §6⛨ §eImplicit Town Membership
+    lore:
+    - §7Every member of the town holds this
+    - §7group's permissions on this outpost.
+    - §7No member list exists — membership
+    - §7is implicit in being a town member.
+    - ''
+    - §8Managed by the town system.
+    material: BOOK
 group-setting-cui:
   title: §6✦ §9§lGroup {0} Settings §6✦
   list-configuration:

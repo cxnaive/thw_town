@@ -1098,6 +1098,17 @@ group-manage-cui:
   - ''
   - §c▶ グループから削除するにはクリック
   - §8  デフォルトグループに戻ります
+  town-group-hint-button:
+    symbol: i
+    name: §6⛨ §eImplicit Town Membership
+    lore:
+    - §7Every member of the town holds this
+    - §7group's permissions on this outpost.
+    - §7No member list exists — membership
+    - §7is implicit in being a town member.
+    - ''
+    - §8Managed by the town system.
+    material: BOOK
 group-setting-cui:
   title: §6✦ §9§lグループ {0} 設定 §6✦
   list-configuration:

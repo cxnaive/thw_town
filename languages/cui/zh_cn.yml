@@ -1078,6 +1078,17 @@ group-manage-cui:
   - ''
   - §c▶ 点击移除出群组
   - §8  他们将返回默认群组
+  town-group-hint-button:
+    symbol: i
+    name: §6⛨ §e隐式镇成员组
+    lore:
+    - §7小镇的全体成员自动拥有
+    - §7此组在本属地的权限。
+    - §7没有成员列表——成员身份
+    - §7即小镇成员身份。
+    - ''
+    - §8由小镇系统托管。
+    material: BOOK
 group-setting-cui:
   title: §6✦ §9§l群组 {0} 设置 §6✦
   list-configuration:

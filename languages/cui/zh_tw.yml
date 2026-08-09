@@ -1043,6 +1043,17 @@ group-manage-cui:
     - ''
     - §8請三思而後行…
     material: TNT
+  town-group-hint-button:
+    symbol: i
+    name: §6⛨ §eImplicit Town Membership
+    lore:
+    - §7Every member of the town holds this
+    - §7group's permissions on this outpost.
+    - §7No member list exists — membership
+    - §7is implicit in being a town member.
+    - ''
+    - §8Managed by the town system.
+    material: BOOK
 add-member-button:
   symbol: i
   name: §a➕ §2§l新增成員
