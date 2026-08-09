@@ -199,8 +199,8 @@ public class TownMembers extends AbstractUI {
                         "§7Role: §b{0}",
                         "§7Source: §b{1}",
                         "",
-                        "§c▶ Left Click: kick (managers, residents)",
-                        "§e▶ Right Click: demote (mayor, assistants)"
+                        "§a▶ Left Click: promote/demote (managers)",
+                        "§c▶ Right Click: kick resident (managers)"
                 )
         );
         public ButtonConfiguration inviteItemButton = ButtonConfiguration.createMaterial(
@@ -228,16 +228,20 @@ public class TownMembers extends AbstractUI {
                     @Override
                     public void onClick(ClickType type) {
                         if (!manager) return;
-                        // mirror the TUI buttons: residents can be
-                        // kicked/promoted, assistants demoted/transferred,
+                        // mirror the TUI buttons: left toggles the role
+                        // (resident <-> assistant), right kicks a resident;
                         // the mayor row is inert (transfer only)
                         TownUI.action(player, () -> {
                             if (type.isLeftClick() && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
-                                TownManager.kickMember(player, town, member.getPlayerUuid());
-                            } else if (type.isRightClick()
+                                TownManager.setRole(player, town, member.getPlayerUuid(),
+                                        TownMemberDOO.TownRole.ASSISTANT);
+                            } else if (type.isLeftClick()
                                     && member.getRole() == TownMemberDOO.TownRole.ASSISTANT) {
                                 TownManager.setRole(player, town, member.getPlayerUuid(),
                                         TownMemberDOO.TownRole.RESIDENT);
+                            } else if (type.isRightClick()
+                                    && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
+                                TownManager.kickMember(player, town, member.getPlayerUuid());
                             }
                         }, () -> show(player, town.getName(), "1"));
                     }

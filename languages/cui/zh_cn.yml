@@ -1507,8 +1507,8 @@ town-members-cui:
     - §7角色：§b{0}
     - §7来源：§b{1}
     - ''
-    - §c▶ 左键：移出（管理者对居民）
-    - §e▶ 右键：降职（镇长对助理）
+    - §a▶ 左键：晋升/降职（管理者）
+    - §c▶ 右键：移出居民（管理者）
     material: PLAYER_HEAD
   invite-item-button:
     symbol: A

@@ -1489,8 +1489,8 @@ town-members-cui:
     - '§7Role: §b{0}'
     - '§7Source: §b{1}'
     - ''
-    - '§c▶ Left Click: kick (managers, residents)'
-    - '§e▶ Right Click: demote (mayor, assistants)'
+    - '§a▶ Left Click: promote/demote (managers)'
+    - '§c▶ Right Click: kick resident (managers)'
     material: PLAYER_HEAD
   invite-item-button:
     symbol: A
