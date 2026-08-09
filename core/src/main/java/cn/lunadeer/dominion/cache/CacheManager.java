@@ -21,6 +21,9 @@ import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.AutoTimer;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.XLogger;
+import cn.lunadeer.dominion.utils.databse.FIelds.Field;
+import cn.lunadeer.dominion.utils.databse.FIelds.FieldInteger;
+import cn.lunadeer.dominion.utils.databse.syntax.Select;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -76,6 +79,36 @@ public class CacheManager {
         this.thisServerCache.getDominionCache().load();
         this.thisServerCache.getMemberCache().load();
         this.thisServerCache.getGroupCache().load();
+
+        // Multi-server: populate the aggregate view. Every backend registers
+        // itself in server_info (MultiServerManager runs first); without a
+        // ServerCache per registered backend the cross-server getters
+        // (getPlayerOwnDominionDTOs, tab completion, DominionList) silently
+        // degenerated to this server's data only. Loading requires only the
+        // shared database — the other backend does NOT need to be online.
+        if (Configuration.multiServer.enable) {
+            try {
+                List<Map<String, Field<?>>> servers =
+                        Select.select(new FieldInteger("id", -1)).from("server_info").execute();
+                for (Map<String, Field<?>> row : servers) {
+                    Integer id = (Integer) row.get("id").getValue();
+                    if (id.equals(Configuration.multiServer.serverId)) continue;
+                    addServerCache(id);
+                    reloadServerCache(id);
+                }
+            } catch (Exception e) {
+                XLogger.error("Failed to load other servers' caches: {0}", e.getMessage());
+            }
+            // Same rationale as the town refresh above: no cross-server
+            // invalidation channel exists, so bound the staleness of the
+            // replica caches (list views, tab completion, cross-server
+            // lookups) to ~60s instead of a restart.
+            Scheduler.runTaskRepeatAsync(() -> {
+                for (Integer id : otherServerCaches.keySet()) {
+                    reloadServerCache(id);
+                }
+            }, 60 * 20L, 60 * 20L);
+        }
 
         Bukkit.getPluginManager().registerEvents(new CacheEventHandler(), Dominion.instance);
     }
