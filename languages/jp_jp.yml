@@ -126,6 +126,7 @@ group-provider-handler-text:
   add-member-failed: 'グループへのメンバー追加に失敗しました。理由: {0}'
   remove-member-success: メンバー {0} をグループ {1} から正常に削除しました。
   remove-member-failed: 'グループからメンバーを削除に失敗しました。理由: {0}'
+  town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
 select-point-events-handler-text:
   first-point: 最初のポイントが {0}, {1}, {2} に選択されました。
   second-point: 2番目のポイントが {0}, {1}, {2} に選択されました。
@@ -644,6 +645,7 @@ town-manager-text:
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
+  town-group-display-name: Town Members
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'

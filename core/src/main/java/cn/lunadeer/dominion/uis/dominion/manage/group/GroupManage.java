@@ -147,7 +147,8 @@ public class GroupManage extends AbstractUI {
         assertDominionAdmin(player, dominion);
         GroupDTO group = toGroupDTO(dominion, args[1]);
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
-        view.setTitle(formatString(ChestUserInterface.groupManageCUI.title, group.getNameColoredBukkit()));
+        view.setTitle(formatString(ChestUserInterface.groupManageCUI.title,
+                cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group)));
         view.applyListConfiguration(ChestUserInterface.groupManageCUI.listConfiguration, toIntegrity(args[2]));
 
         view.setButton(ChestUserInterface.groupManageCUI.backButton.getSymbol(),

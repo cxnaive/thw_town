@@ -126,6 +126,7 @@ group-provider-handler-text:
   add-member-failed: 添加成员到权限组失败，原因：{0}
   remove-member-success: 成功将成员 {0} 移出权限组 {1}
   remove-member-failed: 移除成员失败，原因：{0}
+  town-group-members-implicit: 小镇成员组的权限由镇成员身份隐式持有，不能向其中添加或移除成员。
 select-point-events-handler-text:
   first-point: 第一个选点坐标：{0}, {1}, {2}
   second-point: 第二个选点坐标：{0}, {1}, {2}
@@ -645,6 +646,7 @@ town-manager-text:
   outpost-admin-cleared: 已清除前哨 {0} 的次级管理员。
   outpost-admin-not-member: 次级管理员必须是城镇 {0} 的成员。
   merge-member-trusted: 你在 {1} 的成员身份已转为该属地的 Trust 授权（该领地已挂靠小镇）。
+  town-group-display-name: 小镇成员
 town-command-text:
   disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
   disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。

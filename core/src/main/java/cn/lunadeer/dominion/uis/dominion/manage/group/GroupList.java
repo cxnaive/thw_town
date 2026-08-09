@@ -107,6 +107,12 @@ public class GroupList extends AbstractUI {
         // get data from database directly because cache update may not be in time
         List<MemberDTO> members = new ArrayList<>(selectByDominionId(dominion.getId()));
         for (GroupDTO group : groups) {
+            // built-in town group: implicit membership — no delete, no
+            // add/remove member (provider enforces it too); flags remain
+            // editable, that is the group's whole purpose
+            boolean isTownGroup = group.getNamePlain().equals(cn.lunadeer.dominion.managers.TownManager.TOWN_MEMBER_GROUP_NAME)
+                    && dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                    && doo.isTownOutpost();
             Line line = new Line();
             Button deleteGroup = new FunctionalButton(TextUserInterface.groupListTuiText.deleteButton) {
                 @Override
@@ -116,10 +122,14 @@ public class GroupList extends AbstractUI {
             }.needPermission(defaultPermission).red().setHoverText(TextUserInterface.groupListTuiText.deleteDescription);
             Button setting = GroupFlags.button(player, dominionName, group.getNamePlain());
             Button addMember = SelectMember.button(player, dominionName, group.getNamePlain(), pageStr);
-            line.append(deleteGroup.build()).append(setting.build()).append(group.getNameColoredComponent()).append(addMember.build());
+            if (isTownGroup) {
+                line.append(setting.build()).append(cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group));
+            } else {
+                line.append(deleteGroup.build()).append(setting.build()).append(group.getNameColoredComponent()).append(addMember.build());
+            }
             view.add(line);
             for (MemberDTO member : members) {
-                if (!member.getGroupId().equals(group.getId())) {
+                if (isTownGroup || !member.getGroupId().equals(group.getId())) {
                     continue;
                 }
                 PlayerDTO p = toPlayerDTO(member.getPlayerUUID());
@@ -226,7 +236,7 @@ public class GroupList extends AbstractUI {
                 public void onClick(ClickType type) {
                     GroupManage.show(player, dominion.getName(), group.getNamePlain(), "1");
                 }
-            }.setDisplayNameArgs(group.getNameColoredBukkit()).setLoreArgs(group.getMembers().size());
+            }.setDisplayNameArgs(cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group)).setLoreArgs(group.getMembers().size());
             view.addItem(groupChest);
         }
 
@@ -260,7 +270,7 @@ public class GroupList extends AbstractUI {
         List<String> lines = new ArrayList<>();
         for (GroupDOO group : groups) {
             totalSize += group.getMembers().size();
-            String groupName = group.getNameColoredBukkit();
+            String groupName = cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group);
             int memberCount = group.getMembers().size();
             lines.add("§6▶ §6" + groupName + " §7(" + memberCount + ")");
             for (MemberDTO member : group.getMembers()) {

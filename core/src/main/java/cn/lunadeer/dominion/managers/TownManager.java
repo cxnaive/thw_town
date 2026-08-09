@@ -106,6 +106,7 @@ public class TownManager {
         public String outpostAdminCleared = "Outpost admin of {0} cleared.";
         public String outpostAdminNotMember = "Outpost admin must be a member of town {0}.";
         public String mergeMemberTrusted = "Your membership of {1} was converted to a trust grant for that outpost (the land was attached to a town).";
+        public String townGroupDisplayName = "Town Members";
     }
 
     /**
@@ -115,6 +116,18 @@ public class TownManager {
      * commands; the reserved name keeps the lookup unambiguous.
      */
     public static final String TOWN_MEMBER_GROUP_NAME = "@town";
+
+    /**
+     * Localized display name for the built-in town member group. The
+     * internal key "@town" stays as-is (it is the lookup key on every
+     * attached outpost); only the presentation layer localizes.
+     */
+    public static @NotNull String groupDisplayName(@NotNull GroupDTO group) {
+        if (group.getNamePlain().equals(TOWN_MEMBER_GROUP_NAME)) {
+            return Language.townManagerText.townGroupDisplayName;
+        }
+        return group.getNameColoredBukkit();
+    }
 
     // ------------------------------------------------------------------
     // Trust flag categories (plan §4.5 mapping, both directions)

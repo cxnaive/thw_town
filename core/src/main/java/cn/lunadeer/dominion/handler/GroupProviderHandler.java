@@ -34,6 +34,7 @@ public class GroupProviderHandler extends GroupProvider {
         public String createGroupFailed = "Failed to create group, reason: {0}";
 
         public String townGroupReserved = "The @town group is managed by the town system and cannot be deleted or renamed.";
+        public String townGroupMembersImplicit = "Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.";
         public String townOutpostNoCustomGroups = "Custom groups have no effect on town outposts; use the @town group or /town trust instead.";
         public String deleteGroupSuccess = "Group {0} deleted successfully.";
         public String deleteGroupFailed = "Failed to delete group, reason: {0}";
@@ -181,6 +182,13 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
+                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                        && doo.isTownOutpost()) {
+                    // town members hold this group implicitly — explicit
+                    // member rows would be archived away on re-attach
+                    throw new DominionException(Language.groupProviderHandlerText.townGroupMembersImplicit);
+                }
                 if (event.getGroup().getFlagValue(Flags.ADMIN) || event.getMember().getFlagValue(Flags.ADMIN)) {
                     assertDominionManage(event.getOperator(), event.getDominion());
                 } else {
@@ -209,6 +217,11 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
+                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
+                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                        && doo.isTownOutpost()) {
+                    throw new DominionException(Language.groupProviderHandlerText.townGroupMembersImplicit);
+                }
                 if (event.getGroup().getFlagValue(Flags.ADMIN)) {
                     assertDominionManage(event.getOperator(), event.getDominion());
                 } else {
