@@ -630,6 +630,9 @@ ui-commands-description:
   environment-flags: 管理領地環境權限
   guest-flags: 管理領地通用權限權限
 town-manager-text:
+  use-transfer-for-mayor: 'The mayor role can only change hands via /town transfer.'
+  set-role-notify: 'Your role in town {1} is now {0}.'
+  set-role-success: 'Set {0}''s role to {1} in town {2}.'
   disband-enclave-dissolved: 'Your dominion {0} was dissolved together with town {1}.'
   only-mayor-can-transfer: 'Only the current mayor of {0} can transfer the mayor role.'
   town-name-should-not-empty: Town name should not be empty.
@@ -687,6 +690,7 @@ town-command-text:
     &b/town leave &7- leave your town (land stays with the town)
     &b/town kick <player> &7- kick a resident (mayor/assistant)
     &b/town transfer <player> &7- transfer the mayor role
+    &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
     &b/town disband [confirm] &7- disband the town (dissolves outposts)
     &b/town deposit <amount> &7- deposit into the town bank
     &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
@@ -711,3 +715,17 @@ town-command-text:
   member-list: 'Members of {0}: {1}'
 migration-text:
   town-data-dropped: 'The source server has town data; towns do NOT follow a server merge — imported dominions become townless.'
+
+town-create-inputter-text:
+  button: 'CREATE TOWN'
+  hint: 'Enter the new town name.'
+  description: 'Create a town: your land attaches, or a founding outpost is created from your selection.'
+
+town-outpost-admin-inputter-text:
+  button: 'OUTPOST ADMIN'
+  hint: 'Enter the player name to appoint, or ''clear'' to remove.'
+  description: 'Appoint or clear the outpost admin.'
+
+town-disband-confirm-inputter-text:
+  button: 'DISBAND'
+  hint: 'Type ''confirm'' to disband the town.'

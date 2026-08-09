@@ -64,6 +64,8 @@ public class MainMenu extends AbstractUI {
         public String title = "Dominion Menu";
         public String button = "MENU";
         public String adminOnlySection = "Only admin can see this section";
+        public String myTownButton = "MY TOWN";
+        public String myTownDescription = "Open your town (or create one).";
         public String documentButton = "DOCUMENT";
         public String documentDescription = "Open the documentation external link.";
         public String commandHelpButton = "COMMAND HELP";
@@ -85,9 +87,36 @@ public class MainMenu extends AbstractUI {
     protected void showTUI(Player player, String... args) {
         int page = toIntegrity(args[0], 1);
 
-        Line create = Line.create()
-                .append(CreateDominionInputter.createTuiButtonOn(player).needPermission(defaultPermission).build())
-                .append(Language.createDominionInputterText.description);
+        boolean admin = player.hasPermission(adminPermission);
+        // town era: personal dominion creation is retired for players —
+        // the create line becomes the town entry (admins keep the old one)
+        Line create;
+        if (admin) {
+            create = Line.create()
+                    .append(CreateDominionInputter.createTuiButtonOn(player).needPermission(defaultPermission).build())
+                    .append(Language.createDominionInputterText.description);
+        } else {
+            create = Line.create()
+                    .append(cn.lunadeer.dominion.inputters.town.TownCreateInputter.createTuiButtonOn(player)
+                            .needPermission(defaultPermission).build())
+                    .append(Language.townCreateInputterText.description);
+        }
+        Line myTown = Line.create()
+                .append(new FunctionalButton(TextUserInterface.menuTuiText.myTownButton) {
+                    @Override
+                    public void function() {
+                        cn.lunadeer.dominion.doos.TownDOO own = cn.lunadeer.dominion.managers.TownManager.ownTownOf(player);
+                        if (own != null) {
+                            cn.lunadeer.dominion.uis.town.TownInfo.show(player, own.getName(), "1");
+                        } else {
+                            cn.lunadeer.dominion.inputters.town.TownCreateInputter.createOn(player);
+                        }
+                    }
+                }.needPermission(defaultPermission).build())
+                .append(TextUserInterface.menuTuiText.myTownDescription);
+        Line townList = Line.create()
+                .append(cn.lunadeer.dominion.uis.town.TownList.button(player).build())
+                .append(TextUserInterface.townListTuiText.description);
         Line list = Line.create()
                 .append(DominionList.button(player).build())
                 .append(TextUserInterface.dominionListTuiText.description);
@@ -134,6 +163,8 @@ public class MainMenu extends AbstractUI {
         view.title(TextUserInterface.menuTuiText.title);
         view.navigator(Line.create().append(TextUserInterface.menuTuiText.button).append(switchToCui.build()));
         view.add(create);
+        view.add(myTown);
+        view.add(townList);
         view.add(list);
         if (Configuration.groupTitle.enable) view.add(title);
         view.add(template);
@@ -161,13 +192,13 @@ public class MainMenu extends AbstractUI {
                 "#########",
                 "##A#B#C##",
                 "##D#E#F##",
-                "#########",
+                "##G#H####",
                 "####S####"
         );
         public List<String> userLayout = List.of(
                 "#########",
-                "##A#B#C##",
-                "###D#E###",
+                "##G#B#C##",
+                "##D#E#H##",
                 "#########",
                 "####S####"
         );
@@ -264,6 +295,27 @@ public class MainMenu extends AbstractUI {
                         "§8text-based experience!"
                 )
         );
+
+        public ButtonConfiguration myTownButton = ButtonConfiguration.createMaterial(
+                'G', Material.BEACON, "§6⛨ §eMy Town",
+                List.of(
+                        "§7Open your town's management page,",
+                        "§7or create a new town.",
+                        "",
+                        "§e▶ Click to open",
+                        "",
+                        "§8Towns own land in the new era."
+                )
+        );
+
+        public ButtonConfiguration townListButton = ButtonConfiguration.createMaterial(
+                'H', Material.MAP, "§b🗺 §fAll Towns",
+                List.of(
+                        "§7Browse every town on the server.",
+                        "",
+                        "§b▶ Click to browse towns"
+                )
+        );
     }
 
     @Override
@@ -280,8 +332,35 @@ public class MainMenu extends AbstractUI {
                 new ChestButton(ChestUserInterface.mainMenuCui.createButton) {
                     @Override
                     public void onClick(ClickType type) {
+                        // admins keep the retired personal-create entry
                         CreateDominionInputter.createOn(player);
                         view.close();
+                    }
+                }
+        );
+
+        // town era: 'G' replaces the create button in the user layout
+        view.setButton(ChestUserInterface.mainMenuCui.myTownButton.getSymbol(),
+                new ChestButton(ChestUserInterface.mainMenuCui.myTownButton) {
+                    @Override
+                    public void onClick(ClickType type) {
+                        cn.lunadeer.dominion.doos.TownDOO own =
+                                cn.lunadeer.dominion.managers.TownManager.ownTownOf(player);
+                        if (own != null) {
+                            cn.lunadeer.dominion.uis.town.TownInfo.show(player, own.getName(), "1");
+                        } else {
+                            cn.lunadeer.dominion.inputters.town.TownCreateInputter.createOn(player);
+                            view.close();
+                        }
+                    }
+                }
+        );
+
+        view.setButton(ChestUserInterface.mainMenuCui.townListButton.getSymbol(),
+                new ChestButton(ChestUserInterface.mainMenuCui.townListButton) {
+                    @Override
+                    public void onClick(ClickType type) {
+                        cn.lunadeer.dominion.uis.town.TownList.show(player, "1");
                     }
                 }
         );

@@ -4,6 +4,7 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.cache.DominionNode;
 import cn.lunadeer.dominion.commands.DominionOperateCommand;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
@@ -37,11 +38,34 @@ import java.util.List;
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion;
 import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
+import static cn.lunadeer.dominion.utils.Misc.formatString;
 
 public class DominionList extends AbstractUI {
 
     public static void show(CommandSender sender, String pageStr) {
-        new DominionList().displayByPreference(sender, pageStr);
+        DominionList ui = new DominionList();
+        if (!(sender instanceof Player player)) {
+            ui.displayByPreference(sender, pageStr);
+            return;
+        }
+        // the managed-town section queries the DB (cross-server) — prefetch
+        // async, render sync (TownUI thread discipline, §13.5)
+        cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+            try {
+                ui.prefetchedManaged = managedTownOutposts(player);
+            } catch (Exception e) {
+                Notification.error(player, e);
+                return;
+            }
+            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
+                    () -> ui.displayByPreference(sender, pageStr));
+        });
+    }
+
+    private List<cn.lunadeer.dominion.doos.DominionDOO> prefetchedManaged;
+
+    private List<cn.lunadeer.dominion.doos.DominionDOO> managedOutposts(Player player) throws Exception {
+        return prefetchedManaged != null ? prefetchedManaged : managedTownOutposts(player);
     }
 
     public static SecondaryCommand list = new SecondaryCommand("list", List.of(
@@ -66,6 +90,9 @@ public class DominionList extends AbstractUI {
         public String deleteButton = "DELETE";
         public String adminSection = "Your admin dominions section.";
         public String serverSection = "Server {0} dominions section.";
+        public String townTag = " [{0}]";
+        public String townManagedSection = "Town outposts you manage (all servers).";
+        public String townManagedLine = "§b{0} §7- town: {1}, server {2}";
     }
 
     public static ListViewButton button(CommandSender sender) {
@@ -82,13 +109,30 @@ public class DominionList extends AbstractUI {
         StringBuilder prefix = new StringBuilder();
         prefix.append(" | ".repeat(Math.max(0, depth)));
         for (DominionNode node : dominionTree) {
-            TextComponent manage = DominionManage.button(sender, node.getDominion().getName()).green().build();
-            TextComponent delete = new FunctionalButton(TextUserInterface.dominionListTuiText.deleteButton) {
-                @Override
-                public void function() {
-                    DominionOperateCommand.delete(sender, node.getDominion().getName(), "");
-                }
-            }.red().build();
+            Line line = Line.create();
+            // town era: town outposts cannot be deleted or personally
+            // managed — the contributor gets a read-only info entry, town
+            // managers keep MANAGE, DELETE never renders (§13.4)
+            boolean townOutpost = node.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                    && doo.isTownOutpost();
+            if (!townOutpost) {
+                TextComponent delete = new FunctionalButton(TextUserInterface.dominionListTuiText.deleteButton) {
+                    @Override
+                    public void function() {
+                        DominionOperateCommand.delete(sender, node.getDominion().getName(), "");
+                    }
+                }.red().build();
+                line.append(delete);
+            }
+            boolean canManage = !(sender instanceof Player p)
+                    || cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(p, node.getDominion());
+            if (canManage) {
+                line.append(DominionManage.button(sender, node.getDominion().getName()).green().build());
+            } else {
+                // reachable only for players (console always canManage)
+                line.append(cn.lunadeer.dominion.uis.dominion.manage.Info.button((Player) sender,
+                        node.getDominion().getName()).build());
+            }
             TextComponent tp = new FunctionalButton("TP") {
                 @Override
                 public void function() {
@@ -96,7 +140,13 @@ public class DominionList extends AbstractUI {
                         teleportToDominion(player, node.getDominion());
                 }
             }.build();
-            Line line = Line.create().append(delete).append(manage).append(tp).append(prefix + node.getDominion().getName());
+            line.append(tp).append(prefix + node.getDominion().getName());
+            if (townOutpost) {
+                cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
+                        .getTown(((cn.lunadeer.dominion.doos.DominionDOO) node.getDominion()).getTownId());
+                line.append(Component.text(formatString(TextUserInterface.dominionListTuiText.townTag,
+                        town == null ? "?" : town.getName()), ViewStyles.SECONDARY));
+            }
             lines.add(line);
             lines.addAll(BuildTreeLines(sender, node.getChildren(), depth + 1));
         }
@@ -125,7 +175,68 @@ public class DominionList extends AbstractUI {
                 view.add(Line.create().append(manage).append(dominion.getName()));
             }
         }
+        // Town era (§13.4): outposts I manage as mayor/assistant or as an
+        // appointed outpost admin — cross-server, since towns are global.
+        // Rows already shown in the owned tree above are skipped.
+        view.addLines(buildManagedTownLines(player));
         view.showOn(player, page);
+    }
+
+    /**
+     * Outposts the player manages as mayor/assistant or as an appointed
+     * outpost admin — cross-server (DB-backed), deduplicated, order kept.
+     */
+    public static List<cn.lunadeer.dominion.doos.DominionDOO> managedTownOutposts(Player player) throws Exception {
+        List<cn.lunadeer.dominion.doos.DominionDOO> managed = new ArrayList<>();
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        for (cn.lunadeer.dominion.doos.TownMemberDOO membership : CacheManager.instance.getTownCache()
+                .getMembershipsOf(player.getUniqueId())) {
+            if (membership.getRole() == cn.lunadeer.dominion.doos.TownMemberDOO.TownRole.RESIDENT) continue;
+            for (cn.lunadeer.dominion.doos.DominionDOO d : cn.lunadeer.dominion.doos.DominionDOO
+                    .selectByTownId(membership.getTownId())) {
+                if (seen.add(d.getId())) managed.add(d);
+            }
+        }
+        for (cn.lunadeer.dominion.doos.DominionDOO d : cn.lunadeer.dominion.doos.DominionDOO
+                .selectByOutpostAdmin(player.getUniqueId())) {
+            if (seen.add(d.getId())) managed.add(d);
+        }
+        return managed;
+    }
+
+    /**
+     * Lines for the "town outposts I manage" section: outposts of towns
+     * where the player is mayor/assistant, plus outposts they are
+     * appointed admin of. Cross-server (DB-backed); entries on other
+     * servers are display-only.
+     */
+    private List<Line> buildManagedTownLines(Player player) throws Exception {
+        List<Line> lines = new ArrayList<>();
+        java.util.Set<Integer> own = new java.util.HashSet<>();
+        for (DominionDTO d : CacheManager.instance.getCache().getDominionCache()
+                .getPlayerOwnDominionDTOs(player.getUniqueId())) {
+            own.add(d.getId());
+        }
+        List<cn.lunadeer.dominion.doos.DominionDOO> managed = new ArrayList<>(managedOutposts(player));
+        managed.removeIf(d -> own.contains(d.getId()));
+        if (managed.isEmpty()) {
+            return lines;
+        }
+        lines.add(Line.create().append(""));
+        lines.add(Line.create().append(Component.text(
+                TextUserInterface.dominionListTuiText.townManagedSection, ViewStyles.PRIMARY)));
+        for (cn.lunadeer.dominion.doos.DominionDOO outpost : managed) {
+            Line line = Line.create();
+            if (outpost.getServerId() == Configuration.multiServer.serverId) {
+                line.append(DominionManage.button(player, outpost.getName()).build());
+            }
+            cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
+                    .getTown(outpost.getTownId());
+            line.append(formatString(TextUserInterface.dominionListTuiText.townManagedLine,
+                    outpost.getName(), town == null ? "?" : town.getName(), outpost.getServerId()));
+            lines.add(line);
+        }
+        return lines;
     }
 
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ TUI ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
@@ -172,6 +283,31 @@ public class DominionList extends AbstractUI {
                 )
         );
 
+        public ButtonConfiguration contributedDominionButton = ButtonConfiguration.createMaterial(
+                'i', Material.BROWN_BANNER, "§6🏰 §e{0}",
+                List.of(
+                        "§7Town: §b{0}",
+                        "§8Your land belongs to a town now.",
+                        "",
+                        "§b▶ Left Click: info/manage",
+                        "§b▶ Right Click: teleport",
+                        "",
+                        "§7Status: §6Contributed to town"
+                )
+        );
+
+        public ButtonConfiguration townManagedButton = ButtonConfiguration.createMaterial(
+                'i', Material.BEACON, "§3⛨ §b{0}",
+                List.of(
+                        "§7Town: §b{0}",
+                        "§7Server: §b{1}",
+                        "",
+                        "§b▶ Left Click: manage (this server)",
+                        "",
+                        "§7Status: §3Town outpost you manage"
+                )
+        );
+
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
                 '<', Material.RED_STAINED_GLASS_PANE,
                 "§c« Back to Main Menu",
@@ -192,18 +328,63 @@ public class DominionList extends AbstractUI {
 
         List<DominionDTO> own = CacheManager.instance.getCache().getDominionCache().getPlayerOwnDominionDTOs(player.getUniqueId());
         for (DominionDTO dominion : own) {
-            ChestButton btn = new ChestButton(ChestUserInterface.dominionListCui.ownDominionButton) {
+            // town era: contributed land stays listed (the player is the
+            // recorded contributor) but carries the town tag; left click
+            // opens manage only with real authority, info otherwise
+            boolean townOutpost = dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                    && doo.isTownOutpost();
+            boolean canManage = cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, dominion);
+            ChestButton btn = new ChestButton(townOutpost
+                    ? ChestUserInterface.dominionListCui.contributedDominionButton
+                    : ChestUserInterface.dominionListCui.ownDominionButton) {
                 @Override
                 public void onClick(ClickType type) {
                     if (type.isLeftClick()) {
-                        DominionManage.show(player, dominion.getName(), "1");
+                        if (canManage) {
+                            DominionManage.show(player, dominion.getName(), "1");
+                        } else {
+                            cn.lunadeer.dominion.uis.dominion.manage.Info.show(player, dominion.getName());
+                        }
                     } else if (type.isRightClick()) {
                         teleportToDominion(player, dominion);
                     }
                 }
             };
+            String townName = "?";
+            if (townOutpost) {
+                cn.lunadeer.dominion.doos.TownDOO t = CacheManager.instance.getTownCache()
+                        .getTown(((cn.lunadeer.dominion.doos.DominionDOO) dominion).getTownId());
+                if (t != null) townName = t.getName();
+            }
             btn = btn.setDisplayNameArgs(dominion.getName());
+            if (townOutpost) {
+                btn = btn.setLoreArgs(townName);
+            }
             view = view.addItem(btn);
+        }
+
+        // town outposts I manage (mayor/assistant/outpost admin), this server only for clicks
+        try {
+            for (cn.lunadeer.dominion.doos.DominionDOO outpost : managedOutposts(player)) {
+                if (own.stream().anyMatch(d -> d.getId().equals(outpost.getId()))) continue;
+                cn.lunadeer.dominion.doos.TownDOO t = CacheManager.instance.getTownCache()
+                        .getTown(outpost.getTownId());
+                ChestButton btn = new ChestButton(ChestUserInterface.dominionListCui.townManagedButton) {
+                    @Override
+                    public void onClick(ClickType type) {
+                        if (type.isLeftClick()
+                                && outpost.getServerId() == Configuration.multiServer.serverId) {
+                            DominionManage.show(player, outpost.getName(), "1");
+                        }
+                    }
+                };
+                btn = btn.setDisplayNameArgs(outpost.getName());
+                btn = btn.setLoreArgs(t == null ? "?" : t.getName(),
+                        String.valueOf(outpost.getServerId()));
+                view = view.addItem(btn);
+            }
+        } catch (Exception e) {
+            Notification.error(player, e);
         }
 
         List<DominionDTO> admin = CacheManager.instance.getCache().getDominionCache().getPlayerAdminDominionDTOs(player.getUniqueId());

@@ -681,7 +681,16 @@ Phase 1 只需新增 TownBank（镇余额 + 存取命令 + 镇账户扣费），
   的初始模板来源；
 - **multi-server / database**：不动，server-id 语义不改。
 
-## 13. 镇时代 UI 设计(TUI/CUI 改造,设计稿,未实施)
+## 13. 镇时代 UI 设计（TUI/CUI 改造；**已实现，5.0.0**）
+
+实现落点（对照 §13.7）：四步合并一次落地——`uis/town/` 六页
+（TownList/TownInfo/TownMembers/TownTrusts/TownBank/TownOutposts，
+TUI/CUI/Console 三端），DominionList 镇属分区（树内 `[镇名]` 标记 +
+"我管理的镇属地"跨服段），DominionManage 镇属变体（Member→Trust、
+Delete→次级管理员/release），MainMenu 镇入口（玩家建镇引导、管理员
+保留旧建地入口），裸 `/town` 直接开 UI；promote/demote 命令随 UI-3
+前置落地。CUI 新节文本依赖配置回写（Java 默认英文；zh_cn 翻译属
+既有债务，与 jp/zh_tw 同批后补）。
 
 ### 13.1 现状问题
 
@@ -718,9 +727,14 @@ MainMenu
 │       ├── Bank               余额 + 存/取(取仅镇长/助理)
 │       ├── OutpostList        全镇前哨(跨服,DB 分页)→ OutpostManage
 │       └── Disband            红色确认页(列贡献者清单,同命令口径)
-├── [小镇列表]      ← 新增;全服分页,只读信息入口
+├── [小镇列表]      ← 新增;全服分页,只读信息入口(玩家)
 ├── [我的领地]      ← DominionList 改造(§13.4)
-└── 其余行不变(头衔/模板/迁移/管理员工具)
+├── 其余行不变(头衔/模板/迁移/管理员工具)
+└── 管理员区(互不混合的两个入口)
+    ├── [所有小镇]    ← TownList 管理员模式:含解散仲裁、银行/成员查看
+    └── [LIST ALL]   ← 现有 AllDominion(所有 Outpost/领地,本服);
+                       行上加 [镇名] 标记,镇属 Outpost 的管理页给
+                       管理员 [release] 仲裁按钮(/dom town release)
 ```
 
 OutpostManage = 现有 DominionManage 的镇属变体:
@@ -732,8 +746,9 @@ OutpostManage = 现有 DominionManage 的镇属变体:
 | MemberList | 正常 | **隐藏**,替换为 [Trust 管理] 入口 |
 | GroupList | 正常 | 只读:`@town` 组可进 GroupFlags 改 flags(镇长/助理);建组/改名/删除按钮隐藏 |
 | SetTp / Rename / 进出消息 | 不变 | 不变(仍 dominion 级属性) |
-| Delete / Transfer | 正常 | **隐藏**(镇属不可删不可转;admin 仲裁走命令) |
+| Delete / Transfer | 正常 | **隐藏**(镇属不可删不可转) |
 | — | — | 新增 [次级管理员] 行(镇长/助理:任命/清除) |
+| — | — | 新增 [release] 行(仅管理员:仲裁剥离;Founding 不可) |
 
 ### 13.4 DominionList 三段式
 
@@ -762,8 +777,15 @@ OutpostManage = 现有 DominionManage 的镇属变体:
 | flags 编辑(@town 组/guest/env) | ✓ | ✗ | ✗ | ✗ |
 | resize | ✓ | ✗ | ✗ | ✗ |
 | Trust(本前哨) | ✓ | ✓ | ✗ | ✗ |
+
 | Trust(镇级)/成员/银行取/任命/解散 | ✓ | ✗ | ✗ | ✗ |
 | 删除/转让 | 无人(命令层 admin 仲裁) | ✗ | ✗ | ✗ |
+
+> 实现注记：次级管理员经 `assertDominionAdmin`(isOutpostManager)实际可
+> 编辑本前哨的 env/guest/`@town` flags——与上表"✗"的有意偏离（本前哨
+> 的 flags 管理合乎次级管理员职责直觉，后端语义不再收紧）。resize 入口
+> 对次级管理员在 UI 层隐藏（§13.3）。另：镇前哨清单未做 DB 分页——
+> 与全插件所有列表页一致走 UI 内存分页（前哨数受数量上限约束）。
 
 ### 13.7 依赖与拆分
 

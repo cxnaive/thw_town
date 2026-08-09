@@ -5,6 +5,8 @@ style:
   severe-color: '#FF6048'
   normal-color: '#8BFF7B'
 menu-tui-text:
+  my-town-description: '打开你的小镇（或创建一个）。'
+  my-town-button: '我的小镇'
   title: Dominion主菜单
   button: 菜单
   admin-only-section: 以下内容仅管理员可见
@@ -15,6 +17,9 @@ menu-tui-text:
   switch-to-cui-button: ' 切换到CUI 🆕 '
   fail-to-switch-message: 切换到 {0} 失败：{1}
 dominion-list-tui-text:
+  town-managed-line: '§b{0} §7- 小镇: {1}, 服务器 {2}'
+  town-managed-section: '你管理的镇属地（所有服务器）。'
+  town-tag: ' [{0}]'
   title: 你的领地列表
   button: 领地列表
   description: 列出你的所有领地（含可管理领地）。
@@ -22,6 +27,9 @@ dominion-list-tui-text:
   admin-section: 以下为你拥有管理权限的领地列表
   server-section: 以下为你在服务器 {0} 的领地列表
 dominion-manage-tui-text:
+  release-description: '仅管理员：把此前哨从镇里剥离，归还给贡献者。'
+  release-button: '剥离'
+  trusts-description: '管理此镇属前哨的单人 Trust 授权。'
   title: 管理领地 {0}
   button: 管理领地
   set-tp-button: 设置传送
@@ -140,3 +148,71 @@ dominion-copy-tui-text:
   guest-description: 从其他领地复制访客权限配置。
   member-button: 成员配置
   member-description: 从其他领地复制成员配置（包括成员权限）。
+
+town-list-tui-text:
+  title: '所有小镇'
+  description: '列出所有小镇。'
+  button: '小镇列表'
+  town-line: '§b{0} §7- 镇长: {1}, 成员: {2}, 余额: {3}'
+
+town-info-tui-text:
+  title: '小镇: {0}'
+  button: '小镇'
+  mayor-line: '§7镇长: §b{0}'
+  member-count-line: '§7成员数: §b{0}'
+  balance-line: '§7镇库余额: §b{0}'
+  outpost-count-line: '§7前哨数: §b{0}'
+  your-role-line: '§7你的角色: §b{0}'
+  members-button: '成员'
+  members-description: '查看并管理小镇成员。'
+  trusts-button: '授权'
+  trusts-description: '查看并管理 Trust 授权。'
+  bank-button: '银行'
+  bank-description: '镇银行存取。'
+  outposts-button: '前哨'
+  outposts-description: '列出本镇全部前哨。'
+  invite-button: '邀请'
+  invite-description: '邀请玩家加入。'
+  leave-button: '退出'
+  leave-description: '退出本镇（领地留镇）。'
+  disband-button: '解散'
+  disband-description: '解散本镇（需确认）。'
+
+town-members-tui-text:
+  title: '{0} 的成员'
+  button: '成员'
+  member-line: '§b{0} §7- {1} ({2})'
+  invite-button: '邀请'
+  invite-hint: '输入要邀请的玩家名。'
+  kick-button: '踢出'
+  promote-button: '升职'
+  demote-button: '降职'
+  transfer-button: '转让镇长'
+
+town-trusts-tui-text:
+  title: '{0} 的授权'
+  button: '授权'
+  town-scope-label: '§7[镇级]'
+  outpost-scope-label: '§7[前哨: {0}]'
+  trust-line: '§b{0} {1}'
+  add-button: '添加授权'
+  add-hint: '输入要授权的玩家名（镇级，默认全关——添加后再逐项开启）。'
+  remove-button: 'X'
+  flag-on: '§a{0}'
+  flag-off: '§8{0}'
+
+town-bank-tui-text:
+  title: '{0} 的银行'
+  button: '银行'
+  balance-line: '§7余额: §b{0}'
+  deposit-button: '存入'
+  deposit-hint: '输入存入金额。'
+  withdraw-button: '取出'
+  withdraw-hint: '输入取出金额。'
+  invalid-amount: '无效金额: {0}'
+
+town-outposts-tui-text:
+  title: '{0} 的前哨'
+  button: '前哨'
+  outpost-line: '§b{0} §7- {1} ({2}, 服务器 {3})'
+  remote-hint: '§8（在另一个服务器）'

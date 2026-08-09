@@ -82,6 +82,9 @@ public class TownManager {
         public String cannotKickManager = "You cannot kick the mayor or an assistant.";
         public String onlyMayorCanTransfer = "Only the current mayor of {0} can transfer the mayor role.";
         public String transferSuccess = "Mayor of {0} transferred to {1}.";
+        public String setRoleSuccess = "Set {0}'s role to {1} in town {2}.";
+        public String setRoleNotify = "Your role in town {1} is now {0}.";
+        public String useTransferForMayor = "The mayor role can only change hands via /town transfer.";
         public String targetNotMember = "{0} is not a member of town {1}.";
         public String trustSuccess = "Trusted {0} on {1} (scope {2}).";
         public String untrustSuccess = "Removed trust of {0} on {1} (scope {2}).";
@@ -218,6 +221,32 @@ public class TownManager {
         if (current >= max) {
             throw new DominionException(Language.townManagerText.maxMembershipsReached, current, max);
         }
+    }
+
+    /** Role of a player in a town, or null when not a member. */
+    public static TownMemberDOO.@Nullable TownRole roleOf(@NotNull TownDOO town, @NotNull UUID player) {
+        TownMemberDOO member = cache().getMember(town.getId(), player);
+        return member == null ? null : member.getRole();
+    }
+
+    /**
+     * The player's "home" town for UI purposes: with multiple memberships,
+     * prefer the one they actually lead (mayor over assistant over
+     * resident), matching TownCommand resolution. Null when townless.
+     */
+    public static @Nullable TownDOO ownTownOf(@NotNull Player player) {
+        List<TownMemberDOO> memberships = new ArrayList<>(
+                cache().getMembershipsOf(player.getUniqueId()));
+        memberships.sort(java.util.Comparator.comparingInt(m -> switch (m.getRole()) {
+            case MAYOR -> 0;
+            case ASSISTANT -> 1;
+            case RESIDENT -> 2;
+        }));
+        for (TownMemberDOO membership : memberships) {
+            TownDOO town = cache().getTown(membership.getTownId());
+            if (town != null) return town;
+        }
+        return null;
     }
 
     public static boolean isManager(@NotNull TownDOO town, @NotNull UUID player) {
@@ -537,6 +566,39 @@ public class TownManager {
     }
 
     /**
+     * Promote a resident to assistant / demote an assistant to resident.
+     * Mayor/assistant only; the mayor role itself changes hands solely via
+     * {@link #transferMayor}.
+     */
+    public static void setRole(@NotNull Player operator, @NotNull TownDOO town, @NotNull UUID target,
+                               @NotNull TownMemberDOO.TownRole newRole) throws Exception {
+        assertManager(operator, town);
+        if (newRole == TownMemberDOO.TownRole.MAYOR) {
+            throw new DominionException(Language.townManagerText.useTransferForMayor);
+        }
+        TownMemberDOO member = cache().getMember(town.getId(), target);
+        if (member == null) {
+            throw new DominionException(Language.townManagerText.targetNotMember,
+                    CacheManager.instance.getPlayerName(target), town.getName());
+        }
+        // the mayor's membership row must never be demoted — not even by
+        // admins: town.mayor_uuid would dangle at a non-mayor member and
+        // the town becomes unmanageable. Mayor changes hands solely via
+        // transferMayor (which updates mayor_uuid atomically).
+        if (member.getRole() == TownMemberDOO.TownRole.MAYOR) {
+            throw new DominionException(Language.townManagerText.useTransferForMayor);
+        }
+        if (member.getRole() == newRole) {
+            return;
+        }
+        member.setRole(newRole);
+        cache().reloadNow();
+        Notification.info(operator, Language.townManagerText.setRoleSuccess,
+                CacheManager.instance.getPlayerName(target), newRole.name(), town.getName());
+        notifyIfOnline(target, Language.townManagerText.setRoleNotify, newRole.name(), town.getName());
+    }
+
+    /**
      * Transfer the mayor role: pure town_member/town.mayor_uuid change, zero
      * dominion row writes (plan §3). Only the current mayor (or an admin)
      * may transfer — assistants must not self-promote. The old mayor
@@ -614,6 +676,14 @@ public class TownManager {
         assertTrustOperator(operator, town, scope, outpost);
         int scopeId = scope == TownTrustDOO.TrustScope.TOWN ? town.getId()
                 : (outpost == null ? -1 : outpost.getId());
+        if (scope == TownTrustDOO.TrustScope.OUTPOST) {
+            // never fake success: an unresolvable outpost must not turn
+            // into a silent no-op DELETE while the grant survives
+            if (outpost == null || !town.getId().equals(outpost.getTownId())) {
+                throw new DominionException(Language.townManagerText.trustTargetOutpostNotInTown,
+                        outpost == null ? "?" : outpost.getName(), town.getName());
+            }
+        }
         TownTrustDOO.delete(town.getId(), target, scope, scopeId);
         cache().reloadNow();
         Notification.info(operator, Language.townManagerText.untrustSuccess,

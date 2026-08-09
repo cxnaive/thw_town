@@ -64,6 +64,12 @@ public class TextUserInterface extends ConfigurationFile {
     public static TemplateFlags.TemplateSettingTuiText templateSettingTuiText = new TemplateFlags.TemplateSettingTuiText();
     public static CopyMenu.CopyMenuTuiText copyMenuTuiText = new CopyMenu.CopyMenuTuiText();
     public static DominionCopy.DominionCopyTuiText dominionCopyTuiText = new DominionCopy.DominionCopyTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownList.TownListTuiText townListTuiText = new cn.lunadeer.dominion.uis.town.TownList.TownListTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownInfo.TownInfoTuiText townInfoTuiText = new cn.lunadeer.dominion.uis.town.TownInfo.TownInfoTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownMembers.TownMembersTuiText townMembersTuiText = new cn.lunadeer.dominion.uis.town.TownMembers.TownMembersTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsTuiText townTrustsTuiText = new cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText townBankTuiText = new cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsTuiText townOutpostsTuiText = new cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsTuiText();
 
     @PostProcess
     public void postProcess() {

@@ -5,6 +5,8 @@ style:
   severe-color: '#FF6048'
   normal-color: '#8BFF7B'
 menu-tui-text:
+  my-town-description: 'Open your town (or create one).'
+  my-town-button: 'MY TOWN'
   title: 領地主選單
   button: 選單
   admin-only-section: 以下內容僅管理員才能看見
@@ -15,6 +17,9 @@ menu-tui-text:
   switch-to-cui-button: 切換至 CUI 🆕
   fail-to-switch-message: 切換至 {0} 失敗：{1}
 dominion-list-tui-text:
+  town-managed-line: '§b{0} §7- town: {1}, server {2}'
+  town-managed-section: 'Town outposts you manage (all servers).'
+  town-tag: ' [{0}]'
   title: 你的領地列表
   button: 領地列表
   description: 列出你所有的領地(含可管理的領地)
@@ -22,6 +27,9 @@ dominion-list-tui-text:
   admin-section: 以下為你可管理的領地
   server-section: 以下為你在伺服器 {0} 的領地
 dominion-manage-tui-text:
+  release-description: 'Admin only: detach this outpost from its town back to the contributor.'
+  release-button: 'RELEASE'
+  trusts-description: 'Manage per-player trust grants of this town outpost.'
   title: 管理領地 {0}
   button: 管理領地
   set-tp-button: 設定傳送點
@@ -140,3 +148,71 @@ dominion-copy-tui-text:
   guest-description: 複製其他領地的通用權限設定
   member-button: 成員設定
   member-description: 複製其他領地的成員設定(含權限)  
+
+town-list-tui-text:
+  title: 'All Towns'
+  description: 'List all towns.'
+  button: 'TOWNS'
+  town-line: '§b{0} §7- mayor: {1}, members: {2}, balance: {3}'
+
+town-info-tui-text:
+  title: 'Town: {0}'
+  button: 'TOWN'
+  mayor-line: '§7Mayor: §b{0}'
+  member-count-line: '§7Members: §b{0}'
+  balance-line: '§7Bank balance: §b{0}'
+  outpost-count-line: '§7Outposts: §b{0}'
+  your-role-line: '§7Your role: §b{0}'
+  members-button: 'MEMBERS'
+  members-description: 'View and manage town members.'
+  trusts-button: 'TRUSTS'
+  trusts-description: 'View and manage trust grants.'
+  bank-button: 'BANK'
+  bank-description: 'Town bank deposit/withdraw.'
+  outposts-button: 'OUTPOSTS'
+  outposts-description: 'List outposts of this town.'
+  invite-button: 'INVITE'
+  invite-description: 'Invite a player to join.'
+  leave-button: 'LEAVE'
+  leave-description: 'Leave this town (land stays).'
+  disband-button: 'DISBAND'
+  disband-description: 'Disband this town (confirmation required).'
+
+town-members-tui-text:
+  title: 'Members of {0}'
+  button: 'MEMBERS'
+  member-line: '§b{0} §7- {1} ({2})'
+  invite-button: 'INVITE'
+  invite-hint: 'Enter the player name to invite.'
+  kick-button: 'KICK'
+  promote-button: 'PROMOTE'
+  demote-button: 'DEMOTE'
+  transfer-button: 'TRANSFER'
+
+town-trusts-tui-text:
+  title: 'Trusts of {0}'
+  button: 'TRUSTS'
+  town-scope-label: '§7[town]'
+  outpost-scope-label: '§7[outpost: {0}]'
+  trust-line: '§b{0} {1}'
+  add-button: 'ADD TRUST'
+  add-hint: 'Enter the player name to trust (town scope, all flags off — toggle after).'
+  remove-button: 'X'
+  flag-on: '§a{0}'
+  flag-off: '§8{0}'
+
+town-bank-tui-text:
+  title: 'Bank of {0}'
+  button: 'BANK'
+  balance-line: '§7Balance: §b{0}'
+  deposit-button: 'DEPOSIT'
+  deposit-hint: 'Enter the amount to deposit.'
+  withdraw-button: 'WITHDRAW'
+  withdraw-hint: 'Enter the amount to withdraw.'
+  invalid-amount: 'Invalid amount: {0}'
+
+town-outposts-tui-text:
+  title: 'Outposts of {0}'
+  button: 'OUTPOSTS'
+  outpost-line: '§b{0} §7- {1} ({2}, server {3})'
+  remote-hint: '§8(on another server)'

@@ -15,6 +15,7 @@ import cn.lunadeer.dominion.utils.databse.FIelds.FieldString;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldTimestamp;
 import cn.lunadeer.dominion.utils.databse.syntax.Delete;
 import cn.lunadeer.dominion.utils.databse.syntax.Insert;
+import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import cn.lunadeer.dominion.utils.databse.syntax.Select;
 import cn.lunadeer.dominion.utils.databse.syntax.Update;
 import org.bukkit.Color;
@@ -24,6 +25,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -167,6 +170,31 @@ public class DominionDOO implements DominionDTO {
         List<Map<String, Field<?>>> res = Select.select(fields())
                 .from("dominion")
                 .where("town_id = ?", townId)
+                .execute();
+        return res.stream().map(DominionDOO::parse).toList();
+    }
+
+
+    public static int countByTownId(Integer townId) throws SQLException {
+        try (Connection conn = DatabaseManager.instance.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM dominion WHERE town_id = ?")) {
+            ps.setInt(1, townId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Outposts whose appointed admin is this player (plan §2.4) — the
+     * reverse lookup the town-aware dominion list needs, since outpost
+     * admins are neither owners nor members.
+     */
+    public static @NotNull List<DominionDOO> selectByOutpostAdmin(@NotNull UUID admin) throws SQLException {
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("dominion")
+                .where("outpost_admin_uuid = ?", admin.toString())
                 .execute();
         return res.stream().map(DominionDOO::parse).toList();
     }

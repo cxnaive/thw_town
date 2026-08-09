@@ -600,6 +600,9 @@ ui-commands-description:
   environment-flags: 管理领地的环境权限。
   guest-flags: 管理领地的访客权限。
 town-manager-text:
+  use-transfer-for-mayor: '镇长一职只能通过 /town transfer 转让。'
+  set-role-notify: '你在小镇 {1} 的角色已变为 {0}。'
+  set-role-success: '已将 {0} 在小镇 {2} 的角色设为 {1}。'
   disband-enclave-dissolved: '你的领地 {0} 已随城镇 {1} 一并解散。'
   only-mayor-can-transfer: '只有 {0} 的现任镇长可以转让镇长。'
   town-name-should-not-empty: 城镇名称不能为空。
@@ -657,6 +660,7 @@ town-command-text:
     &b/town leave &7- 离开城镇（领地留在城镇）
     &b/town kick <玩家> &7- 踢出居民（镇长/助理）
     &b/town transfer <玩家> &7- 转让镇长
+    &b/town promote|demote <玩家> &7- 任命/降级助理（镇长/助理）
     &b/town disband [confirm] &7- 解散城镇（前哨一并解散）
     &b/town deposit <金额> &7- 向城镇金库存款
     &b/town withdraw <金额> &7- 从城镇金库取款（镇长/助理）
@@ -681,3 +685,17 @@ town-command-text:
   member-list: '{0} 的成员：{1}'
 migration-text:
   town-data-dropped: '源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。'
+
+town-create-inputter-text:
+  button: '创建小镇'
+  hint: '请输入新小镇的名称。'
+  description: '创建小镇：你的领地将挂靠，或以选区创建建国前哨。'
+
+town-outpost-admin-inputter-text:
+  button: '次级管理员'
+  hint: '输入玩家名任命，输入 clear 移除。'
+  description: '任命或清除此前哨的次级管理员。'
+
+town-disband-confirm-inputter-text:
+  button: '解散小镇'
+  hint: '输入 confirm 确认解散小镇。'

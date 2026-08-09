@@ -45,6 +45,12 @@ public class ChestUserInterface extends ConfigurationFile {
     public static MainMenu.MainMenuCui mainMenuCui = new MainMenu.MainMenuCui();
     public static AllDominion.AllDominionCui allDominionCui = new AllDominion.AllDominionCui();
     public static AllDominionOfPlayer.AllDominionOfPlayerCui allDominionOfPlayerCui = new AllDominionOfPlayer.AllDominionOfPlayerCui();
+    public static cn.lunadeer.dominion.uis.town.TownList.TownListCui townListCui = new cn.lunadeer.dominion.uis.town.TownList.TownListCui();
+    public static cn.lunadeer.dominion.uis.town.TownInfo.TownInfoCui townInfoCui = new cn.lunadeer.dominion.uis.town.TownInfo.TownInfoCui();
+    public static cn.lunadeer.dominion.uis.town.TownMembers.TownMembersCui townMembersCui = new cn.lunadeer.dominion.uis.town.TownMembers.TownMembersCui();
+    public static cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsCui townTrustsCui = new cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsCui();
+    public static cn.lunadeer.dominion.uis.town.TownBank.TownBankCui townBankCui = new cn.lunadeer.dominion.uis.town.TownBank.TownBankCui();
+    public static cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsCui townOutpostsCui = new cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsCui();
     public static TitleList.TitleListCui titleListCui = new TitleList.TitleListCui();
     public static MigrateList.MigrateListCui migrateListCui = new MigrateList.MigrateListCui();
     public static TemplateList.TemplateListCui templateListCui = new TemplateList.TemplateListCui();

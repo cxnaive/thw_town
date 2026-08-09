@@ -52,6 +52,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
                 + "&b/town kick <player> &7- kick a resident (mayor/assistant)\n"
                 + "&b/town transfer <player> &7- transfer the mayor role\n"
+                + "&b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)\n"
                 + "&b/town disband [confirm] &7- disband the town (dissolves outposts)\n"
                 + "&b/town deposit <amount> &7- deposit into the town bank\n"
                 + "&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n"
@@ -123,7 +124,18 @@ public class TownCommand implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            Notification.info(sender, Language.townCommandText.usage);
+            // bare /town opens the town UI (own town, or the town list
+            // when townless); console gets the usage text
+            if (sender instanceof Player player) {
+                cn.lunadeer.dominion.doos.TownDOO own = TownManager.ownTownOf(player);
+                if (own != null) {
+                    cn.lunadeer.dominion.uis.town.TownInfo.show(player, own.getName(), "1");
+                } else {
+                    cn.lunadeer.dominion.uis.town.TownList.show(player, "1");
+                }
+            } else {
+                Notification.info(sender, Language.townCommandText.usage);
+            }
             return true;
         }
         // Town operations run real database I/O (merge/archive/disband can
@@ -143,6 +155,8 @@ public class TownCommand implements TabExecutor {
                 case "leave" -> handleLeave(sender);
                 case "kick" -> handleKick(sender, args);
                 case "transfer" -> handleTransfer(sender, args);
+                case "promote" -> handleSetRole(sender, args, cn.lunadeer.dominion.doos.TownMemberDOO.TownRole.ASSISTANT);
+                case "demote" -> handleSetRole(sender, args, cn.lunadeer.dominion.doos.TownMemberDOO.TownRole.RESIDENT);
                 case "trust" -> handleTrust(sender, args, true);
                 case "untrust" -> handleTrust(sender, args, false);
                 case "deposit" -> handleBank(sender, args, true);
@@ -165,7 +179,15 @@ public class TownCommand implements TabExecutor {
 
     private void handleCreate(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
-        String name = requireArg(args, 1);
+        createTownInteractive(player, requireArg(args, 1));
+    }
+
+    /**
+     * Shared by the command and the main-menu create-town inputter:
+     * players with no land must provide a founding cuboid (selection, or
+     * the auto square around their location).
+     */
+    public static void createTownInteractive(@NotNull Player player, @NotNull String name) throws Exception {
         CuboidDTO foundingCuboid = null;
         if (TownManager.ownedDominions(player.getUniqueId()).isEmpty()) {
             foundingCuboid = foundingCuboidAt(player);
@@ -286,6 +308,13 @@ public class TownCommand implements TabExecutor {
         TownDOO town = resolveManagedTown(sender);
         PlayerDTO target = requirePlayerDto(args, 1);
         TownManager.transferMayor(player, town, target.getUuid());
+    }
+
+    private void handleSetRole(@NotNull CommandSender sender, @NotNull String[] args,
+                               @NotNull cn.lunadeer.dominion.doos.TownMemberDOO.TownRole role) throws Exception {
+        Player player = requirePlayer(sender);
+        TownDOO town = resolveManagedTown(sender);
+        TownManager.setRole(player, town, requirePlayerDto(args, 1).getUuid(), role);
     }
 
     private void handleTrust(@NotNull CommandSender sender, @NotNull String[] args, boolean grant) throws Exception {
@@ -487,7 +516,8 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
 
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
-            "kick", "transfer", "trust", "untrust", "deposit", "withdraw", "outpost", "admin", "info", "list");
+            "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
+            "admin", "info", "list");
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
@@ -498,7 +528,8 @@ public class TownCommand implements TabExecutor {
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
-                case "invite", "kick", "transfer", "trust", "untrust" -> filter(playerNames(), args[1], suggestions);
+                case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
+                        filter(playerNames(), args[1], suggestions);
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
             }
         } else if (args.length == 3) {
