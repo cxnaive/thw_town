@@ -17,6 +17,8 @@ menu-tui-text:
   switch-to-cui-button: ' CUIに切り替え 🆕 '
   fail-to-switch-message: '{0} に切り替えに失敗しました: {1}'
 dominion-list-tui-text:
+  remote-owned-line: '§b{0} §7- server {1}'
+  remote-owned-section: 'Your dominions on other servers.'
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
   town-managed-section: 'Town outposts you manage (all servers).'
   town-tag: ' [{0}]'

@@ -17,6 +17,8 @@ menu-tui-text:
   switch-to-cui-button: ' 切换到CUI 🆕 '
   fail-to-switch-message: 切换到 {0} 失败：{1}
 dominion-list-tui-text:
+  remote-owned-line: '§b{0} §7- 服务器 {1}'
+  remote-owned-section: '你在其他服务器的领地。'
   town-managed-line: '§b{0} §7- 小镇: {1}, 服务器 {2}'
   town-managed-section: '你管理的镇属地（所有服务器）。'
   town-tag: ' [{0}]'
