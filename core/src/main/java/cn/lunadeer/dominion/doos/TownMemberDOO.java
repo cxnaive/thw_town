@@ -66,15 +66,18 @@ public class TownMemberDOO {
     public static @NotNull TownMemberDOO insert(@NotNull Integer townId, @NotNull UUID player,
                                                 @NotNull TownRole role, @NotNull MemberSource source) throws SQLException {
         TownMemberDOO member = new TownMemberDOO(townId, player, role.name(), source.name(), null);
-        Map<String, Field<?>> res = Insert.insert()
+        // no .returning() here: town_member has no id column, and the MySQL
+        // returning-emulation selects by `id = LAST_INSERT_ID()` — broken
+        // for composite-PK tables. Re-select by the composite key instead.
+        Insert.insert()
                 .into("town_member")
                 .values(member.townId, member.playerUuid, member.role, member.source)
-                .returning(fields())
                 .execute();
-        if (res.isEmpty()) {
+        TownMemberDOO inserted = select(townId, player);
+        if (inserted == null) {
             throw new SQLException("Failed to insert town member.");
         }
-        return parse(res);
+        return inserted;
     }
 
     public static @Nullable TownMemberDOO select(@NotNull Integer townId, @NotNull UUID player) throws SQLException {

@@ -118,7 +118,7 @@ public abstract class Insert implements Syntax {
                 XLogger.error("SQL: " + getSql());
                 XLogger.error("Param: " + Arrays.stream(fields).map(Field::getValue));
                 XLogger.error(e);
-                throw new SQLException("Error executing delete statement: " + e.getMessage(), e);
+                throw new SQLException("Error executing insert statement: " + e.getMessage(), e);
             }
         }
 
@@ -173,7 +173,7 @@ public abstract class Insert implements Syntax {
                 XLogger.error("SQL: " + getSql());
                 XLogger.error("Param: " + Arrays.stream(fields).map(Field::getValue));
                 XLogger.error(e);
-                throw new SQLException("Error executing delete statement: " + e.getMessage(), e);
+                throw new SQLException("Error executing insert statement: " + e.getMessage(), e);
             }
         }
 

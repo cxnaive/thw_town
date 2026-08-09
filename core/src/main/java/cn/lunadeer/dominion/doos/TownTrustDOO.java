@@ -82,16 +82,30 @@ public class TownTrustDOO {
                                                @NotNull UUID createdBy) throws SQLException {
         TownTrustDOO trust = new TownTrustDOO(townId, player, scope.name(), scopeId,
                 build, destroy, switchFlag, itemUse, createdBy.toString(), null);
-        Map<String, Field<?>> res = Insert.insert()
+        // no .returning(): town_trust has no id column and the MySQL
+        // returning-emulation selects by `id = LAST_INSERT_ID()` — broken
+        // for composite-PK tables. Re-select by the composite key instead.
+        Insert.insert()
                 .into("town_trust")
                 .values(trust.townId, trust.playerUuid, trust.scopeType, trust.scopeId,
                         trust.build, trust.destroy, trust.switchFlag, trust.itemUse, trust.createdBy)
-                .returning(fields())
                 .execute();
-        if (res.isEmpty()) {
+        TownTrustDOO inserted = select(townId, player, scope, scopeId);
+        if (inserted == null) {
             throw new SQLException("Failed to insert town trust.");
         }
-        return parse(res);
+        return inserted;
+    }
+
+    public static @Nullable TownTrustDOO select(@NotNull Integer townId, @NotNull UUID player,
+                                                @NotNull TrustScope scope, @NotNull Integer scopeId) throws SQLException {
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("town_trust")
+                .where("town_id = ? AND player_uuid = ? AND scope_type = ? AND scope_id = ?",
+                        townId, player.toString(), scope.name(), scopeId)
+                .execute();
+        if (res.isEmpty()) return null;
+        return parse(res.get(0));
     }
 
     public static @NotNull List<TownTrustDOO> selectByTown(@NotNull Integer townId) throws SQLException {
