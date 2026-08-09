@@ -675,6 +675,8 @@ town-command-text:
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
   join-confirm: 加入 {0} 将把 {1} 块领地转为城镇所有：{2}。加 'confirm' 重新执行以确认。
   join-confirm-no-land: 加入 {0} 将成为其居民。加 'confirm' 重新执行以确认。
+  create-confirm: '创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。'
+  attach-member-note: '被挂靠领地的成员列表将归档保存；受影响的成员会按规则并入小镇成为居民、或转为该属地的 Trust 授权，并会收到通知。'
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。
   no-managed-town: 你不是任何城镇的镇长或助理。
@@ -689,6 +691,7 @@ migration-text:
 town-create-inputter-text:
   button: '创建小镇'
   hint: '请输入新小镇的名称。'
+  confirm-hint: '输入 confirm 确认创建小镇并挂靠上述领地。'
   description: '创建小镇：你的领地将挂靠，或以选区创建建国前哨。'
 
 town-outpost-admin-inputter-text:

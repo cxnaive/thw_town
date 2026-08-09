@@ -439,6 +439,29 @@ dominion-list-cui:
     - ''
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+  contributed-dominion-button:
+    symbol: i
+    name: §6🏰 §e{0}
+    lore:
+    - '§7Town: §b{0}'
+    - §8Your land belongs to a town now.
+    - ''
+    - '§b▶ Left Click: info/manage'
+    - '§b▶ Right Click: teleport'
+    - ''
+    - '§7Status: §6Contributed to town'
+    material: BROWN_BANNER
+  town-managed-button:
+    symbol: i
+    name: §3⛨ §b{0}
+    lore:
+    - '§7Town: §b{0}'
+    - '§7Server: §b{1}'
+    - ''
+    - '§b▶ Left Click: manage (this server)'
+    - ''
+    - '§7Status: §3Town outpost you manage'
+    material: BEACON
 dominion-manage-cui:
   title: §6✦ §a§lManage {0} §6✦
   list-configuration:
@@ -608,6 +631,33 @@ dominion-manage-cui:
     - ''
     - §c⚠ This cannot be undone!
     material: RED_DYE
+  trusts-button:
+    symbol: i
+    name: §6🏷 §eTrust Grants
+    lore:
+    - §7Manage per-player trust grants
+    - §7of this town outpost.
+    - ''
+    - §e▶ Click to manage trusts
+    material: NAME_TAG
+  outpost-admin-button:
+    symbol: i
+    name: §6👑 §eOutpost Admin
+    lore:
+    - §7Appoint or clear the admin
+    - §7of this town outpost.
+    - ''
+    - §e▶ Click to edit
+    material: GOLDEN_HELMET
+  release-button:
+    symbol: i
+    name: §c✂ §cRelease Outpost
+    lore:
+    - '§7Admin only: detach this outpost'
+    - §7from its town back to the contributor.
+    - ''
+    - §c▶ Click to release
+    material: SHEARS
 copy-menu-cui:
   title: §6✦ §a§lCopy Settings §6✦
   layout:
@@ -1329,3 +1379,294 @@ select-template-cui:
     - §8This will override member's
     - §8current permissions.
     material: WRITABLE_BOOK
+town-list-cui:
+  title: §6✦ §e§lAll Towns §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  town-item-button:
+    symbol: i
+    name: §6⛏ §e{0}
+    lore:
+    - '§7Mayor: §b{0}'
+    - '§7Members: §b{1}'
+    - '§7Balance: §b{2}'
+    - ''
+    - '§a▶ Left Click: view town'
+    material: GRASS_BLOCK
+  back-button:
+    symbol: <
+    name: §c« Back to Main Menu
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-info-cui:
+  title: '§6✦ §e§lTown: {0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  members-button:
+    symbol: i
+    name: §eMembers
+    lore:
+    - §7View and manage town members.
+    - §a▶ Click to open
+    material: PLAYER_HEAD
+  trusts-button:
+    symbol: i
+    name: §eTrusts
+    lore:
+    - §7View and manage trust grants.
+    - §a▶ Click to open
+    material: NAME_TAG
+  bank-button:
+    symbol: i
+    name: §eBank
+    lore:
+    - '§7Balance: §b{0}'
+    - §a▶ Click to open
+    material: GOLD_INGOT
+  outposts-button:
+    symbol: i
+    name: §eOutposts
+    lore:
+    - '§7Total: §b{0}'
+    - §a▶ Click to open
+    material: FILLED_MAP
+  invite-button:
+    symbol: i
+    name: §aInvite
+    lore:
+    - §7Invite a player to join.
+    - §a▶ Click to invite
+    material: WRITABLE_BOOK
+  leave-button:
+    symbol: i
+    name: §cLeave
+    lore:
+    - §7Leave this town (land stays).
+    - §c▶ Click to leave
+    material: OAK_DOOR
+  disband-button:
+    symbol: i
+    name: §4Disband
+    lore:
+    - §7Disband this town.
+    - §4▶ Click to confirm
+    material: TNT
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-members-cui:
+  title: §6✦ §eMembers of {0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p######An
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  member-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - '§7Role: §b{0}'
+    - '§7Source: §b{1}'
+    - ''
+    - '§c▶ Left Click: kick (managers, residents)'
+    - '§e▶ Right Click: demote (mayor, assistants)'
+    material: PLAYER_HEAD
+  invite-item-button:
+    symbol: A
+    name: §aInvite player
+    lore:
+    - §7Invite a player to join.
+    - §a▶ Click to invite
+    material: WRITABLE_BOOK
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-trusts-cui:
+  title: §6✦ §eTrusts of {0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p######An
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  trust-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - '§7Scope: §b{0}'
+    - '§7build/destroy/switch/item_use: §b{1}'
+    - ''
+    - '§a▶ Left Click: cycle flags (editors)'
+    - '§c▶ Right Click: remove (editors)'
+    material: NAME_TAG
+  add-item-button:
+    symbol: A
+    name: §aAdd trust
+    lore:
+    - §7Trust a player (town scope).
+    - §a▶ Click to add
+    material: WRITABLE_BOOK
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-bank-cui:
+  title: §6✦ §eBank of {0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#########'
+    - '#########'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  balance-item:
+    symbol: i
+    name: '§6Balance: §e{0}'
+    lore:
+    - §7Town bank balance.
+    material: GOLD_BLOCK
+  deposit-item:
+    symbol: i
+    name: §aDeposit
+    lore:
+    - §7Deposit from your wallet.
+    - §a▶ Click to deposit
+    material: HOPPER
+  withdraw-item:
+    symbol: i
+    name: §cWithdraw
+    lore:
+    - §7Withdraw to your wallet (managers).
+    - §c▶ Click to withdraw
+    material: DROPPER
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-outposts-cui:
+  title: §6✦ §eOutposts of {0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  outpost-item-button:
+    symbol: i
+    name: §6⛏ §e{0}
+    lore:
+    - '§7World: §b{0}'
+    - '§7Kind: §b{1}'
+    - '§7Server: §b{2}'
+    - ''
+    - '§a▶ Left Click: manage (this server)'
+    material: FILLED_MAP
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE

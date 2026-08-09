@@ -67,6 +67,8 @@ public class TownCommand implements TabExecutor {
         public String inviteSent = "Invited {0} to join {1} (valid for 5 minutes).";
         public String joinConfirm = "Joining {0} will attach your {1} dominion(s) to the town: {2}. Re-run with 'confirm' to proceed.";
         public String joinConfirmNoLand = "Joining {0} makes you a resident. Re-run with 'confirm' to proceed.";
+        public String createConfirm = "Creating town {0} will attach your {1} dominion(s) to it: {2}. Re-run with 'confirm' to proceed.";
+        public String attachMemberNote = "Member lists of attached dominions are archived; affected members become residents or per-outpost trust by policy and are notified.";
         public String disbandConfirm = "Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with 'confirm' to proceed.";
         public String disbandConfirmContributors = "Contributed land of these players will be dissolved: {0}.";
         public String disbandConfirmReturn = "Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with 'confirm' to proceed.";
@@ -179,7 +181,28 @@ public class TownCommand implements TabExecutor {
 
     private void handleCreate(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
-        createTownInteractive(player, requireArg(args, 1));
+        String name = requireArg(args, 1);
+        // same informed-consent gate as /town join: attaching every owned
+        // dominion is a one-way merge of each land's member overlay, so the
+        // founder must see the list before it happens
+        List<DominionDOO> attachable = new ArrayList<>();
+        for (DominionDOO dominion : TownManager.ownedDominions(player.getUniqueId())) {
+            if (!dominion.isTownOutpost()) {
+                attachable.add(dominion);
+            }
+        }
+        if (attachable.isEmpty()) {
+            // no legacy land — the founding-outpost flow handles it
+            createTownInteractive(player, name);
+            return;
+        }
+        if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+            Notification.warn(sender, Language.townCommandText.createConfirm,
+                    name, attachable.size(), outpostNames(attachable));
+            Notification.warn(sender, Language.townCommandText.attachMemberNote);
+            return;
+        }
+        TownManager.createTown(player, name, null);
     }
 
     /**
@@ -188,11 +211,38 @@ public class TownCommand implements TabExecutor {
      * the auto square around their location).
      */
     public static void createTownInteractive(@NotNull Player player, @NotNull String name) throws Exception {
-        CuboidDTO foundingCuboid = null;
-        if (TownManager.ownedDominions(player.getUniqueId()).isEmpty()) {
-            foundingCuboid = foundingCuboidAt(player);
+        List<DominionDOO> attachable = new ArrayList<>();
+        for (DominionDOO dominion : TownManager.ownedDominions(player.getUniqueId())) {
+            if (!dominion.isTownOutpost()) {
+                attachable.add(dominion);
+            }
         }
-        TownManager.createTown(player, name, foundingCuboid);
+        if (!attachable.isEmpty()) {
+            // the menu inputter path has no 'confirm' argument — gate the
+            // attach behind a second inputter exactly like /town disband
+            Notification.warn(player, Language.townCommandText.createConfirm,
+                    name, attachable.size(), outpostNames(attachable));
+            Notification.warn(player, Language.townCommandText.attachMemberNote);
+            new cn.lunadeer.dominion.utils.stui.inputter.InputterRunner(
+                    player, Language.townCreateInputterText.confirmHint) {
+                @Override
+                public void run(String input) {
+                    if (!input.trim().equalsIgnoreCase("confirm")) {
+                        Notification.warn(player, Language.townCreateInputterText.confirmHint);
+                        return;
+                    }
+                    cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+                        try {
+                            TownManager.createTown(player, name, null);
+                        } catch (Exception e) {
+                            Notification.error(player, e);
+                        }
+                    });
+                }
+            };
+            return;
+        }
+        TownManager.createTown(player, name, foundingCuboidAt(player));
     }
 
     private void handleDisband(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
@@ -282,6 +332,7 @@ public class TownCommand implements TabExecutor {
             } else {
                 Notification.warn(sender, Language.townCommandText.joinConfirm,
                         town.getName(), attachable.size(), outpostNames(attachable));
+                Notification.warn(sender, Language.townCommandText.attachMemberNote);
             }
             return;
         }

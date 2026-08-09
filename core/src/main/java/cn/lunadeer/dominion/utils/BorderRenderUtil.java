@@ -33,8 +33,15 @@ public class BorderRenderUtil {
     }
 
     public static void showBorder(Player player, DominionDTO dominion) {
+        World world = dominion.getWorld();
+        // null when the dominion's world is not loaded here — expected for
+        // dominions living on other backend servers (multi-server list
+        // views); a border render is best-effort, never an exception
+        if (world == null) {
+            return;
+        }
         showBorder(player,
-                dominion.getWorld(),
+                world,
                 dominion.getCuboid()
         );
     }
@@ -65,7 +72,7 @@ public class BorderRenderUtil {
 
     public static void showBoxFace(Player player, Location loc1, Location loc2) {
         Scheduler.runTask(() -> {
-            if (!loc1.getWorld().equals(loc2.getWorld())) {
+            if (loc1.getWorld() == null || loc2.getWorld() == null || !loc1.getWorld().equals(loc2.getWorld())) {
                 return;
             }
             int minX = Math.min(loc1.getBlockX(), loc2.getBlockX());
