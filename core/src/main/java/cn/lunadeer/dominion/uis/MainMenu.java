@@ -231,7 +231,7 @@ public class MainMenu extends AbstractUI {
                         "§8Includes: Your dominions &",
                         "§8dominions you're admin of!",
                         "",
-                        "§c⚠ Legacy system - create a town",
+                        "§c⚠ Legacy system - create or join a town",
                         "§cand migrate your land to it!"
                 )
         );

@@ -95,8 +95,8 @@ public class DominionList extends AbstractUI {
         public String townManagedLine = "§b{0} §7- town: {1}, server {2}";
         public String remoteOwnedSection = "Your dominions on other servers.";
         public String remoteOwnedLine = "§b{0} §7- server {1}";
-        public String legacyTag = " (legacy - migrate to a town!)";
-        public String legacyNotice = "Personal dominions are a legacy system - create a town soon (/town create or the main menu); your land will attach as town outposts.";
+        public String legacyTag = " (legacy - create or join a town!)";
+        public String legacyNotice = "Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu); your land will attach as town outposts.";
     }
 
     public static ListViewButton button(CommandSender sender) {

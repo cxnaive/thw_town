@@ -28,8 +28,8 @@ dominion-list-tui-text:
   delete-button: DELETE
   admin-section: Your admin dominions section.
   server-section: Server {0} dominions section.
-  legacy-tag: ' (legacy - migrate to a town!)'
-  legacy-notice: Personal dominions are a legacy system - create a town soon (/town create or the main menu); your land will attach as town outposts.
+  legacy-tag: ' (legacy - create or join a town!)'
+  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu); your land will attach as town outposts.
 dominion-manage-tui-text:
   release-description: 'Admin only: detach this outpost from its town back to the contributor.'
   release-button: RELEASE

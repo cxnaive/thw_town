@@ -28,8 +28,8 @@ dominion-list-tui-text:
   delete-button: 删除
   admin-section: 以下为你拥有管理权限的领地列表
   server-section: 以下为你在服务器 {0} 的领地列表
-  legacy-tag: （旧系统——请尽快建镇迁移）
-  legacy-notice: 个人领地已是旧系统，请尽快创建小镇（/town create 或主菜单），你的领地会挂靠为镇属地。
+  legacy-tag: （旧系统——请尽快创建或加入小镇）
+  legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），你的领地会挂靠为镇属地。
 dominion-manage-tui-text:
   release-description: 仅管理员：把此前哨从镇里剥离，归还给贡献者。
   release-button: 剥离
