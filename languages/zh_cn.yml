@@ -99,7 +99,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: 设置领地访客权限 {0} 为 {1} 成功
   set-guest-flag-failed: 设置领地访客权限 {0} 为 {1} 失败，原因：{2}
 member-provider-handler-text:
-  use-trust-for-town-outposts: '该领地属于城镇，单人授权请使用 /town trust 而非成员。'
+  use-trust-for-town-outposts: 该领地属于城镇，单人授权请使用 /town trust 而非成员。
   set-flag-success: 成功修改领地 {2} 成员 {1} 的权限配置 {0}
   owner-only: 只有领地所有者可以管理领地管理员
   group-already: 该成员属于权限组 {0}，无法单独管理
@@ -111,7 +111,7 @@ member-provider-handler-text:
   remove-member-success: 成功将成员 {0} 移出领地 {1}
   remove-member-failed: 移除成员失败，原因：{0}
 group-provider-handler-text:
-  town-outpost-no-custom-groups: '自定义权限组在城镇前哨上不生效，请使用 @town 组或 /town trust。'
+  town-outpost-no-custom-groups: 自定义权限组在城镇前哨上不生效，请使用 @town 组或 /town trust。
   town-group-reserved: '@town 组由城镇系统管理，不能删除或重命名。'
   owner-only: 只有领地所有者可以配置管理员权限组
   set-flag-success: 设置权限组 {0} 的权限 {1} 为 {2} 成功
@@ -220,7 +220,7 @@ limitation-text:
   load-world-setting-failed: 加载 {0} 设置失败，原因：{1}
   load-world-settings-success: 成功加载了 {0} 个世界设置：{1}
 database-manager-text:
-  import-drops-town-data: '该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。'
+  import-drops-town-data: 该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。
   exporting-database-tables: 正在导出数据库备份...
   export-table-fail: 导出数据库备份失败，原因：{0}
   export-database-success: 成功导出数据库备份文件至 {0}
@@ -600,13 +600,13 @@ ui-commands-description:
   environment-flags: 管理领地的环境权限。
   guest-flags: 管理领地的访客权限。
 town-manager-text:
-  use-transfer-for-mayor: '镇长一职只能通过 /town transfer 转让。'
-  set-role-notify: '你在小镇 {1} 的角色已变为 {0}。'
-  set-role-success: '已将 {0} 在小镇 {2} 的角色设为 {1}。'
-  disband-enclave-dissolved: '你的领地 {0} 已随城镇 {1} 一并解散。'
-  only-mayor-can-transfer: '只有 {0} 的现任镇长可以转让镇长。'
+  use-transfer-for-mayor: 镇长一职只能通过 /town transfer 转让。
+  set-role-notify: 你在小镇 {1} 的角色已变为 {0}。
+  set-role-success: 已将 {0} 在小镇 {2} 的角色设为 {1}。
+  disband-enclave-dissolved: 你的领地 {0} 已随城镇 {1} 一并解散。
+  only-mayor-can-transfer: 只有 {0} 的现任镇长可以转让镇长。
   town-name-should-not-empty: 城镇名称不能为空。
-  town-name-invalid: '镇名不能包含空格、点、§、&、~ 或逗号。'
+  town-name-invalid: 镇名不能包含空格、点、§、&、~ 或逗号。
   town-name-exist: 城镇名称 {0} 已存在。
   town-not-exist: 城镇 {0} 不存在。
   already-in-town: 你已经是城镇 {0} 的成员。
@@ -636,7 +636,6 @@ town-manager-text:
   outpost-create-success: 已为城镇 {1} 创建前哨 {0}，从金库扣除 {2}。
   outpost-remote-disabled: 远程前哨已禁用，城镇只能扩建现有前哨。
   outpost-amount-exceeded: 城镇 {0} 已达到前哨数量上限。
-  founding-too-large: 建国前哨超过最大边长 {0} 格。
   founding-required: 你名下没有领地：创建城镇需要一个建国前哨位置。
   release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
   release-not-outpost: 领地 {0} 不是城镇前哨。
@@ -648,38 +647,52 @@ town-manager-text:
   merge-member-merged: '{0} 已作为居民并入城镇 {1}。'
   merge-member-trusted: '{0} 已超加入上限，已转为前哨 {1} 的信任授权。'
 town-command-text:
-  disband-confirm-contributors-return: '以下玩家贡献的领地将归还给本人：{0}。'
-  disband-confirm-return: '解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。'
-  dominion-not-exist: '领地 {0} 不存在。'
-  disband-confirm-contributors: '以下玩家贡献的领地将被解散：{0}。'
+  disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
+  disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。
+  dominion-not-exist: 领地 {0} 不存在。
+  disband-confirm-contributors: 以下玩家贡献的领地将被解散：{0}。
   only-player: 该命令只能由玩家执行。
-  usage: |-
-    &b/town create <名称> &7- 创建城镇（你的领地自动挂靠，或获得免费建国前哨）
+  usage: '&b/town create <名称> &7- 创建城镇（你的领地自动挂靠，或获得免费建国前哨）
+
     &b/town invite <玩家> &7- 邀请玩家（镇长/助理）
+
     &b/town join <城镇> [confirm] &7- 加入被邀请的城镇
+
     &b/town leave &7- 离开城镇（领地留在城镇）
+
     &b/town kick <玩家> &7- 踢出居民（镇长/助理）
+
     &b/town transfer <玩家> &7- 转让镇长
+
     &b/town promote|demote <玩家> &7- 任命/降级助理（镇长/助理）
+
     &b/town disband [confirm] &7- 解散城镇（前哨一并解散）
+
     &b/town deposit <金额> &7- 向城镇金库存款
+
     &b/town withdraw <金额> &7- 从城镇金库取款（镇长/助理）
+
     &b/town outpost create <名称> &7- 新建远程前哨（需要先选点）
+
     &b/town admin <前哨> [玩家] &7- 设置/清除前哨次级管理员
+
     &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
+
     &b/town untrust <玩家> [town|outpost <名称>]
+
     &b/town info [城镇] &7- 城镇信息
-    &b/town list &7- 城镇列表
+
+    &b/town list &7- 城镇列表'
   unknown-sub-command: 未知的城镇命令：{0}
   no-invite: 需要 {0} 的镇长或助理邀请才能加入。
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
-  no-invite-remote: '你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。'
-  invite-received: '你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】执行 /town join {0} 接受邀请。'
+  no-invite-remote: 你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。
+  invite-received: 你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】执行 /town join {0} 接受邀请。
   invite-not-local: '{0} 当前不在本服务器。邀请按服务器隔离：对方需要切换到本服务器（或在其所在服重新邀请）后才能加入。'
   join-confirm: 加入 {0} 将把 {1} 块领地转为城镇所有：{2}。加 'confirm' 重新执行以确认。
   join-confirm-no-land: 加入 {0} 将成为其居民。加 'confirm' 重新执行以确认。
-  create-confirm: '创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。'
-  attach-member-note: '被挂靠领地的成员列表将归档保存；受影响的成员会按规则并入小镇成为居民、或转为该属地的 Trust 授权，并会收到通知。'
+  create-confirm: 创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。加 confirm 重新执行以确认。
+  attach-member-note: 被挂靠领地的成员列表将归档保存；受影响的成员会按规则并入小镇成为居民、或转为该属地的 Trust 授权，并会收到通知。
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。
   no-managed-town: 你不是任何城镇的镇长或助理。
@@ -689,19 +702,16 @@ town-command-text:
   player-not-found: 找不到玩家 {0}。
   member-list: '{0} 的成员：{1}'
 migration-text:
-  town-data-dropped: '源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。'
-
+  town-data-dropped: 源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。
 town-create-inputter-text:
-  button: '创建小镇'
-  hint: '请输入新小镇的名称。'
-  confirm-hint: '输入 confirm 确认创建小镇并挂靠上述领地。'
-  description: '创建小镇：你的领地将挂靠，或以选区创建建国前哨。'
-
+  button: 创建小镇
+  hint: 请输入新小镇的名称。
+  confirm-hint: 输入 confirm 确认创建小镇并挂靠上述领地。
+  description: 创建小镇：你的领地将挂靠，或以你为中心圈出一块建国属地（新手地）。
 town-outpost-admin-inputter-text:
-  button: '次级管理员'
-  hint: '输入玩家名任命，输入 clear 移除。'
-  description: '任命或清除此前哨的次级管理员。'
-
+  button: 次级管理员
+  hint: 输入玩家名任命，输入 clear 移除。
+  description: 任命或清除此前哨的次级管理员。
 town-disband-confirm-inputter-text:
-  button: '解散小镇'
-  hint: '输入 confirm 确认解散小镇。'
+  button: 解散小镇
+  hint: 输入 confirm 确认解散小镇。

@@ -191,10 +191,15 @@ public class Configuration extends ConfigurationFile {
         public boolean mergeMembersOnAttach = true;
         @Comments("Whether players owning legacy land may join a town (their land attaches).")
         public boolean allowJoinWithLegacyLand = true;
-        @Comments("Cost of the founding outpost charged from the town bank.")
+        @Comments("Cost of the founding outpost charged from the founder's wallet.")
         public double foundingCost = 0;
-        @Comments("Max edge length of the founding outpost cube.")
-        public int foundingMaxSize = 32;
+        @Comments({
+                "Edge length of the auto-created founding outpost — the town's",
+                "first plot, centered on the founder. foundingCost is the flat",
+                "price of exactly this plot (0 = free starter land).",
+                "Later expansion uses normal town-outpost resize rules."
+        })
+        public int foundingSize = 500;
         @Comments({
                 "Whether towns may create new remote outposts.",
                 "false: towns can only expand existing outposts (resize)."
@@ -322,9 +327,9 @@ public class Configuration extends ConfigurationFile {
             XLogger.warn("town max-memberships of 0 makes towns unusable; resetting to 1.");
             town.maxMemberships = 1;
         }
-        if (town.foundingMaxSize <= 0) {
-            XLogger.warn("Invalid town founding-max-size: {0}", town.foundingMaxSize);
-            town.foundingMaxSize = 32;
+        if (town.foundingSize <= 0) {
+            XLogger.warn("Invalid town founding-size: {0}", town.foundingSize);
+            town.foundingSize = 500;
         }
         if (town.foundingCost < 0) {
             XLogger.warn("Invalid town founding-cost: {0}", town.foundingCost);

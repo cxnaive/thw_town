@@ -569,7 +569,7 @@ public class TownCommand implements TabExecutor {
      * autoCreateRadius, which is -1 in the town era.
      */
     private static @NotNull CuboidDTO foundingCuboidAt(@NotNull Player player) {
-        int max = Configuration.town.foundingMaxSize;
+        int max = Configuration.town.foundingSize;
         int half = max / 2;
         Location loc = player.getLocation();
         Limitation.WorldLimitationSetting worldSettings =

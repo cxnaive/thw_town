@@ -97,7 +97,6 @@ public class TownManager {
         public String outpostCreateSuccess = "Outpost {0} created for town {1}, cost {2} from the town bank.";
         public String outpostRemoteDisabled = "Remote outposts are disabled; towns may only resize existing outposts.";
         public String outpostAmountExceeded = "Town {0} has reached the outpost amount limit.";
-        public String foundingTooLarge = "Founding outpost exceeds the max edge length of {0} blocks.";
         public String foundingRequired = "You own no land: a founding outpost location is required to create a town.";
         public String releaseSuccess = "Outpost {0} released from town {1}, returned to contributor {2}.";
         public String releaseNotOutpost = "Dominion {0} is not a town outpost.";
@@ -302,11 +301,11 @@ public class TownManager {
             if (foundingCuboid == null) {
                 throw new DominionException(Language.townManagerText.foundingRequired);
             }
-            int max = Configuration.town.foundingMaxSize;
-            if (foundingCuboid.xLength() > max || foundingCuboid.zLength() > max) {
-                throw new DominionException(Language.townManagerText.foundingTooLarge, max);
-            }
-            assertDominionSize(founder, founder.getWorld().getUID(), foundingCuboid);
+            // The founding outpost is exactly town.foundingSize across and
+            // full world height (both baked into the auto cuboid) — there is
+            // no separate size cap and no personal-limitation check: town
+            // land is governed by its own knobs (foundingSize, foundingCost),
+            // and expansion afterwards follows normal town-outpost resize.
             foundingToCreate = new DominionDOO(founder.getUniqueId(), uniqueDominionName(name),
                     founder.getWorld().getUID(), foundingCuboid, -1);
             assertDominionIntersect(founder, foundingToCreate, foundingCuboid);

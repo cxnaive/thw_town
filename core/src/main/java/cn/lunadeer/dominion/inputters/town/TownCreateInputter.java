@@ -23,7 +23,7 @@ public class TownCreateInputter {
         public String button = "CREATE TOWN";
         public String hint = "Enter the new town name.";
         public String confirmHint = "Type 'confirm' to create the town with the listed land attached.";
-        public String description = "Create a town: your land attaches, or a founding outpost is created from your selection.";
+        public String description = "Create a town: your land attaches, or a starter plot (founding outpost) is created around your location.";
     }
 
     public static void createOn(CommandSender sender) {
