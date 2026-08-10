@@ -100,6 +100,10 @@ public class DominionManage extends AbstractUI {
         }
         boolean manager = outpostDoo != null && (cn.lunadeer.dominion.misc.Others.bypassLimit(player)
                 || cn.lunadeer.dominion.managers.TownManager.isOutpostManager(player, outpostDoo));
+        // mayor/assistant (or bypass) only — gates the entries that stay
+        // town-authority operations on outposts (resize, outpost-admin)
+        boolean townManager = town != null && (cn.lunadeer.dominion.managers.TownManager.isManager(
+                town, player.getUniqueId()) || cn.lunadeer.dominion.misc.Others.bypassLimit(player));
 
         Line size_info = Line.create()
                 .append(Info.button(player, dominion.getName()).build())
@@ -149,16 +153,22 @@ public class DominionManage extends AbstractUI {
                         .append(dominion.getName()));
         // resize of a town outpost is mayor/assistant-only (charged to
         // the town bank) — hide the entry for outpost admins (§13.6)
-        if (town == null || manager) {
+        if (town == null || townManager) {
             view.add(size_info);
         }
         view.add(env_info).add(flag_info);
         if (town == null) {
             view.add(member_list);
         } else {
-            // town outpost: per-player grants live in TownTrust (§5.1)
+            // town outpost: per-player grants live in TownTrust (§5.1) —
+            // jump straight to this outpost's trust page
             Line trusts = Line.create()
-                    .append(cn.lunadeer.dominion.uis.town.TownTrusts.button(player, town.getName()).build())
+                    .append(new FunctionalButton(TextUserInterface.townTrustsTuiText.button) {
+                        @Override
+                        public void function() {
+                            cn.lunadeer.dominion.uis.town.OutpostTrusts.show(player, dominion.getName(), "1");
+                        }
+                    }.needPermission(defaultPermission).build())
                     .append(TextUserInterface.dominionManageTuiText.trustsDescription);
             view.add(trusts);
         }
@@ -169,7 +179,7 @@ public class DominionManage extends AbstractUI {
                 .add(leave_msg);
         view.add(map_color);
         view.add(copy_menu);
-        if (town != null && manager) {
+        if (town != null && townManager) {
             Line outpostAdmin = Line.create()
                     .append(cn.lunadeer.dominion.inputters.town.TownOutpostAdminInputter
                             .createTuiButtonOn(player, dominion.getName()).needPermission(defaultPermission).build())
@@ -431,8 +441,12 @@ public class DominionManage extends AbstractUI {
         }
         boolean manager = outpostDoo != null && (cn.lunadeer.dominion.misc.Others.bypassLimit(player)
                 || cn.lunadeer.dominion.managers.TownManager.isOutpostManager(player, outpostDoo));
+        // mayor/assistant (or bypass) only (see showTUI)
+        boolean townManager = town != null && (cn.lunadeer.dominion.managers.TownManager.isManager(
+                town, player.getUniqueId()) || cn.lunadeer.dominion.misc.Others.bypassLimit(player));
         final cn.lunadeer.dominion.doos.TownDOO townFinal = town;
         final boolean managerFinal = manager;
+        final boolean townManagerFinal = townManager;
 
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
         view.setTitle(formatString(ChestUserInterface.dominionManageCui.title, dominion.getName()));
@@ -448,7 +462,7 @@ public class DominionManage extends AbstractUI {
         );
 
         // resize entry: hidden on town outposts for non-managers (§13.6)
-        if (townFinal == null || managerFinal)
+        if (townFinal == null || townManagerFinal)
         view.setButton(ChestUserInterface.dominionManageCui.dominionInfoButton.getSymbol(),
                 new ChestButton(ChestUserInterface.dominionManageCui.dominionInfoButton) {
                     @Override
@@ -492,11 +506,12 @@ public class DominionManage extends AbstractUI {
                 }
             });
         } else {
-            // town outpost: per-player grants live in TownTrust (§5.1)
+            // town outpost: per-player grants live in TownTrust (§5.1) —
+            // jump straight to this outpost's trust page
             view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.trustsButton) {
                 @Override
                 public void onClick(ClickType type) {
-                    cn.lunadeer.dominion.uis.town.TownTrusts.show(player, townFinal.getName(), "1");
+                    cn.lunadeer.dominion.uis.town.OutpostTrusts.show(player, dominion.getName(), "1");
                 }
             });
         }
@@ -566,7 +581,7 @@ public class DominionManage extends AbstractUI {
             // town outposts cannot be deleted/transferred (§3); managers
             // get the outpost-admin appointment, admins the release
             // arbitration (hidden for FOUNDING outposts)
-            if (managerFinal) {
+            if (townManagerFinal) {
                 view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.outpostAdminButton) {
                     @Override
                     public void onClick(ClickType type) {

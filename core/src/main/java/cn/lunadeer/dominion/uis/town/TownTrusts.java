@@ -180,12 +180,6 @@ public class TownTrusts extends AbstractUI {
         }
     }
 
-    private static DominionDOO outpostOf(TownTrustDOO trust) {
-        if (trust.getScopeType() != TownTrustDOO.TrustScope.OUTPOST) return null;
-        DominionDTO dto = CacheManager.instance.getDominion(trust.getScopeId());
-        return dto instanceof DominionDOO doo ? doo : null;
-    }
-
     private static void createAddOn(Player player, String townName) {
         new InputterRunner(player, TextUserInterface.townTrustsTuiText.addHint) {
             @Override
