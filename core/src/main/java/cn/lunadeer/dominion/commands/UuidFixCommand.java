@@ -1,6 +1,7 @@
 package cn.lunadeer.dominion.commands;
 
 import cn.lunadeer.dominion.Dominion;
+import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.doos.PlayerDOO;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.Notification;
@@ -206,8 +207,12 @@ public class UuidFixCommand {
                         }
                     }
                     
+                    
                     conn.commit();
                     
+                    // CRITICAL: Reload cache to pick up UUID changes
+                    // PlayerCache must be reloaded or toPlayerDTO(name) will still use stale row id
+                    CacheManager.instance.reloadCache();
                     Notification.info(sender, "§a=== UUID Fix Complete ===");
                     Notification.info(sender, "§aPlayer: §e{0}", playerName);
                     Notification.info(sender, "§aStale UUIDs fixed: §c{0}", staleRecords.size());
@@ -222,7 +227,8 @@ public class UuidFixCommand {
                         Notification.info(sender, "§aOne stale row updated to correct UUID.");
                     }
                     Notification.info(sender, "");
-                    Notification.info(sender, "§aReload cache to apply changes: §e/dom admin reload cache");
+                    Notification.info(sender, "§aCache reloaded automatically. Changes are now active.");
+                    Notification.info(sender, "§aYou can now use §e/dom give§a with this player.");
                     
                     XLogger.info("UUID fixed: {0} | {1} stale UUID(s) migrated to {2} | {3} records updated", 
                             playerName, staleRecords.size(), correctUuid, totalUpdated);
