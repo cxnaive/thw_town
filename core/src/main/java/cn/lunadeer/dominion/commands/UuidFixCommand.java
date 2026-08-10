@@ -22,22 +22,10 @@ import java.util.*;
  * 
  * Usage: /dom admin fix_uuid <player_name> [confirm]
  * 
- * Scenarios handled:
- * 1. Offline→Premium: Correct UUID row exists (recent join), stale offline UUID owns dominions
- * 2. Premium→Offline: Stale premium UUID owns dominions, may or may not have new offline row
- * 3. Multiple stale rows from repeated switches
- * 
- * Algorithm:
- * 1. Find ALL player_name rows matching last_known_name
- * 2. Identify stale rows (uuid != correctUuid)
- * 3. For EACH stale UUID:
- *    - Migrate children to correctUuid
- *    - Delete stale row
- * 4. If no correct UUID row exists, UPDATE one stale row instead of deleting
- * 
- * Update order (critical for FK constraints):
- * 1. Update child tables FIRST (dominion, dominion_member, town_member, etc.)
- * 2. Update or delete player_name LAST
+ * v5.0.3 fixes:
+ * 1. Multiple stale UUID detection (name collision safety)
+ * 2. FK constraint fix (INSERT player_name before child migration)
+ * 3. Conflict deletion tracking and logging
  */
 public class UuidFixCommand {
 
@@ -68,7 +56,6 @@ public class UuidFixCommand {
             PlayerRecord correctRecord = null;
             
             try (Connection conn = DatabaseManager.instance.getConnection()) {
-                // Find all records by name (handles multiple rows from repeated switches)
                 String sql = "SELECT id, uuid, last_known_name FROM player_name WHERE last_known_name = ?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, playerName);
@@ -110,6 +97,29 @@ public class UuidFixCommand {
                 return;
             }
 
+            // FIX 1: Multiple stale UUID detection (name collision safety)
+            if (staleRecords.size() > 1) {
+                try (Connection conn = DatabaseManager.instance.getConnection()) {
+                    Notification.error(sender, "§c⚠ MULTIPLE STALE UUIDs DETECTED");
+                    Notification.error(sender, "§cFound {0} stale UUIDs for player ''{1}'':", staleRecords.size(), playerName);
+                    Notification.error(sender, "§a  Current (online): {0}", correctUuid);
+                    for (PlayerRecord stale : staleRecords) {
+                        int domCount = countAffected(conn, "dominion", "owner", stale.uuid);
+                        Notification.error(sender, "§c  Stale: {0} (owns {1} dominions)", stale.uuid, domCount);
+                    }
+                    Notification.error(sender, "");
+                    Notification.error(sender, "§cThis may indicate:");
+                    Notification.error(sender, "§c  1. Name collision - different players used this name");
+                    Notification.error(sender, "§c  2. Multiple online/offline mode switches");
+                    Notification.error(sender, "");
+                    Notification.error(sender, "§cTo prevent accidental data transfer:");
+                    Notification.error(sender, "§c  - Manually verify which dominions belong to current player");
+                    Notification.error(sender, "§c  - Check player login history");
+                    Notification.error(sender, "§c  - Use manual SQL fix if needed");
+                }
+                throw new DominionException("Multiple stale UUIDs detected - operation aborted for safety.");
+            }
+
             // Step 4: Show preview
             if (!confirm) {
                 showPreview(sender, playerName, staleRecords, correctUuid, correctRecord != null);
@@ -122,6 +132,22 @@ public class UuidFixCommand {
                 
                 try {
                     int totalUpdated = 0;
+                    int totalConflictDeleted = 0;  // FIX 3: Track conflict deletions
+                    
+                    // FIX 2: If no correct UUID row exists, INSERT it FIRST to satisfy FK constraints
+                    if (correctRecord == null) {
+                        String checkSql = "SELECT COUNT(*) FROM player_name WHERE uuid = ?";
+                        try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                            ps.setString(1, correctUuid.toString());
+                            try (ResultSet rs = ps.executeQuery()) {
+                                rs.next();
+                                if (rs.getInt(1) == 0) {
+                                    PlayerDOO.create(correctUuid, playerName);
+                                    XLogger.info("Created player_name row for correctUuid: {0}", correctUuid);
+                                }
+                            }
+                        }
+                    }
                     
                     // Process EACH stale UUID
                     for (PlayerRecord staleRecord : staleRecords) {
@@ -129,90 +155,54 @@ public class UuidFixCommand {
                         
                         Notification.info(sender, "§6Processing stale UUID: {0}", staleUuid);
                         
-                        // CRITICAL: Update children FIRST before parent (FK constraints)
-                        
-                        // Update dominion.owner
+                        // CRITICAL: Update children FIRST (FK constraints)
                         totalUpdated += updateUuid(conn, "dominion", "owner", staleUuid, correctUuid);
-                        
-                        // Update dominion.outpost_admin_uuid
                         totalUpdated += updateUuid(conn, "dominion", "outpost_admin_uuid", staleUuid, correctUuid);
-                        
-                        // Update dominion.attached_by
                         totalUpdated += updateUuid(conn, "dominion", "attached_by", staleUuid, correctUuid);
-                        
-                        // Update dominion_member.player_uuid
                         totalUpdated += updateUuid(conn, "dominion_member", "player_uuid", staleUuid, correctUuid);
                         
-                        // Update dominion_member_archive.player_uuid (if table exists)
                         if (tableExists(conn, "dominion_member_archive")) {
                             totalUpdated += updateUuid(conn, "dominion_member_archive", "player_uuid", staleUuid, correctUuid);
                         }
                         
-                        // Update town.founder_uuid and mayor_uuid (no FK, manual rewrite)
                         if (tableExists(conn, "town")) {
                             totalUpdated += updateUuid(conn, "town", "founder_uuid", staleUuid, correctUuid);
                             totalUpdated += updateUuid(conn, "town", "mayor_uuid", staleUuid, correctUuid);
                         }
                         
-                        // Update town_member.player_uuid (skip if new UUID already exists for same town)
                         if (tableExists(conn, "town_member")) {
-                            totalUpdated += updateTownMember(conn, staleUuid, correctUuid);
+                            int[] result = updateTownMember(conn, staleUuid, correctUuid);
+                            totalUpdated += result[0];
+                            totalConflictDeleted += result[1];
                         }
                         
-                        // Update town_trust.player_uuid and created_by (skip PK conflicts)
                         if (tableExists(conn, "town_trust")) {
-                            totalUpdated += updateTownTrust(conn, staleUuid, correctUuid);
+                            int[] result = updateTownTrust(conn, staleUuid, correctUuid);
+                            totalUpdated += result[0];
+                            totalConflictDeleted += result[1];
                         }
                         
-                        // Update privilege_template.creator (if table exists)
                         if (tableExists(conn, "privilege_template")) {
                             totalUpdated += updateUuid(conn, "privilege_template", "creator", staleUuid, correctUuid);
                         }
                     }
                     
-                    // LAST: Update or delete player_name rows
-                    if (correctRecord != null) {
-                        // Correct UUID row exists → delete ALL stale rows
-                        for (PlayerRecord staleRecord : staleRecords) {
-                            String sql = "DELETE FROM player_name WHERE id = ?";
-                            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                                ps.setInt(1, staleRecord.id);
-                                int deleted = ps.executeUpdate();
-                                totalUpdated += deleted;
-                                XLogger.info("Deleted stale player_name row: id={0}, uuid={1}", staleRecord.id, staleRecord.uuid);
-                            }
-                        }
-                    } else {
-                        // No correct UUID row → update the FIRST stale row, delete rest
-                        PlayerRecord toUpdate = staleRecords.get(0);
-                        String sql = "UPDATE player_name SET uuid = ? WHERE id = ?";
+                    // LAST: Delete ALL stale player_name rows
+                    for (PlayerRecord staleRecord : staleRecords) {
+                        String sql = "DELETE FROM player_name WHERE id = ?";
                         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                            ps.setString(1, correctUuid.toString());
-                            ps.setInt(2, toUpdate.id);
-                            int updated = ps.executeUpdate();
-                            totalUpdated += updated;
-                            XLogger.info("Updated player_name row: id={0}, {1} -> {2}", toUpdate.id, toUpdate.uuid, correctUuid);
-                        }
-                        
-                        // Delete remaining stale rows
-                        for (int i = 1; i < staleRecords.size(); i++) {
-                            PlayerRecord staleRecord = staleRecords.get(i);
-                            sql = "DELETE FROM player_name WHERE id = ?";
-                            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                                ps.setInt(1, staleRecord.id);
-                                int deleted = ps.executeUpdate();
-                                totalUpdated += deleted;
-                                XLogger.info("Deleted extra stale player_name row: id={0}, uuid={1}", staleRecord.id, staleRecord.uuid);
-                            }
+                            ps.setInt(1, staleRecord.id);
+                            int deleted = ps.executeUpdate();
+                            totalUpdated += deleted;
+                            XLogger.info("Deleted stale player_name row: id={0}, uuid={1}", staleRecord.id, staleRecord.uuid);
                         }
                     }
                     
-                    
                     conn.commit();
                     
-                    // CRITICAL: Reload cache to pick up UUID changes
-                    // PlayerCache must be reloaded or toPlayerDTO(name) will still use stale row id
+                    // Reload cache
                     CacheManager.instance.reloadCache();
+                    
                     Notification.info(sender, "§a=== UUID Fix Complete ===");
                     Notification.info(sender, "§aPlayer: §e{0}", playerName);
                     Notification.info(sender, "§aStale UUIDs fixed: §c{0}", staleRecords.size());
@@ -221,17 +211,15 @@ public class UuidFixCommand {
                     }
                     Notification.info(sender, "§aCorrect UUID: §2{0}", correctUuid);
                     Notification.info(sender, "§aTotal records updated: §2{0}", totalUpdated);
-                    if (correctRecord != null) {
-                        Notification.info(sender, "§aStale player_name row(s) deleted (correct UUID row kept).");
-                    } else {
-                        Notification.info(sender, "§aOne stale row updated to correct UUID.");
+                    if (totalConflictDeleted > 0) {
+                        Notification.warn(sender, "§6PK conflict deletions: §e{0} §6(records where correct UUID already existed)", totalConflictDeleted);
                     }
                     Notification.info(sender, "");
                     Notification.info(sender, "§aCache reloaded automatically. Changes are now active.");
                     Notification.info(sender, "§aYou can now use §e/dom give§a with this player.");
                     
-                    XLogger.info("UUID fixed: {0} | {1} stale UUID(s) migrated to {2} | {3} records updated", 
-                            playerName, staleRecords.size(), correctUuid, totalUpdated);
+                    XLogger.info("UUID fixed: {0} | {1} stale UUID(s) migrated to {2} | {3} records updated | {4} conflicts deleted", 
+                            playerName, staleRecords.size(), correctUuid, totalUpdated, totalConflictDeleted);
                     
                 } catch (Exception e) {
                     conn.rollback();
@@ -264,7 +252,7 @@ public class UuidFixCommand {
             Notification.warn(sender, "§c  Stale row(s) will be DELETED after migrating children.");
         } else {
             Notification.warn(sender, "§c⚠ No correct UUID row exists.");
-            Notification.warn(sender, "§6  One stale row will be UPDATED, rest deleted.");
+            Notification.warn(sender, "§6  Will INSERT correct UUID row, then delete stale rows.");
         }
         
         Notification.warn(sender, "");
@@ -308,7 +296,10 @@ public class UuidFixCommand {
         Notification.warn(sender, "§c/dom admin fix_uuid {0} confirm", playerName);
     }
 
-    private static int updateTownMember(Connection conn, UUID oldUuid, UUID newUuid) throws SQLException {
+    private static int[] updateTownMember(Connection conn, UUID oldUuid, UUID newUuid) throws SQLException {
+        int updated = 0;
+        int deleted = 0;
+        
         // Skip rows where (town_id, new_uuid) already exists (composite PK conflict)
         String sql = "UPDATE town_member SET player_uuid = ? WHERE player_uuid = ? " +
                      "AND NOT EXISTS (SELECT 1 FROM town_member tm2 WHERE tm2.town_id = town_member.town_id AND tm2.player_uuid = ?)";
@@ -316,24 +307,25 @@ public class UuidFixCommand {
             ps.setString(1, newUuid.toString());
             ps.setString(2, oldUuid.toString());
             ps.setString(3, newUuid.toString());
-            int updated = ps.executeUpdate();
-            
-            // Delete remaining old rows (PK conflict cases)
-            sql = "DELETE FROM town_member WHERE player_uuid = ?";
-            try (PreparedStatement ps2 = conn.prepareStatement(sql)) {
-                ps2.setString(1, oldUuid.toString());
-                int deleted = ps2.executeUpdate();
-                if (deleted > 0) {
-                    XLogger.info("Deleted {0} conflicting town_member rows (new UUID already exists)", deleted);
-                }
-            }
-            
-            return updated;
+            updated = ps.executeUpdate();
         }
+        
+        // Delete remaining old rows (PK conflict cases)
+        sql = "DELETE FROM town_member WHERE player_uuid = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, oldUuid.toString());
+            deleted = ps.executeUpdate();
+            if (deleted > 0) {
+                XLogger.warn("Deleted {0} conflicting town_member rows (correct UUID already existed)", deleted);
+            }
+        }
+        
+        return new int[]{updated, deleted};
     }
 
-    private static int updateTownTrust(Connection conn, UUID oldUuid, UUID newUuid) throws SQLException {
-        int totalUpdated = 0;
+    private static int[] updateTownTrust(Connection conn, UUID oldUuid, UUID newUuid) throws SQLException {
+        int updated = 0;
+        int deleted = 0;
         
         // Update player_uuid (skip PK conflicts)
         String sql = "UPDATE town_trust SET player_uuid = ? WHERE player_uuid = ? " +
@@ -343,23 +335,23 @@ public class UuidFixCommand {
             ps.setString(1, newUuid.toString());
             ps.setString(2, oldUuid.toString());
             ps.setString(3, newUuid.toString());
-            totalUpdated += ps.executeUpdate();
+            updated += ps.executeUpdate();
         }
         
         // Delete remaining old rows (PK conflict cases)
         sql = "DELETE FROM town_trust WHERE player_uuid = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, oldUuid.toString());
-            int deleted = ps.executeUpdate();
+            deleted = ps.executeUpdate();
             if (deleted > 0) {
-                XLogger.info("Deleted {0} conflicting town_trust rows (new UUID already exists)", deleted);
+                XLogger.warn("Deleted {0} conflicting town_trust rows (correct UUID already existed)", deleted);
             }
         }
         
         // Update created_by (no PK constraint)
-        totalUpdated += updateUuid(conn, "town_trust", "created_by", oldUuid, newUuid);
+        updated += updateUuid(conn, "town_trust", "created_by", oldUuid, newUuid);
         
-        return totalUpdated;
+        return new int[]{updated, deleted};
     }
 
     private static int countAffected(Connection conn, String table, String column, UUID uuid) throws SQLException {
