@@ -166,6 +166,7 @@ administrator-command-text:
   update-language-confirm: 这将覆盖你当前的语言文件，请在指令末尾加上 confirm 以确认操作。
   town-release-description: 将城镇前哨释放并返还给贡献者（仲裁）。
   fix-uuid-description: 修复玩家 UUID 不匹配（正版/离线模式切换导致，需要玩家在线）
+  town-attach-description: 将领地挂靠到小镇（管理员仲裁）
 migration-command-text:
   create-player-failed: 创建玩家记录 {0} 失败
   migrate-success: 成功从 Residence 迁移领地 {0} 到 Dominion

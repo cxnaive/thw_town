@@ -6,6 +6,7 @@ import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
+import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.managers.DatabaseMigration;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.DatabaseTables;
@@ -104,34 +105,78 @@ public class AdministratorCommand {
      * detaches an outpost from its town and returns it to the contributor.
      * Founding outposts can never be released (invariant 5).
      */
-    public static SecondaryCommand townRelease = new SecondaryCommand("town", List.of(
-            new Option(List.of("release")),
+    public static SecondaryCommand town = new SecondaryCommand("town", List.of(
+            new Option(List.of("release", "attach")),
             new Argument("dominion_name", true, (commandSender, preArguments) ->
-                    CacheManager.instance.getAllDominionNames())
+                    CacheManager.instance.getAllDominionNames()),
+            new Argument("town_name", false, (commandSender, preArguments) -> {
+                if (preArguments.length > 0 && preArguments[0].equalsIgnoreCase("attach")) {
+                    return CacheManager.instance.getTownCache().getAllTowns().stream()
+                            .map(TownDOO::getName).toList();
+                }
+                return List.of();
+            })
     ), Language.administratorCommandText.townReleaseDescription) {
         @Override
         public void executeHandler(CommandSender sender) {
-            if (!getArgumentValue(0).equalsIgnoreCase("release")) {
-                Notification.warn(sender, getUsage());
-                return;
-            }
-            // capture argument values BEFORE the async hop:
-            // SecondaryCommand stores them in a ThreadLocal that is
-            // cleared when executeHandler returns
+            String action = getArgumentValue(0).toLowerCase();
             String dominionName = getArgumentValue(1);
-            // detaching runs SQL and cache reloads — keep it off the main
-            // thread like every /town subcommand
-            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
-                try {
-                    DominionDTO dto = CacheManager.instance.getDominion(dominionName);
-                    if (!(dto instanceof DominionDOO doo)) {
-                        throw new DominionException(Language.townCommandText.dominionNotExist, dominionName);
+            
+            if (action.equals("release")) {
+                // /dom town release <dominion>
+                cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+                    try {
+                        DominionDTO dto = CacheManager.instance.getDominion(dominionName);
+                        if (!(dto instanceof DominionDOO doo)) {
+                            throw new DominionException(Language.townCommandText.dominionNotExist, dominionName);
+                        }
+                        TownManager.releaseOutpost(sender, doo);
+                    } catch (Exception e) {
+                        Notification.error(sender, e);
                     }
-                    TownManager.releaseOutpost(sender, doo);
-                } catch (Exception e) {
-                    Notification.error(sender, e);
-                }
-            });
+                });
+            } else if (action.equals("attach")) {
+                // /dom town attach <dominion> <town>
+                String townName = getArgumentValue(2);
+                
+                cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+                    try {
+                        DominionDTO domDto = CacheManager.instance.getDominion(dominionName);
+                        if (!(domDto instanceof DominionDOO dominion)) {
+                            throw new DominionException(Language.townCommandText.dominionNotExist, dominionName);
+                        }
+                        
+                        // Find town by name
+                        TownDOO town = null;
+                        for (TownDOO t : CacheManager.instance.getTownCache().getAllTowns()) {
+                            if (t.getName().equalsIgnoreCase(townName)) {
+                                town = t;
+                                break;
+                            }
+                        }
+                        if (town == null) {
+                            throw new DominionException("Town {0} not found.", townName);
+                        }
+                        
+                        if (dominion.isTownOutpost()) {
+                            throw new DominionException("Dominion {0} is already a town outpost.", dominionName);
+                        }
+                        
+                        // Admin forced attachment - use operator UUID or console UUID
+                        java.util.UUID operatorUuid = sender instanceof org.bukkit.entity.Player p 
+                                ? p.getUniqueId() 
+                                : java.util.UUID.fromString("00000000-0000-0000-0000-000000000000");
+                        
+                        TownManager.attachOutpost(town, dominion, operatorUuid);
+                        Notification.info(sender, "§aAdmin: Attached dominion {0} to town {1}.", dominionName, townName);
+                        
+                    } catch (Exception e) {
+                        Notification.error(sender, e);
+                    }
+                });
+            } else {
+                Notification.warn(sender, getUsage());
+            }
         }
     }.needPermission(adminPermission).register();
 
