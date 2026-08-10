@@ -24,8 +24,10 @@ import java.util.*;
  * 
  * v5.0.3 fixes:
  * 1. Multiple stale UUID detection (name collision safety)
- * 2. FK constraint fix (INSERT player_name before child migration)
+ * 2. FK constraint fix (raw JDBC INSERT within transaction)
  * 3. Conflict deletion tracking and logging
+ * 4. Dominion ownership preview when correctRecord==null
+ * 5. Transaction atomicity (no external connection)
  */
 public class UuidFixCommand {
 
@@ -134,7 +136,7 @@ public class UuidFixCommand {
                     int totalUpdated = 0;
                     int totalConflictDeleted = 0;  // FIX 3: Track conflict deletions
                     
-                    // FIX 2: If no correct UUID row exists, INSERT it FIRST to satisfy FK constraints
+                    // FIX 2 & 5: If no correct UUID row exists, INSERT it FIRST using raw JDBC within transaction
                     if (correctRecord == null) {
                         String checkSql = "SELECT COUNT(*) FROM player_name WHERE uuid = ?";
                         try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
@@ -142,8 +144,14 @@ public class UuidFixCommand {
                             try (ResultSet rs = ps.executeQuery()) {
                                 rs.next();
                                 if (rs.getInt(1) == 0) {
-                                    PlayerDOO.create(correctUuid, playerName);
-                                    XLogger.info("Created player_name row for correctUuid: {0}", correctUuid);
+                                    // Raw JDBC INSERT within transaction (PlayerDOO.create opens new connection and auto-commits)
+                                    String insertSql = "INSERT INTO player_name (uuid, last_known_name, last_join_at) VALUES (?, ?, CURRENT_TIMESTAMP)";
+                                    try (PreparedStatement insertPs = conn.prepareStatement(insertSql)) {
+                                        insertPs.setString(1, correctUuid.toString());
+                                        insertPs.setString(2, playerName);
+                                        insertPs.executeUpdate();
+                                        XLogger.info("Created player_name row for correctUuid: {0} within transaction", correctUuid);
+                                    }
                                 }
                             }
                         }
@@ -201,7 +209,12 @@ public class UuidFixCommand {
                     conn.commit();
                     
                     // Reload cache
-                    CacheManager.instance.reloadCache();
+                    try {
+                        CacheManager.instance.reloadCache();
+                    } catch (Exception e) {
+                        XLogger.error("Cache reload failed after UUID fix: {0}", e.getMessage());
+                        Notification.warn(sender, "§cCache reload failed. Please run: /dom admin reload cache");
+                    }
                     
                     Notification.info(sender, "§a=== UUID Fix Complete ===");
                     Notification.info(sender, "§aPlayer: §e{0}", playerName);
@@ -251,8 +264,20 @@ public class UuidFixCommand {
             Notification.warn(sender, "§a✓ Correct UUID row exists in player_name.");
             Notification.warn(sender, "§c  Stale row(s) will be DELETED after migrating children.");
         } else {
+            // FIX 4: Show dominion ownership breakdown when correctRecord==null
             Notification.warn(sender, "§c⚠ No correct UUID row exists.");
             Notification.warn(sender, "§6  Will INSERT correct UUID row, then delete stale rows.");
+            Notification.warn(sender, "");
+            Notification.warn(sender, "§6⚠ IMPORTANT: Verify dominion ownership:");
+            try (Connection conn = DatabaseManager.instance.getConnection()) {
+                for (PlayerRecord stale : staleRecords) {
+                    int domCount = countAffected(conn, "dominion", "owner", stale.uuid);
+                    Notification.warn(sender, "§6  UUID {0}: §e{1} dominions", stale.uuid, domCount);
+                }
+            }
+            Notification.warn(sender, "");
+            Notification.warn(sender, "§c  If these dominions do NOT belong to the current player {0},", playerName);
+            Notification.warn(sender, "§c  DO NOT confirm - this indicates a name collision.");
         }
         
         Notification.warn(sender, "");
