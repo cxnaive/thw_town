@@ -93,11 +93,13 @@ public class DominionManage extends AbstractUI {
         // instead) and delete/transfer do not exist; management buttons
         // render by town role instead of failing after the click (§13.3)
         cn.lunadeer.dominion.doos.TownDOO town = null;
+        cn.lunadeer.dominion.doos.DominionDOO outpostDoo = null;
         if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+            outpostDoo = doo;
             town = CacheManager.instance.getTownCache().getTown(doo.getTownId());
         }
-        boolean manager = town != null && (cn.lunadeer.dominion.managers.TownManager.isManager(
-                town, player.getUniqueId()) || cn.lunadeer.dominion.misc.Others.bypassLimit(player));
+        boolean manager = outpostDoo != null && (cn.lunadeer.dominion.misc.Others.bypassLimit(player)
+                || cn.lunadeer.dominion.managers.TownManager.isOutpostManager(player, outpostDoo));
 
         Line size_info = Line.create()
                 .append(Info.button(player, dominion.getName()).build())
@@ -422,11 +424,13 @@ public class DominionManage extends AbstractUI {
         assertDominionAdmin(player, dominion);
         // town era variant (see showTUI)
         cn.lunadeer.dominion.doos.TownDOO town = null;
+        cn.lunadeer.dominion.doos.DominionDOO outpostDoo = null;
         if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
+            outpostDoo = doo;
             town = CacheManager.instance.getTownCache().getTown(doo.getTownId());
         }
-        boolean manager = town != null && (cn.lunadeer.dominion.managers.TownManager.isManager(
-                town, player.getUniqueId()) || cn.lunadeer.dominion.misc.Others.bypassLimit(player));
+        boolean manager = outpostDoo != null && (cn.lunadeer.dominion.misc.Others.bypassLimit(player)
+                || cn.lunadeer.dominion.managers.TownManager.isOutpostManager(player, outpostDoo));
         final cn.lunadeer.dominion.doos.TownDOO townFinal = town;
         final boolean managerFinal = manager;
 

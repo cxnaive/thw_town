@@ -275,9 +275,13 @@ public class TownManager {
     }
 
     /**
-     * Town-cascade management check for a town outpost: mayor/assistant or
-     * the appointed outpost admin (plan §2.4). Used by Asserts to route
-     * management commands (flags, tp point, resize, ...) of town outposts.
+     * Town-cascade management check for a town outpost: mayor/assistant,
+     * the appointed outpost admin (plan §2.4), or the recorded owner. The
+     * owner of a contributed dominion is the CONTRIBUTOR — contributing
+     * land is not a donation of control, so they keep a special management
+     * tier on their own outpost (flags, env, tp point). Operations that
+     * spend town money or affect the town as a whole (resize, release)
+     * stay mayor/admin-only.
      */
     public static boolean isOutpostManager(@NotNull Player player, @NotNull DominionDOO dominion) {
         Integer townId = dominion.getTownId();
@@ -285,6 +289,7 @@ public class TownManager {
         TownDOO town = cache().getTown(townId);
         if (town == null) return false;
         if (isManager(town, player.getUniqueId())) return true;
+        if (player.getUniqueId().equals(dominion.getOwner())) return true;
         UUID outpostAdmin = dominion.getOutpostAdminUuid();
         return player.getUniqueId().equals(outpostAdmin);
     }
