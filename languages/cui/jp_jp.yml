@@ -1590,12 +1590,12 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - '§7Scope: §b{0}'
-    - '§7build/destroy/switch/item_use: §b{1}'
+    - §7範囲：§b町の全拠点
+    - §7権限：§b{0}
+    - §8B 建築 · D 破壊 · S 操作 · I アイテム使用
     - ''
-    - '§a▶ Left Click: cycle flags (editors)'
-    - '§c▶ Right Click: remove (editors)'
-    material: NAME_TAG
+    - §a▶ クリックして4項目を個別設定
+    material: PLAYER_HEAD
   add-item-button:
     symbol: A
     name: §aAdd trust
@@ -1704,3 +1704,74 @@ town-outposts-cui:
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+town-trust-editor-cui:
+  town-title: '§6✦ §e{0} の信頼権限 §6✦'
+  outpost-title: '§6✦ §e前哨 {0} の信頼権限 §6✦'
+  layout:
+  - <###P###R
+  - '#########'
+  - '##BDSI###'
+  target-button:
+    symbol: P
+    name: §e{0}
+    lore:
+    - §7このプレイヤーの4つの信頼権限を設定します。
+    material: PLAYER_HEAD
+  build-button:
+    symbol: B
+    name: §e建築 (B)
+    lore:
+    - '§7状態: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: BRICKS
+  destroy-button:
+    symbol: D
+    name: §e破壊 (D)
+    lore:
+    - '§7状態: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: DIAMOND_PICKAXE
+  switch-button:
+    symbol: S
+    name: §e操作 (S)
+    lore:
+    - '§7状態: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: LEVER
+  item-use-button:
+    symbol: I
+    name: §eアイテム使用 (I)
+    lore:
+    - '§7状態: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: CRAFTING_TABLE
+  enabled-state: §a有効
+  disabled-state: §c無効
+  toggle-hint: §a▶ クリックして切り替え
+  read-only-hint: §8読み取り専用：この信頼権限は編集できません
+  build-description: ブロックの設置、種まき、乗り物の生成。
+  destroy-description: ブロックの破壊、収穫、乗り物の破壊。
+  switch-description: ドア、ボタン、コンテナなどの操作。
+  item-use-description: クラフト、取引、アイテム使用、エンティティとの操作。
+  back-button:
+    symbol: <
+    name: §c« 戻る
+    lore:
+    - §e▶ 信頼リストに戻る
+    material: RED_STAINED_GLASS_PANE
+  remove-button:
+    symbol: R
+    name: §c信頼を削除
+    lore:
+    - §7このプレイヤーの信頼権限をすべて削除します。
+    - §c▶ 2回クリックして確認
+    material: BARRIER
+  remove-confirm: '§c5秒以内にもう一度「信頼を削除」をクリックすると、{0}を削除します。'

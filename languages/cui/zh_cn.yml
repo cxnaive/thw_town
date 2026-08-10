@@ -1594,12 +1594,12 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - §7范围：§b{0}
-    - §7建造/破坏/交互/使用物品：§b{1}
+    - §7范围：§b小镇全部属地
+    - §7权限：§b{0}
+    - §8B 建造 · D 破坏 · S 交互 · I 物品使用
     - ''
-    - §a▶ 左键：逐项切换旗子（有编辑权者）
-    - §c▶ 右键：移除（有编辑权者）
-    material: NAME_TAG
+    - §a▶ 点击独立设置四项权限
+    material: PLAYER_HEAD
   add-item-button:
     symbol: A
     name: §a添加授权
@@ -1634,11 +1634,12 @@ outpost-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - §7建造/破坏/交互/使用物品：§b{0}
+    - §7范围：§b仅此属地
+    - §7权限：§b{0}
+    - §8B 建造 · D 破坏 · S 交互 · I 物品使用
     - ''
-    - §a▶ 左键：逐项切换旗子（有编辑权者）
-    - §c▶ 右键：移除（有编辑权者）
-    material: NAME_TAG
+    - §a▶ 点击独立设置四项权限
+    material: PLAYER_HEAD
   add-item-button:
     symbol: A
     name: §a添加授权
@@ -1886,3 +1887,74 @@ town-group-manage-cui:
   - §7已分配到此小镇组。
   - ''
   - §c▶ 点击移除
+town-trust-editor-cui:
+  town-title: '§6✦ §e{0} 的信任权限 §6✦'
+  outpost-title: '§6✦ §e属地 {0} 的信任权限 §6✦'
+  layout:
+  - <###P###R
+  - '#########'
+  - '##BDSI###'
+  target-button:
+    symbol: P
+    name: §e{0}
+    lore:
+    - §7设置该玩家的四项信任权限。
+    material: PLAYER_HEAD
+  build-button:
+    symbol: B
+    name: §e建造 (B)
+    lore:
+    - '§7状态：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: BRICKS
+  destroy-button:
+    symbol: D
+    name: §e破坏 (D)
+    lore:
+    - '§7状态：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: DIAMOND_PICKAXE
+  switch-button:
+    symbol: S
+    name: §e交互 (S)
+    lore:
+    - '§7状态：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: LEVER
+  item-use-button:
+    symbol: I
+    name: §e物品使用 (I)
+    lore:
+    - '§7状态：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: CRAFTING_TABLE
+  enabled-state: §a已开启
+  disabled-state: §c已关闭
+  toggle-hint: §a▶ 点击切换
+  read-only-hint: §8只读：你无法编辑此信任权限
+  build-description: 放置方块、播种和生成载具。
+  destroy-description: 破坏方块、收获和摧毁载具。
+  switch-description: 使用门、按钮、容器和其他开关。
+  item-use-description: 合成、交易、使用物品以及与实体互动。
+  back-button:
+    symbol: <
+    name: §c« 返回
+    lore:
+    - §e▶ 返回信任列表
+    material: RED_STAINED_GLASS_PANE
+  remove-button:
+    symbol: R
+    name: §c移除信任
+    lore:
+    - §7移除该玩家的全部信任权限。
+    - §c▶ 再次点击确认
+    material: BARRIER
+  remove-confirm: §c请在5秒内再次点击“移除信任”，以移除 {0}。

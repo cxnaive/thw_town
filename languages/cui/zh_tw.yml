@@ -1552,12 +1552,12 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - '§7Scope: §b{0}'
-    - '§7build/destroy/switch/item_use: §b{1}'
+    - §7範圍：§b小鎮全部屬地
+    - §7權限：§b{0}
+    - §8B 建造 · D 破壞 · S 互動 · I 物品使用
     - ''
-    - '§a▶ Left Click: cycle flags (editors)'
-    - '§c▶ Right Click: remove (editors)'
-    material: NAME_TAG
+    - §a▶ 點擊個別設定四項權限
+    material: PLAYER_HEAD
   add-item-button:
     symbol: A
     name: §aAdd trust
@@ -1666,3 +1666,74 @@ town-outposts-cui:
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+town-trust-editor-cui:
+  town-title: '§6✦ §e{0} 的信任權限 §6✦'
+  outpost-title: '§6✦ §e屬地 {0} 的信任權限 §6✦'
+  layout:
+  - <###P###R
+  - '#########'
+  - '##BDSI###'
+  target-button:
+    symbol: P
+    name: §e{0}
+    lore:
+    - §7設定此玩家的四項信任權限。
+    material: PLAYER_HEAD
+  build-button:
+    symbol: B
+    name: §e建造 (B)
+    lore:
+    - '§7狀態：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: BRICKS
+  destroy-button:
+    symbol: D
+    name: §e破壞 (D)
+    lore:
+    - '§7狀態：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: DIAMOND_PICKAXE
+  switch-button:
+    symbol: S
+    name: §e互動 (S)
+    lore:
+    - '§7狀態：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: LEVER
+  item-use-button:
+    symbol: I
+    name: §e物品使用 (I)
+    lore:
+    - '§7狀態：{0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: CRAFTING_TABLE
+  enabled-state: §a已開啟
+  disabled-state: §c已關閉
+  toggle-hint: §a▶ 點擊切換
+  read-only-hint: §8唯讀：你無法編輯此信任權限
+  build-description: 放置方塊、播種及生成載具。
+  destroy-description: 破壞方塊、收穫及破壞載具。
+  switch-description: 操作門、按鈕、容器及其他開關。
+  item-use-description: 合成、交易、使用物品及與生物互動。
+  back-button:
+    symbol: <
+    name: §c« 返回
+    lore:
+    - §e▶ 返回信任列表
+    material: RED_STAINED_GLASS_PANE
+  remove-button:
+    symbol: R
+    name: §c移除信任
+    lore:
+    - §7移除此玩家的全部信任權限。
+    - §c▶ 點擊兩次確認
+    material: BARRIER
+  remove-confirm: '§c5秒內再次點擊「移除信任」即可移除 {0}。'

@@ -224,13 +224,13 @@ public class TownTrusts extends AbstractUI {
                 )
         );
         public ButtonConfiguration trustItemButton = ButtonConfiguration.createMaterial(
-                'i', Material.NAME_TAG, "§e{0}",
+                'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
-                        "§7Scope: §b{0}",
-                        "§7build/destroy/switch/item_use: §b{1}",
+                        "§7Scope: §bAll town outposts",
+                        "§7Flags: §b{0}",
+                        "§8B Build · D Destroy · S Switch · I Item use",
                         "",
-                        "§a▶ Left Click: cycle flags (editors)",
-                        "§c▶ Right Click: remove (editors)"
+                        "§a▶ Click to manage four independent flags"
                 )
         );
         public ButtonConfiguration addItemButton = ButtonConfiguration.createMaterial(
@@ -250,41 +250,32 @@ public class TownTrusts extends AbstractUI {
             TownDOO town = TownManager.requireTown(args[0]);
             boolean manager = TownManager.isManager(town, player.getUniqueId())
                     || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
+            String currentPage = String.valueOf(toIntegrity(args[1], 1));
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townTrustsCui.title, town.getName()));
-            view.applyListConfiguration(ChestUserInterface.townTrustsCui.listConfiguration, toIntegrity(args[1], 1));
+            view.applyListConfiguration(ChestUserInterface.townTrustsCui.listConfiguration,
+                    Integer.parseInt(currentPage));
 
             for (TownTrustDOO trust : CacheManager.instance.getTownCache().getTrustsOf(town.getId())) {
                 if (trust.getScopeType() != TownTrustDOO.TrustScope.TOWN) continue;
-                String scope = "town";
                 String flags = (trust.isBuild() ? "B" : "-") + (trust.isDestroy() ? "D" : "-")
                         + (trust.isSwitch() ? "S" : "-") + (trust.isItemUse() ? "I" : "-");
-                ChestButton btn = new ChestButton(ChestUserInterface.townTrustsCui.trustItemButton) {
+                String playerName = CacheManager.instance.getPlayerName(trust.getPlayerUuid());
+                ButtonConfiguration item = ButtonConfiguration.createHeadByName(
+                        ChestUserInterface.townTrustsCui.listConfiguration.itemSymbol.charAt(0),
+                        playerName,
+                        ChestUserInterface.townTrustsCui.trustItemButton.name,
+                        ChestUserInterface.townTrustsCui.trustItemButton.lore
+                );
+                ChestButton btn = new ChestButton(item) {
                     @Override
                     public void onClick(ClickType type) {
-                        if (!manager) return;
-                        TownUI.action(player, () -> {
-                            if (type.isLeftClick()) {
-                                // cycle: all-off -> build -> +destroy -> +switch -> +item_use -> all-off
-                                boolean[] next;
-                                if (!trust.isBuild()) next = new boolean[]{true, false, false, false};
-                                else if (!trust.isDestroy()) next = new boolean[]{true, true, false, false};
-                                else if (!trust.isSwitch()) next = new boolean[]{true, true, true, false};
-                                else if (!trust.isItemUse()) next = new boolean[]{true, true, true, true};
-                                else next = new boolean[]{false, false, false, false};
-                                TownManager.trust(player, town, trust.getPlayerUuid(),
-                                        trust.getScopeType(), null,
-                                        next[0], next[1], next[2], next[3]);
-                            } else if (type.isRightClick()) {
-                                TownManager.untrust(player, town, trust.getPlayerUuid(),
-                                        trust.getScopeType(), null);
-                            }
-                        }, () -> show(player, town.getName(), "1"));
+                        TownTrustEditor.showTown(player, town, trust.getPlayerUuid(), currentPage);
                     }
                 };
-                btn = btn.setDisplayNameArgs(CacheManager.instance.getPlayerName(trust.getPlayerUuid()));
-                btn = btn.setLoreArgs(scope, flags);
+                btn = btn.setDisplayNameArgs(playerName);
+                btn = btn.setLoreArgs(flags);
                 view = view.addItem(btn);
             }
             // outpost jump entries — open the per-outpost trust page

@@ -1600,12 +1600,12 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - '§7Scope: §b{0}'
-    - '§7build/destroy/switch/item_use: §b{1}'
+    - '§7Scope: §bAll town outposts'
+    - '§7Flags: §b{0}'
+    - §8B Build · D Destroy · S Switch · I Item use
     - ''
-    - '§a▶ Left Click: cycle flags (editors)'
-    - '§c▶ Right Click: remove (editors)'
-    material: NAME_TAG
+    - §a▶ Click to manage four independent flags
+    material: PLAYER_HEAD
   add-item-button:
     symbol: A
     name: §aAdd trust
@@ -1714,3 +1714,74 @@ town-outposts-cui:
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+town-trust-editor-cui:
+  town-title: '§6✦ §eTrust permissions: {0} §6✦'
+  outpost-title: '§6✦ §eOutpost trust permissions: {0} §6✦'
+  layout:
+  - <###P###R
+  - '#########'
+  - '##BDSI###'
+  target-button:
+    symbol: P
+    name: §e{0}
+    lore:
+    - §7Configure this player's four trust categories.
+    material: PLAYER_HEAD
+  build-button:
+    symbol: B
+    name: §eBuild (B)
+    lore:
+    - '§7State: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: BRICKS
+  destroy-button:
+    symbol: D
+    name: §eDestroy (D)
+    lore:
+    - '§7State: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: DIAMOND_PICKAXE
+  switch-button:
+    symbol: S
+    name: §eSwitch (S)
+    lore:
+    - '§7State: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: LEVER
+  item-use-button:
+    symbol: I
+    name: §eItem use (I)
+    lore:
+    - '§7State: {0}'
+    - §7{1}
+    - ''
+    - '{2}'
+    material: CRAFTING_TABLE
+  enabled-state: §aEnabled
+  disabled-state: §cDisabled
+  toggle-hint: §a▶ Click to toggle
+  read-only-hint: '§8Read-only: you cannot edit this trust'
+  build-description: Place, sow, and spawn vehicles.
+  destroy-description: Break, harvest, and destroy vehicles.
+  switch-description: Use doors, buttons, containers, and other switches.
+  item-use-description: Craft, trade, use items, and interact with entities.
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to return to the trust list
+    material: RED_STAINED_GLASS_PANE
+  remove-button:
+    symbol: R
+    name: §cRemove trust
+    lore:
+    - §7Remove all trust categories for this player.
+    - §c▶ Click twice to confirm
+    material: BARRIER
+  remove-confirm: '§cClick Remove trust again within 5 seconds to remove {0}.'

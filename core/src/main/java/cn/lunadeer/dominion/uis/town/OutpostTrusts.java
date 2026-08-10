@@ -196,12 +196,13 @@ public class OutpostTrusts extends AbstractUI {
                 )
         );
         public ButtonConfiguration trustItemButton = ButtonConfiguration.createMaterial(
-                'i', Material.NAME_TAG, "§e{0}",
+                'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
-                        "§7build/destroy/switch/item_use: §b{0}",
+                        "§7Scope: §bThis outpost only",
+                        "§7Flags: §b{0}",
+                        "§8B Build · D Destroy · S Switch · I Item use",
                         "",
-                        "§a▶ Left Click: cycle flags (editors)",
-                        "§c▶ Right Click: remove (editors)"
+                        "§a▶ Click to manage four independent flags"
                 )
         );
         public ButtonConfiguration addItemButton = ButtonConfiguration.createMaterial(
@@ -218,36 +219,28 @@ public class OutpostTrusts extends AbstractUI {
             DominionDOO outpost = requireOutpost(args[0]);
             TownDOO town = TownManager.requireTown(outpost.getTownId());
             boolean editor = canEdit(player, outpost);
+            String currentPage = String.valueOf(toIntegrity(args[1], 1));
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.outpostTrustsCui.title, outpost.getName()));
-            view.applyListConfiguration(ChestUserInterface.outpostTrustsCui.listConfiguration, toIntegrity(args[1], 1));
+            view.applyListConfiguration(ChestUserInterface.outpostTrustsCui.listConfiguration,
+                    Integer.parseInt(currentPage));
 
             for (TownTrustDOO trust : outpostTrusts(town, outpost)) {
-                ChestButton btn = new ChestButton(ChestUserInterface.outpostTrustsCui.trustItemButton) {
+                String playerName = CacheManager.instance.getPlayerName(trust.getPlayerUuid());
+                ButtonConfiguration item = ButtonConfiguration.createHeadByName(
+                        ChestUserInterface.outpostTrustsCui.listConfiguration.itemSymbol.charAt(0),
+                        playerName,
+                        ChestUserInterface.outpostTrustsCui.trustItemButton.name,
+                        ChestUserInterface.outpostTrustsCui.trustItemButton.lore
+                );
+                ChestButton btn = new ChestButton(item) {
                     @Override
                     public void onClick(ClickType type) {
-                        if (!canEdit(player, outpost)) return;
-                        TownUI.action(player, () -> {
-                            if (type.isLeftClick()) {
-                                // cycle: all-off -> build -> +destroy -> +switch -> +item_use -> all-off
-                                boolean[] next;
-                                if (!trust.isBuild()) next = new boolean[]{true, false, false, false};
-                                else if (!trust.isDestroy()) next = new boolean[]{true, true, false, false};
-                                else if (!trust.isSwitch()) next = new boolean[]{true, true, true, false};
-                                else if (!trust.isItemUse()) next = new boolean[]{true, true, true, true};
-                                else next = new boolean[]{false, false, false, false};
-                                TownManager.trust(player, town, trust.getPlayerUuid(),
-                                        TownTrustDOO.TrustScope.OUTPOST, outpost,
-                                        next[0], next[1], next[2], next[3]);
-                            } else if (type.isRightClick()) {
-                                TownManager.untrust(player, town, trust.getPlayerUuid(),
-                                        TownTrustDOO.TrustScope.OUTPOST, outpost);
-                            }
-                        }, () -> show(player, outpost.getName(), "1"));
+                        TownTrustEditor.showOutpost(player, outpost, trust.getPlayerUuid(), currentPage);
                     }
                 };
-                btn = btn.setDisplayNameArgs(CacheManager.instance.getPlayerName(trust.getPlayerUuid()));
+                btn = btn.setDisplayNameArgs(playerName);
                 btn = btn.setLoreArgs(flags(trust));
                 view = view.addItem(btn);
             }
