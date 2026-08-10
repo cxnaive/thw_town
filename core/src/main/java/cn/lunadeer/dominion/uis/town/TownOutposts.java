@@ -1,5 +1,6 @@
 package cn.lunadeer.dominion.uis.town;
 
+import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
@@ -85,8 +86,15 @@ public class TownOutposts extends AbstractUI {
         public String title = "Outposts of {0}";
         public String button = "OUTPOSTS";
         public String outpostLine = "§b{0} §7- {1} ({2}, server {3})";
+        public String contributorTag = " §7by §e{0}";
         public String remoteHint = "§8(on another server)";
         public String teleportButton = "TELEPORT";
+    }
+
+    /** owner_uuid on a town outpost is the contributor record (§2.4). */
+    private static String contributorTag(DominionDOO outpost) {
+        return formatString(TextUserInterface.townOutpostsTuiText.contributorTag,
+                CacheManager.instance.getPlayerName(outpost.getOwner()));
     }
 
     @Override
@@ -117,6 +125,7 @@ public class TownOutposts extends AbstractUI {
                 }
                 line.append(formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
                         "", worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId()));
+                line.append(contributorTag(outpost));
                 if (!isLocal(outpost)) {
                     line.append(TextUserInterface.townOutpostsTuiText.remoteHint);
                 } else {
@@ -158,6 +167,7 @@ public class TownOutposts extends AbstractUI {
                         "§7World: §b{0}",
                         "§7Kind: §b{1}",
                         "§7Server: §b{2}",
+                        "§7Contributor: §e{3}",
                         "",
                         "§a▶ Left Click: manage (this server)",
                         "§b▶ Right Click: teleport (this server)"
@@ -193,7 +203,8 @@ public class TownOutposts extends AbstractUI {
                 };
                 btn = btn.setDisplayNameArgs(outpost.getName());
                 btn = btn.setLoreArgs(worldLabel(outpost), outpost.getClaimKind(),
-                        String.valueOf(outpost.getServerId()));
+                        String.valueOf(outpost.getServerId()),
+                        CacheManager.instance.getPlayerName(outpost.getOwner()));
                 view = view.addItem(btn);
             }
             view.setButton(ChestUserInterface.townOutpostsCui.backButton.getSymbol(),
@@ -217,7 +228,8 @@ public class TownOutposts extends AbstractUI {
         TownDOO town = TownManager.requireTown(args[0]);
         for (DominionDOO outpost : outposts(town.getId())) {
             Notification.info(sender, formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
-                    outpost.getName(), worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId()));
+                    outpost.getName(), worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId())
+                    + contributorTag(outpost));
         }
     }
 }

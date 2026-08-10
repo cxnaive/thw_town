@@ -445,6 +445,7 @@ dominion-list-cui:
     name: §6🏰 §e{0}
     lore:
     - '§7Town: §b{0}'
+    - §7Contributor: §e{1}
     - §8Your land belongs to a town now.
     - ''
     - '§b▶ Left Click: info/manage'
@@ -458,6 +459,7 @@ dominion-list-cui:
     lore:
     - '§7Town: §b{0}'
     - '§7Server: §b{1}'
+    - §7Contributor: §e{2}
     - ''
     - '§b▶ Left Click: manage (this server)'
     - ''
@@ -1582,6 +1584,13 @@ town-trusts-cui:
     - §7Trust a player (town scope).
     - §a▶ Click to add
     material: WRITABLE_BOOK
+  outpost-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - §7Manage this outpost's trusts.
+    - §a▶ Click to open
+    material: GRASS_BLOCK
   back-button:
     symbol: <
     name: §c« Back
@@ -1665,6 +1674,7 @@ town-outposts-cui:
     - '§7World: §b{0}'
     - '§7Kind: §b{1}'
     - '§7Server: §b{2}'
+    - §7Contributor: §e{3}
     - ''
     - '§a▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (this server)'

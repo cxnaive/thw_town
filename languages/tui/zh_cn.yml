@@ -22,6 +22,7 @@ dominion-list-tui-text:
   town-managed-line: '§b{0} §7- 小镇: {1}, 服务器 {2}'
   town-managed-section: 你管理的镇属地（所有服务器）。
   town-tag: ' [{0}]'
+  contributor-tag: ' §7贡献者: §e{0}'
   title: 你的领地列表
   button: 领地列表
   description: 列出你的所有领地（含可管理领地）。
@@ -223,5 +224,6 @@ town-outposts-tui-text:
   title: '{0} 的前哨'
   button: 前哨
   outpost-line: §b{0} §7- {1} ({2}, 服务器 {3})
+  contributor-tag: ' §7贡献者: §e{0}'
   remote-hint: §8（在另一个服务器）
   teleport-button: 传送

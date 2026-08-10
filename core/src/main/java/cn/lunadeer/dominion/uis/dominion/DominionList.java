@@ -91,6 +91,7 @@ public class DominionList extends AbstractUI {
         public String adminSection = "Your admin dominions section.";
         public String serverSection = "Server {0} dominions section.";
         public String townTag = " [{0}]";
+        public String contributorTag = " §7by §e{0}";
         public String townManagedSection = "Town outposts you manage (all servers).";
         public String townManagedLine = "§b{0} §7- town: {1}, server {2}";
         public String remoteOwnedSection = "Your dominions on other servers.";
@@ -106,6 +107,12 @@ public class DominionList extends AbstractUI {
                 show(sender, pageStr);
             }
         }.needPermission(defaultPermission);
+    }
+
+    /** owner_uuid on a town outpost is the contributor record (§2.4). */
+    private static String contributorTag(cn.lunadeer.dominion.doos.DominionDOO outpost) {
+        return formatString(TextUserInterface.dominionListTuiText.contributorTag,
+                CacheManager.instance.getPlayerName(outpost.getOwner()));
     }
 
     public static List<Line> BuildTreeLines(CommandSender sender, List<DominionNode> dominionTree, Integer depth) {
@@ -146,10 +153,12 @@ public class DominionList extends AbstractUI {
             }.build();
             line.append(tp).append(prefix + node.getDominion().getName());
             if (townOutpost) {
+                cn.lunadeer.dominion.doos.DominionDOO doo = (cn.lunadeer.dominion.doos.DominionDOO) node.getDominion();
                 cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
-                        .getTown(((cn.lunadeer.dominion.doos.DominionDOO) node.getDominion()).getTownId());
+                        .getTown(doo.getTownId());
                 line.append(Component.text(formatString(TextUserInterface.dominionListTuiText.townTag,
                         town == null ? "?" : town.getName()), ViewStyles.SECONDARY));
+                line.append(Component.text(contributorTag(doo), ViewStyles.SECONDARY));
             }
             lines.add(line);
             lines.addAll(BuildTreeLines(sender, node.getChildren(), depth + 1));
@@ -225,7 +234,7 @@ public class DominionList extends AbstractUI {
                 cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
                         .getTown(doo.getTownId());
                 townTag = formatString(TextUserInterface.dominionListTuiText.townTag,
-                        town == null ? "?" : town.getName());
+                        town == null ? "?" : town.getName()) + contributorTag(doo);
             }
             line.append(Component.text(formatString(TextUserInterface.dominionListTuiText.remoteOwnedLine,
                     dominion.getName(), dominion.getServerId()) + townTag, ViewStyles.SECONDARY));
@@ -294,6 +303,7 @@ public class DominionList extends AbstractUI {
                     .getTown(outpost.getTownId());
             line.append(formatString(TextUserInterface.dominionListTuiText.townManagedLine,
                     outpost.getName(), town == null ? "?" : town.getName(), outpost.getServerId()));
+            line.append(Component.text(contributorTag(outpost), ViewStyles.SECONDARY));
             lines.add(line);
         }
         return lines;
@@ -347,6 +357,7 @@ public class DominionList extends AbstractUI {
                 'i', Material.BROWN_BANNER, "§6🏰 §e{0}",
                 List.of(
                         "§7Town: §b{0}",
+                        "§7Contributor: §e{1}",
                         "§8Your land belongs to a town now.",
                         "",
                         "§b▶ Left Click: info/manage",
@@ -361,6 +372,7 @@ public class DominionList extends AbstractUI {
                 List.of(
                         "§7Town: §b{0}",
                         "§7Server: §b{1}",
+                        "§7Contributor: §e{2}",
                         "",
                         "§b▶ Left Click: manage (this server)",
                         "",
@@ -433,9 +445,11 @@ public class DominionList extends AbstractUI {
                     ? dominion.getName() + " §8@" + dominion.getServerId()
                     : dominion.getName());
             if (townOutpost && remote) {
-                btn = btn.setLoreArgs(townName + " §8| server " + dominion.getServerId());
+                btn = btn.setLoreArgs(townName + " §8| server " + dominion.getServerId(),
+                        CacheManager.instance.getPlayerName(dominion.getOwner()));
             } else if (townOutpost) {
-                btn = btn.setLoreArgs(townName);
+                btn = btn.setLoreArgs(townName,
+                        CacheManager.instance.getPlayerName(dominion.getOwner()));
             } else if (remote) {
                 btn = btn.setLoreArgs("server " + dominion.getServerId());
             }
@@ -459,7 +473,8 @@ public class DominionList extends AbstractUI {
                 };
                 btn = btn.setDisplayNameArgs(outpost.getName());
                 btn = btn.setLoreArgs(t == null ? "?" : t.getName(),
-                        String.valueOf(outpost.getServerId()));
+                        String.valueOf(outpost.getServerId()),
+                        CacheManager.instance.getPlayerName(outpost.getOwner()));
                 view = view.addItem(btn);
             }
         } catch (Exception e) {
