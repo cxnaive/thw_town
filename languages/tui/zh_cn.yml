@@ -227,3 +227,15 @@ town-outposts-tui-text:
   contributor-tag: ' §7贡献者: §e{0}'
   remote-hint: §8（在另一个服务器）
   teleport-button: 传送
+town-attach-selector-tui-text:
+  title: 选择挂靠领地到 {0}
+  button: 选择领地
+  dominion-line: '{0} §b{1} §7({2}, {3})'
+  selected: '[✓]'
+  unselected: '[ ]'
+  toggle-button: 切换
+  confirm-button: 确认
+  cancel-button: 取消
+  attach-success: 已将 {0} 块领地挂靠到小镇 {1}。
+  none-selected: 未选择任何领地。
+  no-dominions: 你没有可挂靠的个人领地。

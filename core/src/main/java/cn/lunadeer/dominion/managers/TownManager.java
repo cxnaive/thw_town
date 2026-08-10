@@ -377,14 +377,18 @@ public class TownManager {
             } else {
                 // No auto-attach: player manually selects dominions via /town attach (phase 2)
                 Notification.info(founder, Language.townManagerText.createSuccess, name);
+                // Show hint if player has attachable personal dominions
+                int attachableCount = (int) ownedDominions(founder.getUniqueId()).stream()
+                        .filter(d -> !d.isTownOutpost()).count();
+                if (attachableCount > 0) {
+                    Notification.info(founder, Language.townManagerText.attachHint, attachableCount);
+                }
             }
         } catch (Exception e) {
             // a failure after the town row was inserted must not leave
             // orphans behind — roll every insert back before rethrowing:
-            // the founding dominion, any dominions already attached to the
-            // town (their town_id would dangle at the deleted town and lock
-            // the owner out of their own land), and the town rows
-            // themselves. Member rows consumed by merge are preserved in
+            // the founding dominion (if any) and the town rows themselves.
+            // Member rows consumed by merge are preserved in
             // dominion_member_archive for manual recovery.
             XLogger.error("createTown failed after town insert (town={0}); rolling back. {1}",
                     town.getId(), e.getMessage());
@@ -517,6 +521,12 @@ public class TownManager {
         }
         cache().reloadNow();
         Notification.info(player, Language.townManagerText.joinSuccess, town.getName());
+        // Show hint if player has attachable personal dominions
+        int attachableCount = (int) ownedDominions(player.getUniqueId()).stream()
+                .filter(d -> !d.isTownOutpost()).count();
+        if (attachableCount > 0) {
+            Notification.info(player, Language.townManagerText.attachHint, attachableCount);
+        }
     }
 
     // ===== Role and Source Display Helpers =====

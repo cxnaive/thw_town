@@ -622,9 +622,17 @@ public class TownCommand implements TabExecutor {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
                 case "attach" -> {
-                    List<String> options = new ArrayList<>(List.of("all"));
-                    options.addAll(dominionNames());
-                    filter(options, args[1], suggestions);
+                    if (sender instanceof Player player) {
+                        List<String> options = new ArrayList<>(List.of("all"));
+                        try {
+                            options.addAll(DominionDOO.selectByOwner(player.getUniqueId()).stream()
+                                    .filter(d -> !d.isTownOutpost())
+                                    .map(DominionDOO::getName)
+                                    .toList());
+                        } catch (Exception ignored) {
+                        }
+                        filter(options, args[1], suggestions);
+                    }
                 }
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
                         filter(playerNames(), args[1], suggestions);
