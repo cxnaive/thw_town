@@ -44,6 +44,7 @@ public class AdministratorCommand {
         public String updateLanguageDescription = "Regenerate language files from plugin internal language files.";
         public String updateLanguageConfirm = "This will overwrite your current language files, please confirm by adding 'confirm' at the end of the command.";
         public String townReleaseDescription = "Release a town outpost back to its contributor (arbitration).";
+        public String fixUuidDescription = "Fix player UUID mismatch caused by online/offline mode switch (requires player online).";
 
         public String reloadingDominionCache = "Reloading dominion cache...";
         public String reloadedDominionCache = "Reload dominion cache success!";
@@ -302,6 +303,22 @@ public class AdministratorCommand {
                 Language.loadLanguageFiles(sender, Dominion.instance, Configuration.language);
             } catch (Exception e) {
                 Notification.error(sender, "Failed to update language files: {0}", e.getMessage());
+            }
+        }
+    }.needPermission(adminPermission).register();
+
+    public static SecondaryCommand fixUuid = new SecondaryCommand("fix_uuid", List.of(
+            new Argument("player_name", ""),
+            new Option(List.of("confirm"), "")
+    ), Language.administratorCommandText.fixUuidDescription) {
+        @Override
+        public void executeHandler(CommandSender sender) {
+            try {
+                String playerName = getArgumentValue(0);
+                boolean confirm = getArgumentValue(1).equals("confirm");
+                UuidFixCommand.fixUuid(sender, playerName, confirm);
+            } catch (Exception e) {
+                Notification.error(sender, e);
             }
         }
     }.needPermission(adminPermission).register();

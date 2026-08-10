@@ -730,3 +730,4 @@ town-role-text:
   founder: 创始
   joined: 加入
   merged: 合并
+  fix-uuid-description: 修复玩家 UUID 不匹配（正版/离线模式切换导致，需要玩家在线）
