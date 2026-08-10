@@ -52,7 +52,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
                 + "&b/town kick <player> &7- kick a resident (mayor/assistant)\n"
                 + "&b/town transfer <player> &7- transfer the mayor role\n"
-                + "&b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)\n"
+                + "&b/town promote|demote <player> &7- set assistant/resident role (mayor only)\n"
                 + "&b/town disband [confirm] &7- disband the town (dissolves outposts)\n"
                 + "&b/town deposit <amount> &7- deposit into the town bank\n"
                 + "&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n"

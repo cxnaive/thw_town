@@ -123,7 +123,8 @@ public class TownInfo extends AbstractUI {
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.outpostCountLine,
                     outpostCount(town.getId()))));
             if (role != null) {
-                view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.yourRoleLine, role.name())));
+                view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.yourRoleLine,
+                        TownManager.roleDisplay(role))));
             }
 
             view.add(Line.create()

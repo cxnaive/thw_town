@@ -1532,15 +1532,34 @@ town-members-cui:
       lore:
       - 'Page: {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
-  member-item-button:
+  resident-item-button:
     symbol: i
     name: §e{0}
     lore:
-    - '§7Role: §b{0}'
-    - '§7Source: §b{1}'
+    - §7Role: §b{1}
+    - §7Source: §b{2}
     - ''
-    - '§a▶ Left Click: promote/demote (managers)'
-    - '§c▶ Right Click: kick resident (managers)'
+    - §a▶ Left Click: promote (mayor only)
+    - §c▶ Right Click: kick (managers)
+    material: PLAYER_HEAD
+  assistant-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - §7Role: §b{1}
+    - §7Source: §b{2}
+    - ''
+    - §c▶ Left Click: demote (mayor only)
+    material: PLAYER_HEAD
+  mayor-item-button:
+    symbol: i
+    name: §6👑 §e{0}
+    lore:
+    - §7Role: §b{1}
+    - §7Source: §b{2}
+    - ''
+    - §7This is the town's mayor.
+    - §8No actions available.
     material: PLAYER_HEAD
   invite-item-button:
     symbol: A

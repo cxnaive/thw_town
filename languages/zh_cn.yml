@@ -602,6 +602,11 @@ ui-commands-description:
   guest-flags: 管理领地的访客权限。
 town-manager-text:
   use-transfer-for-mayor: 镇长一职只能通过 /town transfer 转让。
+  only-mayor-can-set-role: 只有镇长能提拔或降级成员。
+  confirm-kick: §c5秒内再次点击确认踢出 {0}。
+  confirm-promote: §a5秒内再次点击确认提拔 {0} 为管理员。
+  confirm-demote: §c5秒内再次点击确认降级 {0} 为居民。
+  confirm-transfer: §6§l5秒内再次点击确认转让镇长给 {0}。此操作不可撤销！
   set-role-notify: 你在小镇 {1} 的角色已变为 {0}。
   set-role-success: 已将 {0} 在小镇 {2} 的角色设为 {1}。
   disband-enclave-dissolved: 你的领地 {0} 已随城镇 {1} 一并解散。
@@ -716,3 +721,11 @@ town-outpost-admin-inputter-text:
 town-disband-confirm-inputter-text:
   button: 解散小镇
   hint: 输入 confirm 确认解散小镇。
+town-role-text:
+  mayor: 镇长
+  assistant: 管理员
+  resident: 居民
+  outsider: 访客
+  founder: 创始
+  joined: 加入
+  merged: 合并

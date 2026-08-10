@@ -138,23 +138,70 @@ public class TownMembers extends AbstractUI {
                 String name = CacheManager.instance.getPlayerName(member.getPlayerUuid());
                 Line line = Line.create()
                         .append(formatString(TextUserInterface.townMembersTuiText.memberLine,
-                                name, member.getRole().name(), member.getSource().name()));
+                                name, TownManager.roleDisplay(member.getRole()),
+                                TownManager.sourceDisplay(member.getSource())));
                 if (manager && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
                     line.append(actionButton(player, town, member, TextUserInterface.townMembersTuiText.kickButton,
-                            () -> TownManager.kickMember(player, town, member.getPlayerUuid())).build());
+                            () -> cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "kick:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> {
+                                        try {
+                                            TownManager.kickMember(player, town, member.getPlayerUuid());
+                                        } catch (Exception e) {
+                                            Notification.error(player, e);
+                                        }
+                                    },
+                                    formatString(Language.townManagerText.confirmKick, name)
+                            )).build());
+                }
+                if (isMayor && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
                     line.append(actionButton(player, town, member, TextUserInterface.townMembersTuiText.promoteButton,
-                            () -> TownManager.setRole(player, town, member.getPlayerUuid(),
-                                    TownMemberDOO.TownRole.ASSISTANT)).build());
+                            () -> cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "promote:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> {
+                                        try {
+                                            TownManager.setRole(player, town, member.getPlayerUuid(),
+                                                    TownMemberDOO.TownRole.ASSISTANT);
+                                        } catch (Exception e) {
+                                            Notification.error(player, e);
+                                        }
+                                    },
+                                    formatString(Language.townManagerText.confirmPromote, name)
+                            )).build());
                 }
                 if (isMayor && member.getRole() == TownMemberDOO.TownRole.ASSISTANT) {
                     line.append(actionButton(player, town, member, TextUserInterface.townMembersTuiText.demoteButton,
-                            () -> TownManager.setRole(player, town, member.getPlayerUuid(),
-                                    TownMemberDOO.TownRole.RESIDENT)).build());
+                            () -> cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "demote:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> {
+                                        try {
+                                            TownManager.setRole(player, town, member.getPlayerUuid(),
+                                                    TownMemberDOO.TownRole.RESIDENT);
+                                        } catch (Exception e) {
+                                            Notification.error(player, e);
+                                        }
+                                    },
+                                    formatString(Language.townManagerText.confirmDemote, name)
+                            )).build());
                 }
                 // the mayor may transfer to ANY member, not just assistants
                 if (isMayor && member.getRole() != TownMemberDOO.TownRole.MAYOR) {
                     line.append(actionButton(player, town, member, TextUserInterface.townMembersTuiText.transferButton,
-                            () -> TownManager.transferMayor(player, town, member.getPlayerUuid())).build());
+                            () -> cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "transfer:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> {
+                                        try {
+                                            TownManager.transferMayor(player, town, member.getPlayerUuid());
+                                        } catch (Exception e) {
+                                            Notification.error(player, e);
+                                        }
+                                    },
+                                    formatString(Language.townManagerText.confirmTransfer, name)
+                            )).build());
                 }
                 view.add(line);
             }
@@ -193,14 +240,33 @@ public class TownMembers extends AbstractUI {
                         "p######An"
                 )
         );
-        public ButtonConfiguration memberItemButton = ButtonConfiguration.createMaterial(
+        public ButtonConfiguration residentItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
-                        "§7Role: §b{0}",
-                        "§7Source: §b{1}",
+                        "§7Role: §b{1}",
+                        "§7Source: §b{2}",
                         "",
-                        "§a▶ Left Click: promote/demote (managers)",
-                        "§c▶ Right Click: kick resident (managers)"
+                        "§a▶ Left Click: promote (mayor only)",
+                        "§c▶ Right Click: kick (managers)"
+                )
+        );
+        public ButtonConfiguration assistantItemButton = ButtonConfiguration.createMaterial(
+                'i', Material.PLAYER_HEAD, "§e{0}",
+                List.of(
+                        "§7Role: §b{1}",
+                        "§7Source: §b{2}",
+                        "",
+                        "§c▶ Left Click: demote (mayor only)"
+                )
+        );
+        public ButtonConfiguration mayorItemButton = ButtonConfiguration.createMaterial(
+                'i', Material.PLAYER_HEAD, "§6👑 §e{0}",
+                List.of(
+                        "§7Role: §b{1}",
+                        "§7Source: §b{2}",
+                        "",
+                        "§7This is the town's mayor.",
+                        "§8No actions available."
                 )
         );
         public ButtonConfiguration inviteItemButton = ButtonConfiguration.createMaterial(
@@ -217,6 +283,8 @@ public class TownMembers extends AbstractUI {
             TownDOO town = TownManager.requireTown(args[0]);
             boolean manager = TownManager.isManager(town, player.getUniqueId())
                     || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
+            boolean isMayor = TownManager.roleOf(town, player.getUniqueId()) == TownMemberDOO.TownRole.MAYOR
+                    || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townMembersCui.title, town.getName()));
@@ -224,30 +292,52 @@ public class TownMembers extends AbstractUI {
 
             for (TownMemberDOO member : CacheManager.instance.getTownCache().getMembersOf(town.getId())) {
                 String name = CacheManager.instance.getPlayerName(member.getPlayerUuid());
-                ChestButton btn = new ChestButton(ChestUserInterface.townMembersCui.memberItemButton) {
+                // Select button configuration by member role
+                ButtonConfiguration buttonConfig = switch (member.getRole()) {
+                    case RESIDENT -> ChestUserInterface.townMembersCui.residentItemButton;
+                    case ASSISTANT -> ChestUserInterface.townMembersCui.assistantItemButton;
+                    case MAYOR -> ChestUserInterface.townMembersCui.mayorItemButton;
+                };
+                ChestButton btn = new ChestButton(buttonConfig) {
                     @Override
                     public void onClick(ClickType type) {
-                        if (!manager) return;
-                        // mirror the TUI buttons: left toggles the role
-                        // (resident <-> assistant), right kicks a resident;
-                        // the mayor row is inert (transfer only)
-                        TownUI.action(player, () -> {
-                            if (type.isLeftClick() && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
-                                TownManager.setRole(player, town, member.getPlayerUuid(),
-                                        TownMemberDOO.TownRole.ASSISTANT);
-                            } else if (type.isLeftClick()
-                                    && member.getRole() == TownMemberDOO.TownRole.ASSISTANT) {
-                                TownManager.setRole(player, town, member.getPlayerUuid(),
-                                        TownMemberDOO.TownRole.RESIDENT);
-                            } else if (type.isRightClick()
-                                    && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
-                                TownManager.kickMember(player, town, member.getPlayerUuid());
-                            }
-                        }, () -> show(player, town.getName(), "1"));
+                        // Left click: promote/demote (mayor only)
+                        // Right click: kick resident (manager)
+                        // Mayor row: inert
+                        if (type.isLeftClick() && isMayor && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
+                            cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "promote:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> TownUI.action(player, () -> TownManager.setRole(player, town,
+                                            member.getPlayerUuid(), TownMemberDOO.TownRole.ASSISTANT),
+                                            () -> show(player, town.getName(), "1")),
+                                    formatString(Language.townManagerText.confirmPromote, name)
+                            );
+                        } else if (type.isLeftClick() && isMayor
+                                && member.getRole() == TownMemberDOO.TownRole.ASSISTANT) {
+                            cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "demote:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> TownUI.action(player, () -> TownManager.setRole(player, town,
+                                            member.getPlayerUuid(), TownMemberDOO.TownRole.RESIDENT),
+                                            () -> show(player, town.getName(), "1")),
+                                    formatString(Language.townManagerText.confirmDemote, name)
+                            );
+                        } else if (type.isRightClick() && manager
+                                && member.getRole() == TownMemberDOO.TownRole.RESIDENT) {
+                            cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                                    player,
+                                    "kick:" + town.getId() + ":" + member.getPlayerUuid(),
+                                    () -> TownUI.action(player, () -> TownManager.kickMember(player, town,
+                                            member.getPlayerUuid()), () -> show(player, town.getName(), "1")),
+                                    formatString(Language.townManagerText.confirmKick, name)
+                            );
+                        }
                     }
                 };
                 btn = btn.setDisplayNameArgs(name);
-                btn = btn.setLoreArgs(member.getRole().name(), member.getSource().name());
+                btn = btn.setLoreArgs(TownManager.roleDisplay(member.getRole()),
+                        TownManager.sourceDisplay(member.getSource()));
                 view = view.addItem(btn);
             }
             final ChestListView viewFinal = view;
@@ -283,7 +373,8 @@ public class TownMembers extends AbstractUI {
         for (TownMemberDOO member : CacheManager.instance.getTownCache().getMembersOf(town.getId())) {
             Notification.info(sender, formatString(TextUserInterface.townMembersTuiText.memberLine,
                     CacheManager.instance.getPlayerName(member.getPlayerUuid()),
-                    member.getRole().name(), member.getSource().name()));
+                    TownManager.roleDisplay(member.getRole()),
+                    TownManager.sourceDisplay(member.getSource())));
         }
     }
 }

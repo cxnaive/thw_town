@@ -1502,15 +1502,34 @@ town-members-cui:
       lore:
       - 'Page: {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
-  member-item-button:
+  resident-item-button:
     symbol: i
     name: §e{0}
     lore:
-    - §7角色：§b{0}
-    - §7来源：§b{1}
+    - §7角色：§b{1}
+    - §7来源：§b{2}
     - ''
-    - §a▶ 左键：晋升/降职（管理者）
-    - §c▶ 右键：移出居民（管理者）
+    - §a▶ 左键：提拔（仅镇长）
+    - §c▶ 右键：踢出（管理者）
+    material: PLAYER_HEAD
+  assistant-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - §7角色：§b{1}
+    - §7来源：§b{2}
+    - ''
+    - §c▶ 左键：降级（仅镇长）
+    material: PLAYER_HEAD
+  mayor-item-button:
+    symbol: i
+    name: §6👑 §e{0}
+    lore:
+    - §7角色：§b{1}
+    - §7来源：§b{2}
+    - ''
+    - §7这是小镇的镇长。
+    - §8无可用操作。
     material: PLAYER_HEAD
   invite-item-button:
     symbol: A

@@ -112,6 +112,7 @@ public class Language extends ConfigurationFile {
     public static MultiServerManager.MultiServerManagerText multiServerManagerText = new MultiServerManager.MultiServerManagerText();
     public static TownManager.TownManagerText townManagerText = new TownManager.TownManagerText();
     public static TownCommand.TownCommandText townCommandText = new TownCommand.TownCommandText();
+    public static TownRoleText townRoleText = new TownRoleText();
 
     public static Asserts.AssertsText assertsText = new Asserts.AssertsText();
     public static Converts.ConvertsText convertsText = new Converts.ConvertsText();
@@ -175,6 +176,18 @@ public class Language extends ConfigurationFile {
         public String onlyPlayer = "TUI inputter can only be used by a player.";
         public String cancel = " [Send 'C' to cancel the inputter.]";
         public String inputterCancelled = "Inputter cancelled.";
+    }
+
+    public static class TownRoleText extends ConfigurationPart {
+        // TownRole display names
+        public String mayor = "Mayor";
+        public String assistant = "Assistant";
+        public String resident = "Resident";
+        public String outsider = "Outsider";
+        // MemberSource display names
+        public String founder = "Founder";
+        public String joined = "Joined";
+        public String merged = "Merged";
     }
 
     @PreProcess

@@ -85,6 +85,12 @@ public class TownManager {
         public String setRoleSuccess = "Set {0}'s role to {1} in town {2}.";
         public String setRoleNotify = "Your role in town {1} is now {0}.";
         public String useTransferForMayor = "The mayor role can only change hands via /town transfer.";
+        public String onlyMayorCanSetRole = "Only the mayor can promote or demote members.";
+        // Confirmation messages for destructive actions
+        public String confirmKick = "§cClick again within 5 seconds to kick {0}.";
+        public String confirmPromote = "§aClick again within 5 seconds to promote {0} to assistant.";
+        public String confirmDemote = "§cClick again within 5 seconds to demote {0} to resident.";
+        public String confirmTransfer = "§6§lClick again within 5 seconds to transfer mayor to {0}. This cannot be undone!";
         public String targetNotMember = "{0} is not a member of town {1}.";
         public String trustSuccess = "Trusted {0} on {1} (scope {2}).";
         public String untrustSuccess = "Removed trust of {0} on {1} (scope {2}).";
@@ -542,6 +548,30 @@ public class TownManager {
         Notification.info(player, Language.townManagerText.joinSuccess, town.getName(), attached);
     }
 
+    // ===== Role and Source Display Helpers =====
+
+    /**
+     * Get the localized display name for a town role.
+     */
+    public static @NotNull String roleDisplay(@NotNull TownMemberDOO.TownRole role) {
+        return switch (role) {
+            case MAYOR -> Language.townRoleText.mayor;
+            case ASSISTANT -> Language.townRoleText.assistant;
+            case RESIDENT -> Language.townRoleText.resident;
+        };
+    }
+
+    /**
+     * Get the localized display name for a member source.
+     */
+    public static @NotNull String sourceDisplay(@NotNull TownMemberDOO.MemberSource source) {
+        return switch (source) {
+            case FOUNDER -> Language.townRoleText.founder;
+            case JOINED -> Language.townRoleText.joined;
+            case MERGED -> Language.townRoleText.merged;
+        };
+    }
+
     /**
      * Leave a town. Land stays (town property); outpost-admin appointments
      * held by the player are cleared (plan §2.4).
@@ -583,12 +613,15 @@ public class TownManager {
 
     /**
      * Promote a resident to assistant / demote an assistant to resident.
-     * Mayor/assistant only; the mayor role itself changes hands solely via
+     * Mayor only; the mayor role itself changes hands solely via
      * {@link #transferMayor}.
      */
     public static void setRole(@NotNull Player operator, @NotNull TownDOO town, @NotNull UUID target,
                                @NotNull TownMemberDOO.TownRole newRole) throws Exception {
-        assertManager(operator, town);
+        // Only the mayor (or bypass admin) can promote/demote
+        if (!bypassLimit(operator) && !town.getMayorUuid().equals(operator.getUniqueId())) {
+            throw new DominionException(Language.townManagerText.onlyMayorCanSetRole);
+        }
         if (newRole == TownMemberDOO.TownRole.MAYOR) {
             throw new DominionException(Language.townManagerText.useTransferForMayor);
         }
@@ -610,8 +643,8 @@ public class TownManager {
         member.setRole(newRole);
         cache().reloadNow();
         Notification.info(operator, Language.townManagerText.setRoleSuccess,
-                CacheManager.instance.getPlayerName(target), newRole.name(), town.getName());
-        notifyIfOnline(target, Language.townManagerText.setRoleNotify, newRole.name(), town.getName());
+                CacheManager.instance.getPlayerName(target), roleDisplay(newRole), town.getName());
+        notifyIfOnline(target, Language.townManagerText.setRoleNotify, roleDisplay(newRole), town.getName());
     }
 
     /**
