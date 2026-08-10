@@ -268,6 +268,7 @@ limitation-text:
   load-world-settings-success: 'ワールド設定 {0} の読み込みに成功しました: {1}。'
 database-manager-text:
   import-drops-town-data: 'This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.'
+  import-drops-town-group-data: 'This backup predates town groups: existing town group definitions will be dropped by this restore.'
   exporting-database-tables: データベーステーブルをエクスポート中...
   export-table-fail: 'テーブルのエクスポートに失敗しました。理由: {0}'
   export-world-mapping-fail: 'ワールド UID マッピングの��クスポートに失敗しました。理由: {0}'

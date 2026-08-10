@@ -402,6 +402,15 @@ public class Converts {
     }
 
     public static @NotNull GroupDTO toGroupDTO(@NotNull DominionDTO dominion, String groupName) {
+        if (groupName.startsWith("#")) {
+            try {
+                int groupId = Integer.parseInt(groupName.substring(1));
+                GroupDTO byId = dominion.getGroups().stream()
+                        .filter(g -> g.getId().equals(groupId)).findFirst().orElse(null);
+                if (byId != null) return byId;
+            } catch (NumberFormatException ignored) {
+            }
+        }
         GroupDTO group = dominion.getGroups().stream().filter(g -> g.getNamePlain().equals(groupName)).findFirst().orElse(null);
         if (group != null) {
             return group;
@@ -415,6 +424,11 @@ public class Converts {
             return group;
         }
         throw new DominionException(Language.convertsText.noGroupFound, groupId.toString());
+    }
+
+    /** Unambiguous internal UI key; group names may collide with town mirrors. */
+    public static @NotNull String toGroupKey(@NotNull GroupDTO group) {
+        return "#" + group.getId();
     }
 
 }

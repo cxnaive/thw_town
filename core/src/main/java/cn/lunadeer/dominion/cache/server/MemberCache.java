@@ -27,6 +27,14 @@ public class MemberCache extends Cache {
         this.serverId = serverId;
     }
 
+    public void reloadNow() {
+        try {
+            loadExecution();
+        } catch (Exception e) {
+            cn.lunadeer.dominion.utils.XLogger.error(e);
+        }
+    }
+
     public @Nullable MemberDTO getMember(@Nullable DominionDTO dominion, @NotNull Player player) {
         return getMember(dominion, player.getUniqueId());
     }

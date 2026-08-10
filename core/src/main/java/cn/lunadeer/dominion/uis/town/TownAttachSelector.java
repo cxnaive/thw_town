@@ -1,6 +1,5 @@
 package cn.lunadeer.dominion.uis.town;
 
-import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.DominionDOO;
@@ -24,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
@@ -31,15 +31,37 @@ import static cn.lunadeer.dominion.utils.Misc.formatString;
 
 /**
  * UI for selecting which personal dominions to attach to the town.
- * Uses direct database queries for cross-server consistency.
+ * Uses asynchronous direct database queries for cross-server consistency.
  */
 public class TownAttachSelector extends AbstractUI {
 
     // Track player selections: player UUID -> set of dominion IDs
-    private static final Map<UUID, Set<Integer>> selections = new HashMap<>();
+    private static final Map<UUID, Set<Integer>> selections = new ConcurrentHashMap<>();
+
+    private List<DominionDOO> prefetchedAttachable = List.of();
 
     public static void show(CommandSender sender, String townName, String pageStr) {
-        new TownAttachSelector().displayByPreference(sender, townName, pageStr);
+        TownAttachSelector ui = new TownAttachSelector();
+        if (!(sender instanceof Player player)) {
+            ui.displayByPreference(sender, townName, pageStr);
+            return;
+        }
+        TownUI.prefetchThenRender(player, () -> {
+            requireMemberTown(player, townName);
+            ui.prefetchedAttachable = DominionDOO.selectByOwner(player.getUniqueId()).stream()
+                    .filter(d -> !d.isTownOutpost())
+                    .toList();
+        }, () -> ui.displayByPreference(player, townName, pageStr));
+    }
+
+    private static TownDOO requireMemberTown(Player player, String townName) throws Exception {
+        TownDOO town = TownManager.requireTown(townName);
+        if (TownManager.roleOf(town, player.getUniqueId()) == null) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    cn.lunadeer.dominion.configuration.Language.townManagerText.notInTown,
+                    town.getName());
+        }
+        return town;
     }
 
     public static ListViewButton button(CommandSender sender, String townName) {
@@ -70,20 +92,18 @@ public class TownAttachSelector extends AbstractUI {
     @Override
     protected void showTUI(Player player, String... args) {
         try {
-            TownDOO town = TownManager.requireTown(args[0]);
+            TownDOO town = requireMemberTown(player, args[0]);
             int page = toIntegrity(args[1], 1);
 
-            // Query database directly for cross-server consistency
-            List<DominionDOO> attachable = DominionDOO.selectByOwner(player.getUniqueId()).stream()
-                    .filter(d -> !d.isTownOutpost())
-                    .toList();
+            List<DominionDOO> attachable = prefetchedAttachable;
 
             if (attachable.isEmpty()) {
                 Notification.info(player, TextUserInterface.townAttachSelectorTuiText.noDominions);
                 return;
             }
 
-            Set<Integer> selected = selections.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>());
+            Set<Integer> selected = selections.computeIfAbsent(player.getUniqueId(),
+                    k -> ConcurrentHashMap.newKeySet());
 
             ListView view = ListView.create(10, button(player, town.getName()));
             view.title(formatString(TextUserInterface.townAttachSelectorTuiText.title, town.getName()));
@@ -149,11 +169,11 @@ public class TownAttachSelector extends AbstractUI {
         public ListViewConfiguration listConfiguration = new ListViewConfiguration(
                 'i',
                 List.of(
-                        "<#######",
-                        "#iiiiiii",
-                        "#iiiiiii",
-                        "#iiiiiii",
-                        "c#####C>"
+                        "#########",
+                        "#iiiiiii#",
+                        "#iiiiiii#",
+                        "#iiiiiii#",
+                        "c##p#n#C#"
                 )
         );
         public ButtonConfiguration selectedItemButton = ButtonConfiguration.createMaterial(
@@ -187,19 +207,17 @@ public class TownAttachSelector extends AbstractUI {
     @Override
     protected void showCUI(Player player, String... args) {
         try {
-            TownDOO town = TownManager.requireTown(args[0]);
+            TownDOO town = requireMemberTown(player, args[0]);
 
-            // Query database directly for cross-server consistency
-            List<DominionDOO> attachable = DominionDOO.selectByOwner(player.getUniqueId()).stream()
-                    .filter(d -> !d.isTownOutpost())
-                    .toList();
+            List<DominionDOO> attachable = prefetchedAttachable;
 
             if (attachable.isEmpty()) {
                 Notification.info(player, TextUserInterface.townAttachSelectorTuiText.noDominions);
                 return;
             }
 
-            Set<Integer> selected = selections.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>());
+            Set<Integer> selected = selections.computeIfAbsent(player.getUniqueId(),
+                    k -> ConcurrentHashMap.newKeySet());
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townAttachSelectorCui.title, town.getName()));
@@ -266,33 +284,31 @@ public class TownAttachSelector extends AbstractUI {
     // ===== Helper =====
 
     private void confirmAttach(Player player, TownDOO town, Set<Integer> selected) {
-        try {
-            if (selected.isEmpty()) {
-                Notification.warn(player, TextUserInterface.townAttachSelectorTuiText.noneSelected);
-                selections.remove(player.getUniqueId());
-                TownInfo.show(player, town.getName(), "1");
-                return;
-            }
-
-            int count = 0;
-            for (Integer dominionId : selected) {
-                // Re-query from database to ensure fresh state
-                DominionDOO dominion = DominionDOO.select(dominionId);
-                if (dominion != null && !dominion.isTownOutpost()) {
-                    // Use TownManager.attachOutpost for complete attachment contract:
-                    // merges members, attaches to town, ensures town member group
-                    TownManager.attachOutpost(town, dominion, player.getUniqueId());
-                    count++;
-                }
-            }
-
+        if (selected.isEmpty()) {
+            Notification.warn(player, TextUserInterface.townAttachSelectorTuiText.noneSelected);
             selections.remove(player.getUniqueId());
-            CacheManager.instance.reloadCache();
-            Notification.info(player, TextUserInterface.townAttachSelectorTuiText.attachSuccess,
-                    count, town.getName());
             TownInfo.show(player, town.getName(), "1");
-        } catch (Exception e) {
-            Notification.error(player, e);
+            return;
         }
+        Set<Integer> selectedSnapshot = new HashSet<>(selected);
+        selections.remove(player.getUniqueId());
+        TownUI.action(player, () -> {
+            TownDOO currentTown = requireMemberTown(player, town.getName());
+            int count = 0;
+            for (Integer dominionId : selectedSnapshot) {
+                // Re-query and re-check ownership: ownership can change while
+                // the selector is open, and stale UI state must never attach
+                // another player's land.
+                DominionDOO dominion = DominionDOO.select(dominionId);
+                if (dominion == null || dominion.isTownOutpost()
+                        || !dominion.getOwner().equals(player.getUniqueId())) {
+                    continue;
+                }
+                TownManager.attachOutpost(currentTown, dominion, player.getUniqueId());
+                count++;
+            }
+            Notification.info(player, TextUserInterface.townAttachSelectorTuiText.attachSuccess,
+                    count, currentTown.getName());
+        }, () -> TownInfo.show(player, town.getName(), "1"));
     }
 }

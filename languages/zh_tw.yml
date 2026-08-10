@@ -268,6 +268,7 @@ limitation-text:
   load-world-settings-success: 已成功載入 {0} 的世界設定：{1}
 database-manager-text:
   import-drops-town-data: 'This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.'
+  import-drops-town-group-data: 'This backup predates town groups: existing town group definitions will be dropped by this restore.'
   exporting-database-tables: 正在匯出資料庫資料表…
   export-table-fail: 資料表匯出失敗，原因：{0}
   export-world-mapping-fail: 世界 UID 對應匯出失敗，原因：{0}

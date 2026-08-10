@@ -139,6 +139,18 @@ public class GroupManage extends AbstractUI {
                         "§8Managed by the town system."
                 )
         );
+
+        public ButtonConfiguration townGroupMirrorHintButton = ButtonConfiguration.createMaterial(
+                'i', Material.BOOK,
+                "§6⛨ §eTown-managed Group",
+                List.of(
+                        "§7Membership is shared by the town and",
+                        "§7cannot be changed from this outpost.",
+                        "§7Use the town group page to assign members.",
+                        "",
+                        "§8Permission flags remain editable here."
+                )
+        );
     }
 
     @Override
@@ -146,9 +158,11 @@ public class GroupManage extends AbstractUI {
         DominionDTO dominion = toDominionDTO(args[0]);
         assertDominionAdmin(player, dominion);
         GroupDTO group = toGroupDTO(dominion, args[1]);
+        boolean isTownGroup = cn.lunadeer.dominion.managers.TownManager
+                .isTownManagedGroup(group, dominion);
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
         view.setTitle(formatString(ChestUserInterface.groupManageCUI.title,
-                cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group)));
+                cn.lunadeer.dominion.managers.TownManager.townGroupDisplayName(group)));
         view.applyListConfiguration(ChestUserInterface.groupManageCUI.listConfiguration, toIntegrity(args[2]));
 
         view.setButton(ChestUserInterface.groupManageCUI.backButton.getSymbol(),
@@ -169,34 +183,36 @@ public class GroupManage extends AbstractUI {
                 }
         );
 
-        view.setButton(ChestUserInterface.groupManageCUI.renameGroupButton.getSymbol(),
-                new ChestButton(ChestUserInterface.groupManageCUI.renameGroupButton) {
-                    @Override
-                    public void onClick(ClickType type) {
-                        RenameGroupInputter.createOn(player, args[0], args[1]);
-                        view.close();
+        if (!isTownGroup) {
+            view.setButton(ChestUserInterface.groupManageCUI.renameGroupButton.getSymbol(),
+                    new ChestButton(ChestUserInterface.groupManageCUI.renameGroupButton) {
+                        @Override
+                        public void onClick(ClickType type) {
+                            RenameGroupInputter.createOn(player, args[0], args[1]);
+                            view.close();
+                        }
                     }
-                }
-        );
+            );
 
-        view.setButton(ChestUserInterface.groupManageCUI.deleteGroupButton.getSymbol(),
-                new ChestButton(ChestUserInterface.groupManageCUI.deleteGroupButton) {
-                    @Override
-                    public void onClick(ClickType type) {
-                        GroupCommand.deleteGroup(player, args[0], args[1], "1");
+            view.setButton(ChestUserInterface.groupManageCUI.deleteGroupButton.getSymbol(),
+                    new ChestButton(ChestUserInterface.groupManageCUI.deleteGroupButton) {
+                        @Override
+                        public void onClick(ClickType type) {
+                            GroupCommand.deleteGroup(player, args[0], args[1], "1");
+                        }
                     }
-                }
-        );
+            );
+        }
 
         // the built-in @town group has no member list: town members hold
         // its flags implicitly (TownManager.townMemberFlagValue). Show an
         // explainer instead of a meaningless empty list / add-member button
         // (a member row added here would be archived away on re-attach).
-        boolean isTownGroup = group.getNamePlain().equals(cn.lunadeer.dominion.managers.TownManager.TOWN_MEMBER_GROUP_NAME)
-                && dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                && doo.isTownOutpost();
         if (isTownGroup) {
-            view.addItem(new ChestButton(ChestUserInterface.groupManageCUI.townGroupHintButton) {
+            ButtonConfiguration hint = group.getTownGroupId() == null
+                    ? ChestUserInterface.groupManageCUI.townGroupHintButton
+                    : ChestUserInterface.groupManageCUI.townGroupMirrorHintButton;
+            view.addItem(new ChestButton(hint) {
                 @Override
                 public void onClick(ClickType type) {
                     // info only
@@ -206,7 +222,7 @@ public class GroupManage extends AbstractUI {
             view.addItem(new ChestButton(ChestUserInterface.groupManageCUI.addMemberButton) {
                 @Override
                 public void onClick(ClickType type) {
-                    SelectMember.show(player, dominion.getName(), group.getNamePlain(), "1", "1");
+                    SelectMember.show(player, dominion.getName(), args[1], "1", "1");
                 }
             });
         }
@@ -223,8 +239,8 @@ public class GroupManage extends AbstractUI {
             view.addItem(new ChestButton(item) {
                 @Override
                 public void onClick(ClickType type) {
-                    GroupCommand.removeMember(player, dominion.getName(), group.getNamePlain(), m.getPlayer().getLastKnownName(), page.toString());
-                    GroupManage.show(player, dominion.getName(), group.getNamePlain(), page.toString());
+                    GroupCommand.removeMember(player, dominion.getName(), args[1], m.getPlayer().getLastKnownName(), page.toString());
+                    GroupManage.show(player, dominion.getName(), args[1], page.toString());
                 }
             });
         }

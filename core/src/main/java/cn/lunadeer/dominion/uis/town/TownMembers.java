@@ -105,7 +105,7 @@ public class TownMembers extends AbstractUI {
     public static class TownMembersTuiText extends ConfigurationPart {
         public String title = "Members of {0}";
         public String button = "MEMBERS";
-        public String memberLine = "§b{0} §7- {1} ({2})";
+        public String memberLine = "§b{0} §7- Role: §b{1} §7| Source: §b{2}";
         public String inviteButton = "INVITE";
         public String inviteHint = "Enter the player name to invite.";
         public String kickButton = "KICK";
@@ -243,8 +243,8 @@ public class TownMembers extends AbstractUI {
         public ButtonConfiguration residentItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
-                        "§7Role: §b{1}",
-                        "§7Source: §b{2}",
+                        "§7Role: §b{0}",
+                        "§7Source: §b{1}",
                         "",
                         "§a▶ Left Click: promote (mayor only)",
                         "§c▶ Right Click: kick (managers)"
@@ -253,8 +253,8 @@ public class TownMembers extends AbstractUI {
         public ButtonConfiguration assistantItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
-                        "§7Role: §b{1}",
-                        "§7Source: §b{2}",
+                        "§7Role: §b{0}",
+                        "§7Source: §b{1}",
                         "",
                         "§c▶ Left Click: demote (mayor only)"
                 )
@@ -262,8 +262,8 @@ public class TownMembers extends AbstractUI {
         public ButtonConfiguration mayorItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.PLAYER_HEAD, "§6👑 §e{0}",
                 List.of(
-                        "§7Role: §b{1}",
-                        "§7Source: §b{2}",
+                        "§7Role: §b{0}",
+                        "§7Source: §b{1}",
                         "",
                         "§7This is the town's mayor.",
                         "§8No actions available."

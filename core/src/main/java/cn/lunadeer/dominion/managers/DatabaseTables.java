@@ -371,6 +371,55 @@ public class DatabaseTables {
                     .execute();
         }
 
+        // 5.1.0 town groups: one town-level definition is mirrored onto
+        // each attached outpost in Phase 2.  Keep the definition table
+        // independent from dominion_group so the latter can still contain
+        // ordinary outpost-local groups.  The explicit unique index is used
+        // instead of Column.unique(fields...), whose inline composite syntax
+        // is rejected by MySQL/PostgreSQL in this project.
+        if (!Show.show().tables().execute().contains("town_group")) {
+            Column town_group_id = Column.of(new FieldInteger("id")).primary().serial().notNull().unique();
+            Column town_group_town_id = Column.of(new FieldInteger("town_id"))
+                    .notNull().foreign("town", new FieldInteger("id"));
+            Column town_group_name = Column.of(new FieldString("name")).notNull();
+            Column town_group_display_name = Column.of(new FieldString("display_name"));
+            Column town_group_priority = Column.of(new FieldInteger("priority")).notNull().defaultSqlVal("0");
+            Column town_group_created_at = Column.of(new FieldTimestamp("created_at"))
+                    .notNull().defaultSqlVal("CURRENT_TIMESTAMP");
+            Create.create().table("town_group")
+                    .column(town_group_id)
+                    .column(town_group_town_id)
+                    .column(town_group_name)
+                    .column(town_group_display_name)
+                    .column(town_group_priority)
+                    .column(town_group_created_at)
+                    .execute();
+            try (Connection conn = DatabaseManager.instance.getConnection()) {
+                conn.createStatement().execute(
+                        "CREATE UNIQUE INDEX idx_town_group_uk ON town_group(town_id, name);");
+            } catch (Exception e) {
+                throw new SQLException("Failed to create town_group indexes", e);
+            }
+        }
+
+        // 5.1.0: a nullable link identifies an outpost-local group mirror.
+        // NULL preserves the legacy group semantics; Phase 2 will populate
+        // this column for town-group mirrors.
+        if (!Show.show().columns().from("dominion_group").execute().containsKey("town_group_id")) {
+            Alter.alter().table("dominion_group").add()
+                    .column(Column.of(new FieldInteger("town_group_id"))).execute();
+            try (Connection conn = DatabaseManager.instance.getConnection()) {
+                // NULL town_group_id rows are ordinary local groups; all
+                // supported databases allow multiple NULLs in a UNIQUE
+                // index, while a mirror is unique per outpost/definition.
+                conn.createStatement().execute(
+                        "CREATE UNIQUE INDEX idx_dominion_group_town_mirror "
+                                + "ON dominion_group(dom_id, town_group_id);");
+            } catch (Exception e) {
+                throw new SQLException("Failed to create town group mirror index", e);
+            }
+        }
+
         // 5.0.0 town era: town_member
         // Composite uniqueness (town_id, player_uuid) via explicit index:
         // the ORM's joinUnique renders an inline constraint that MySQL/PG
@@ -380,12 +429,14 @@ public class DatabaseTables {
             Column tm_player_uuid = Column.of(new FieldString("player_uuid")).notNull().foreign("player_name", new FieldString("uuid"));
             Column tm_role = Column.of(new FieldString("role")).notNull().defaultSqlVal("'RESIDENT'");
             Column tm_source = Column.of(new FieldString("source")).notNull().defaultSqlVal("'JOINED'");
+            Column tm_group_id = Column.of(new FieldInteger("group_id")).notNull().defaultSqlVal("-1");
             Column tm_joined_at = Column.of(new FieldTimestamp("joined_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
             Create.create().table("town_member")
                     .column(tm_town_id)
                     .column(tm_player_uuid)
                     .column(tm_role)
                     .column(tm_source)
+                    .column(tm_group_id)
                     .column(tm_joined_at)
                     .execute();
             try (Connection conn = DatabaseManager.instance.getConnection()) {
@@ -396,6 +447,11 @@ public class DatabaseTables {
             } catch (Exception e) {
                 throw new SQLException("Failed to create town_member indexes", e);
             }
+        }
+        if (!Show.show().columns().from("town_member").execute().containsKey("group_id")) {
+            Alter.alter().table("town_member").add()
+                    .column(Column.of(new FieldInteger("group_id")).notNull().defaultSqlVal("-1"))
+                    .execute();
         }
 
         // 5.0.0 town era: town_trust
@@ -577,6 +633,7 @@ public class DatabaseTables {
         public String importTableSkipped = "Table {0} skipped: not restorable by this plugin (unknown or foreign table).";
         public String importCoreMissing = "Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.";
         public String importDropsTownData = "This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.";
+        public String importDropsTownGroupData = "This backup predates town groups: existing town group definitions will be dropped by this restore.";
         public String exportTablesSummary = "Exported {0} table(s).";
     }
 
@@ -598,6 +655,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_group",
             "town_member",
             "town_trust",
             "dominion_member_archive",
@@ -627,6 +685,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_group",
             "town_member",
             "town_trust",
             "dominion_member_archive",
@@ -763,6 +822,17 @@ public class DatabaseTables {
                     Notification.warn(sender, Language.databaseManagerText.importDropsTownData);
                     XLogger.warn("Restore drops all town data: backup predates the town era.");
                 }
+                // A 5.0.x backup contains town data but no town_group.csv.
+                // Leaving current group definitions in place while replacing
+                // town rows could attach stale groups to reused town ids.
+                // Treat the absent optional table as an explicit empty
+                // snapshot, while keeping the old backup importable.
+                boolean abandoningTownGroupData = existingTables.contains("town_group")
+                        && !toImport.contains("town_group");
+                if (abandoningTownGroupData) {
+                    Notification.warn(sender, Language.databaseManagerText.importDropsTownGroupData);
+                    XLogger.warn("Restore drops town group definitions: backup predates town groups.");
+                }
 
                 // Parse every csv BEFORE touching the database: the same
                 // strict parser is used for validation and insertion, so a
@@ -780,6 +850,9 @@ public class DatabaseTables {
                     boolean oldAutoCommit = conn.getAutoCommit();
                     conn.setAutoCommit(false);
                     try {
+                        if (abandoningTownGroupData) {
+                            conn.createStatement().execute("DELETE FROM town_group");
+                        }
                         if (abandoningTownData) {
                             // restored dominions come from the pre-town
                             // backup with NULL town columns anyway; only

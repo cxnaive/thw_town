@@ -174,6 +174,10 @@ town-info-tui-text:
   bank-description: 镇银行存取。
   outposts-button: 前哨
   outposts-description: 列出本镇全部前哨。
+  attach-button: 挂靠
+  attach-description: 将你的个人领地挂靠到本镇。
+  groups-button: 小镇组
+  groups-description: 管理所有镇属前哨共享的自定义组。
   invite-button: 邀请
   invite-description: 邀请玩家加入。
   leave-button: 退出
@@ -183,7 +187,7 @@ town-info-tui-text:
 town-members-tui-text:
   title: '{0} 的成员'
   button: 成员
-  member-line: §b{0} §7- {1} ({2})
+  member-line: '§b{0} §7- 角色：§b{1} §7| 来源：§b{2}'
   invite-button: 邀请
   invite-hint: 输入要邀请的玩家名。
   kick-button: 踢出
@@ -239,3 +243,23 @@ town-attach-selector-tui-text:
   attach-success: 已将 {0} 块领地挂靠到小镇 {1}。
   none-selected: 未选择任何领地。
   no-dominions: 你没有可挂靠的个人领地。
+town-groups-tui-text:
+  title: '{0} 的小镇组'
+  button: 小镇组
+  create-button: 创建
+  create-hint: 请输入内部组名，可在后面输入显示名。
+  group-line: '§b{0} §7（{1}，成员：§b{2}）'
+  open-button: 管理
+  open-description: 查看成员并管理此小镇组。
+  no-groups: 本小镇尚未创建自定义组。
+town-group-manage-tui-text:
+  title: '小镇组：{0}'
+  button: 小镇组
+  internal-name: '§7内部名：§b{0}'
+  member-line: §b{0}
+  add-button: 添加成员
+  add-hint: 请输入要分配到此组的小镇成员名。
+  remove-button: 移除
+  delete-button: 删除小镇组
+  delete-confirm: '§c5秒内再次点击确认删除小镇组 {0}。'
+  no-members: 此组尚未分配成员。

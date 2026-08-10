@@ -41,6 +41,7 @@ public class TownMemberDOO {
     private final FieldString playerUuid = new FieldString("player_uuid");
     private final FieldString role = new FieldString("role", TownRole.RESIDENT.name());
     private final FieldString source = new FieldString("source", MemberSource.JOINED.name());
+    private final FieldInteger groupId = new FieldInteger("group_id", -1);
     private final FieldTimestamp joinedAt = new FieldTimestamp("joined_at");
 
     private static Field<?>[] fields() {
@@ -49,6 +50,7 @@ public class TownMemberDOO {
                 new FieldString("player_uuid"),
                 new FieldString("role"),
                 new FieldString("source"),
+                new FieldInteger("group_id"),
                 new FieldTimestamp("joined_at"),
         };
     }
@@ -59,13 +61,14 @@ public class TownMemberDOO {
                 UUID.fromString((String) map.get("player_uuid").getValue()),
                 (String) map.get("role").getValue(),
                 (String) map.get("source").getValue(),
+                (Integer) map.get("group_id").getValue(),
                 (Timestamp) map.get("joined_at").getValue()
         );
     }
 
     public static @NotNull TownMemberDOO insert(@NotNull Integer townId, @NotNull UUID player,
                                                 @NotNull TownRole role, @NotNull MemberSource source) throws SQLException {
-        TownMemberDOO member = new TownMemberDOO(townId, player, role.name(), source.name(), null);
+        TownMemberDOO member = new TownMemberDOO(townId, player, role.name(), source.name(), -1, null);
         // no .returning() here: town_member has no id column, and the MySQL
         // returning-emulation selects by `id = LAST_INSERT_ID()` — broken
         // for composite-PK tables. Re-select by the composite key instead.
@@ -159,15 +162,30 @@ public class TownMemberDOO {
         return v == null ? MemberSource.JOINED : MemberSource.valueOf(v);
     }
 
+    public int getGroupId() {
+        Integer value = groupId.getValue();
+        return value == null ? -1 : value;
+    }
+
+    public @NotNull TownMemberDOO setGroupId(int newGroupId) throws SQLException {
+        this.groupId.setValue(newGroupId);
+        Update.update("town_member").set(this.groupId)
+                .where("town_id = ? AND player_uuid = ?", townId.getValue(), playerUuid.getValue())
+                .execute();
+        return this;
+    }
+
     public @Nullable Timestamp getJoinedAt() {
         return joinedAt.getValue();
     }
 
-    private TownMemberDOO(Integer townId, UUID playerUuid, String role, String source, Timestamp joinedAt) {
+    private TownMemberDOO(Integer townId, UUID playerUuid, String role, String source,
+                          Integer groupId, Timestamp joinedAt) {
         this.townId.setValue(townId);
         this.playerUuid.setValue(playerUuid.toString());
         this.role.setValue(role);
         this.source.setValue(source);
+        this.groupId.setValue(groupId == null ? -1 : groupId);
         this.joinedAt.setValue(joinedAt);
     }
 }

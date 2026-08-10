@@ -1,6 +1,7 @@
 package cn.lunadeer.dominion.cache.server;
 
 import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.doos.TownTrustDOO;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +28,8 @@ public class TownCache extends Cache {
     private volatile ConcurrentHashMap<UUID, List<TownMemberDOO>> membersByPlayer = new ConcurrentHashMap<>();
     private volatile ConcurrentHashMap<Integer, List<TownTrustDOO>> trustsByTown = new ConcurrentHashMap<>();
     private volatile ConcurrentHashMap<UUID, List<TownTrustDOO>> trustsByPlayer = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<Integer, TownGroupDOO> groupsById = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<Integer, List<TownGroupDOO>> groupsByTown = new ConcurrentHashMap<>();
 
     /**
      * Immediate synchronous reload, bypassing the base class throttle.
@@ -52,6 +55,8 @@ public class TownCache extends Cache {
         ConcurrentHashMap<UUID, List<TownMemberDOO>> tempMembersByPlayer = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer, List<TownTrustDOO>> tempTrustsByTown = new ConcurrentHashMap<>();
         ConcurrentHashMap<UUID, List<TownTrustDOO>> tempTrustsByPlayer = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer, TownGroupDOO> tempGroupsById = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer, List<TownGroupDOO>> tempGroupsByTown = new ConcurrentHashMap<>();
 
         for (TownDOO town : TownDOO.selectAll()) {
             if (town.getStatus() == TownDOO.TownStatus.DISBANDED) continue;
@@ -62,6 +67,11 @@ public class TownCache extends Cache {
             if (!tempTownsById.containsKey(member.getTownId())) continue;
             tempMembersByTown.computeIfAbsent(member.getTownId(), k -> new ArrayList<>()).add(member);
             tempMembersByPlayer.computeIfAbsent(member.getPlayerUuid(), k -> new ArrayList<>()).add(member);
+        }
+        for (TownGroupDOO group : TownGroupDOO.selectAll()) {
+            if (!tempTownsById.containsKey(group.getTownId())) continue;
+            tempGroupsById.put(group.getId(), group);
+            tempGroupsByTown.computeIfAbsent(group.getTownId(), k -> new ArrayList<>()).add(group);
         }
         for (TownTrustDOO trust : TownTrustDOO.selectAll()) {
             if (!tempTownsById.containsKey(trust.getTownId())) continue;
@@ -75,6 +85,8 @@ public class TownCache extends Cache {
         membersByPlayer = tempMembersByPlayer;
         trustsByTown = tempTrustsByTown;
         trustsByPlayer = tempTrustsByPlayer;
+        groupsById = tempGroupsById;
+        groupsByTown = tempGroupsByTown;
     }
 
     /**
@@ -125,6 +137,21 @@ public class TownCache extends Cache {
 
     public @NotNull List<TownTrustDOO> getTrustsOf(@NotNull Integer townId) {
         return trustsByTown.getOrDefault(townId, List.of());
+    }
+
+    public @Nullable TownGroupDOO getGroup(int id) {
+        return groupsById.get(id);
+    }
+
+    public @Nullable TownGroupDOO getGroup(int townId, @NotNull String name) {
+        for (TownGroupDOO group : getGroupsOf(townId)) {
+            if (group.getName().equalsIgnoreCase(name)) return group;
+        }
+        return null;
+    }
+
+    public @NotNull List<TownGroupDOO> getGroupsOf(int townId) {
+        return groupsByTown.getOrDefault(townId, List.of());
     }
 
     public @NotNull List<TownTrustDOO> getTrustsOf(@NotNull UUID player) {

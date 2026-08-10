@@ -91,6 +91,10 @@ public class TownInfo extends AbstractUI {
         public String bankDescription = "Town bank deposit/withdraw.";
         public String outpostsButton = "OUTPOSTS";
         public String outpostsDescription = "List outposts of this town.";
+        public String attachButton = "ATTACH";
+        public String attachDescription = "Attach your personal dominions to this town.";
+        public String groupsButton = "GROUPS";
+        public String groupsDescription = "Manage custom groups shared by town outposts.";
         public String inviteButton = "INVITE";
         public String inviteDescription = "Invite a player to join.";
         public String leaveButton = "LEAVE";
@@ -139,6 +143,15 @@ public class TownInfo extends AbstractUI {
             view.add(Line.create()
                     .append(TownOutposts.button(player, town.getName()).build())
                     .append(TextUserInterface.townInfoTuiText.outpostsDescription));
+
+            if (role != null) {
+                view.add(Line.create()
+                        .append(TownAttachSelector.button(player, town.getName()).build())
+                        .append(TextUserInterface.townInfoTuiText.attachDescription));
+                view.add(Line.create()
+                        .append(TownGroups.button(player, town.getName()).build())
+                        .append(TextUserInterface.townInfoTuiText.groupsDescription));
+            }
 
             if (manager) {
                 view.add(Line.create()
@@ -194,6 +207,12 @@ public class TownInfo extends AbstractUI {
         public ButtonConfiguration outpostsButton = ButtonConfiguration.createMaterial(
                 'i', Material.FILLED_MAP, "§eOutposts",
                 List.of("§7Total: §b{0}", "§a▶ Click to open"));
+        public ButtonConfiguration attachButton = ButtonConfiguration.createMaterial(
+                'i', Material.LEAD, "§eAttach Dominions",
+                List.of("§7Attach your personal dominions to this town.", "§a▶ Click to select"));
+        public ButtonConfiguration groupsButton = ButtonConfiguration.createMaterial(
+                'i', Material.CHEST, "§eTown Groups",
+                List.of("§7Groups mirrored to every town outpost.", "§a▶ Click to manage"));
         public ButtonConfiguration inviteButton = ButtonConfiguration.createMaterial(
                 'i', Material.WRITABLE_BOOK, "§aInvite",
                 List.of("§7Invite a player to join.", "§a▶ Click to invite"));
@@ -232,6 +251,13 @@ public class TownInfo extends AbstractUI {
                     () -> TownOutposts.show(player, town.getName(), "1"));
             outposts = outposts.setLoreArgs(String.valueOf(outpostCount(town.getId())));
             view = view.addItem(outposts);
+
+            if (role != null) {
+                view = view.addItem(nav(player, ChestUserInterface.townInfoCui.attachButton,
+                        () -> TownAttachSelector.show(player, town.getName(), "1")));
+                view = view.addItem(nav(player, ChestUserInterface.townInfoCui.groupsButton,
+                        () -> TownGroups.show(player, town.getName(), "1")));
+            }
 
             if (manager) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.inviteButton,

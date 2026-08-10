@@ -34,6 +34,7 @@ public class GroupProviderHandler extends GroupProvider {
         public String createGroupFailed = "Failed to create group, reason: {0}";
 
         public String townGroupReserved = "The @town group is managed by the town system and cannot be deleted or renamed.";
+        public String townGroupMirrorReserved = "Town-managed group mirrors cannot be deleted, renamed, or have members edited here; manage them from the town.";
         public String townGroupMembersImplicit = "Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.";
         public String townOutpostNoCustomGroups = "Custom groups have no effect on town outposts; use the @town group or /town trust instead.";
         public String deleteGroupSuccess = "Group {0} deleted successfully.";
@@ -128,10 +129,10 @@ public class GroupProviderHandler extends GroupProvider {
                 // Only protected while the dominion IS a town outpost —
                 // after a release the leftover group is ordinary dead
                 // weight the owner may clean up
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
-                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                        && doo.isTownOutpost()) {
-                    throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
+                if (TownManager.isTownManagedGroup(event.getGroup(), event.getDominion())) {
+                    throw new DominionException(event.getGroup().getTownGroupId() == null
+                            ? Language.groupProviderHandlerText.townGroupReserved
+                            : Language.groupProviderHandlerText.townGroupMirrorReserved);
                 }
                 GroupDOO.deleteById(event.getGroup().getId());
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.deleteGroupSuccess, event.getGroup().getNamePlain());
@@ -155,10 +156,10 @@ public class GroupProviderHandler extends GroupProvider {
             try {
                 assertDominionManage(event.getOperator(), event.getDominion());
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
-                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                        && doo.isTownOutpost()) {
-                    throw new DominionException(Language.groupProviderHandlerText.townGroupReserved);
+                if (TownManager.isTownManagedGroup(event.getGroup(), event.getDominion())) {
+                    throw new DominionException(event.getGroup().getTownGroupId() == null
+                            ? Language.groupProviderHandlerText.townGroupReserved
+                            : Language.groupProviderHandlerText.townGroupMirrorReserved);
                 }
                 assertGroupName(event.getDominion(), event.getNewNamePlain());
                 GroupDTO renamedGroup = event.getGroup().setName(event.getNewNameColored());
@@ -182,12 +183,10 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
-                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                        && doo.isTownOutpost()) {
-                    // town members hold this group implicitly — explicit
-                    // member rows would be archived away on re-attach
-                    throw new DominionException(Language.groupProviderHandlerText.townGroupMembersImplicit);
+                if (TownManager.isTownManagedGroup(event.getGroup(), event.getDominion())) {
+                    throw new DominionException(event.getGroup().getTownGroupId() == null
+                            ? Language.groupProviderHandlerText.townGroupMembersImplicit
+                            : Language.groupProviderHandlerText.townGroupMirrorReserved);
                 }
                 if (event.getGroup().getFlagValue(Flags.ADMIN) || event.getMember().getFlagValue(Flags.ADMIN)) {
                     assertDominionManage(event.getOperator(), event.getDominion());
@@ -217,10 +216,10 @@ public class GroupProviderHandler extends GroupProvider {
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
             try {
-                if (event.getGroup().getNamePlain().equals(TownManager.TOWN_MEMBER_GROUP_NAME)
-                        && event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                        && doo.isTownOutpost()) {
-                    throw new DominionException(Language.groupProviderHandlerText.townGroupMembersImplicit);
+                if (TownManager.isTownManagedGroup(event.getGroup(), event.getDominion())) {
+                    throw new DominionException(event.getGroup().getTownGroupId() == null
+                            ? Language.groupProviderHandlerText.townGroupMembersImplicit
+                            : Language.groupProviderHandlerText.townGroupMirrorReserved);
                 }
                 if (event.getGroup().getFlagValue(Flags.ADMIN)) {
                     assertDominionManage(event.getOperator(), event.getDominion());

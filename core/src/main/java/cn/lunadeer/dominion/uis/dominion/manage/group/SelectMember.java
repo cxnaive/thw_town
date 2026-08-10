@@ -140,9 +140,10 @@ public class SelectMember extends AbstractUI {
 
         DominionDTO dominion = toDominionDTO(dominionName);
         assertDominionAdmin(player, dominion);
+        cn.lunadeer.dominion.api.dtos.GroupDTO group = toGroupDTO(dominion, groupName);
 
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
-        view.setTitle(formatString(ChestUserInterface.selectMemberCui.title, groupName));
+        view.setTitle(formatString(ChestUserInterface.selectMemberCui.title, group.getNameColoredBukkit()));
         view.applyListConfiguration(ChestUserInterface.selectMemberCui.listConfiguration, toIntegrity(args[3]));
 
         view.setButton(ChestUserInterface.selectMemberCui.backButton.getSymbol(),

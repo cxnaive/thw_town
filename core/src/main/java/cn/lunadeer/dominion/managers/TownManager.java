@@ -16,6 +16,7 @@ import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.GroupDOO;
 import cn.lunadeer.dominion.doos.MemberDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.doos.TownTrustDOO;
 import cn.lunadeer.dominion.misc.DominionException;
@@ -37,6 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -76,6 +78,17 @@ public class TownManager {
         public String disbandEnclaveDissolved = "Your dominion {0} was dissolved together with town {1}.";
         public String joinSuccess = "You joined town {0}.";
         public String attachHint = "You have {0} dominion(s) that can be attached to the town. Use /town attach to select.";
+        public String townGroupNameInvalid = "Town group names may contain only lowercase letters, numbers, '_' and '-'.";
+        public String townGroupNameTooLong = "Town group name may not exceed 32 characters.";
+        public String townGroupDisplayTooLong = "Town group display name may not exceed 64 characters.";
+        public String townGroupExists = "Town group {0} already exists in {1}.";
+        public String townGroupNotExist = "Town group {0} does not exist in {1}.";
+        public String townGroupCreated = "Created town group {0} in {1}.";
+        public String townGroupDeleted = "Deleted town group {0} from {1}; assigned members now use @town.";
+        public String townGroupMemberAssigned = "Assigned {0} to town group {1}.";
+        public String townGroupMemberRemoved = "Removed {0} from their town group; they now use @town.";
+        public String townGroupMirrorReserved = "Town-managed group mirrors cannot be deleted, renamed, or edited here; manage membership from the town.";
+        public String townGroupMirrorTag = " §7[From town]";
         public String leaveSuccess = "You left town {0}. Your land stays with the town.";
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
         public String kickSuccess = "Kicked {0} from town {1}.";
@@ -133,6 +146,16 @@ public class TownManager {
             return Language.townManagerText.townGroupDisplayName;
         }
         return group.getNameColoredBukkit();
+    }
+
+    public static boolean isTownManagedGroup(@NotNull GroupDTO group, @NotNull DominionDTO dominion) {
+        if (!(dominion instanceof DominionDOO doo) || !doo.isTownOutpost()) return false;
+        return TOWN_MEMBER_GROUP_NAME.equals(group.getNamePlain()) || group.getTownGroupId() != null;
+    }
+
+    public static @NotNull String townGroupDisplayName(@NotNull GroupDTO group) {
+        String display = groupDisplayName(group);
+        return group.getTownGroupId() == null ? display : display + Language.townManagerText.townGroupMirrorTag;
     }
 
     // ------------------------------------------------------------------
@@ -198,6 +221,91 @@ public class TownManager {
             throw new DominionException(Language.townManagerText.townNotExist, "#" + id);
         }
         return town;
+    }
+
+    public static @NotNull TownGroupDOO requireTownGroup(@NotNull TownDOO town,
+                                                         @NotNull String name) throws DominionException {
+        TownGroupDOO group = cache().getGroup(town.getId(), name);
+        if (group == null) {
+            throw new DominionException(Language.townManagerText.townGroupNotExist,
+                    name, town.getName());
+        }
+        return group;
+    }
+
+    public static @NotNull List<TownGroupDOO> groupsOf(@NotNull TownDOO town) {
+        return new ArrayList<>(cache().getGroupsOf(town.getId()));
+    }
+
+    private static @NotNull String normalizeTownGroupName(@NotNull String name) throws DominionException {
+        String normalized = name.trim().toLowerCase(Locale.ROOT);
+        if (normalized.length() > 32) {
+            throw new DominionException(Language.townManagerText.townGroupNameTooLong);
+        }
+        if (normalized.isEmpty() || !normalized.matches("[a-z0-9_-]+")) {
+            throw new DominionException(Language.townManagerText.townGroupNameInvalid);
+        }
+        return normalized;
+    }
+
+    public static @NotNull TownGroupDOO createTownGroup(@NotNull Player operator,
+                                                         @NotNull TownDOO town,
+                                                         @NotNull String name,
+                                                         @Nullable String displayName) throws Exception {
+        assertManager(operator, town);
+        String normalized = normalizeTownGroupName(name);
+        String display = displayName == null || displayName.isBlank() ? normalized : displayName.trim();
+        if (display.length() > 64) {
+            throw new DominionException(Language.townManagerText.townGroupDisplayTooLong);
+        }
+        if (TownGroupDOO.select(town.getId(), normalized) != null) {
+            throw new DominionException(Language.townManagerText.townGroupExists,
+                    normalized, town.getName());
+        }
+        TownGroupDOO group = TownGroupSyncHandler.createGroup(town, normalized, display);
+        Notification.info(operator, Language.townManagerText.townGroupCreated,
+                group.getDisplayName(), town.getName());
+        return group;
+    }
+
+    public static void deleteTownGroup(@NotNull Player operator, @NotNull TownDOO town,
+                                       @NotNull TownGroupDOO group) throws Exception {
+        assertManager(operator, town);
+        if (group.getTownId() != town.getId()) {
+            throw new DominionException(Language.townManagerText.townGroupNotExist,
+                    group.getName(), town.getName());
+        }
+        TownGroupSyncHandler.deleteGroup(group);
+        Notification.info(operator, Language.townManagerText.townGroupDeleted,
+                group.getDisplayName(), town.getName());
+    }
+
+    public static void assignTownGroup(@NotNull Player operator, @NotNull TownDOO town,
+                                       @NotNull UUID target, @NotNull TownGroupDOO group) throws Exception {
+        assertManager(operator, town);
+        if (group.getTownId() != town.getId()) {
+            throw new DominionException(Language.townManagerText.townGroupNotExist,
+                    group.getName(), town.getName());
+        }
+        if (cache().getMember(town.getId(), target) == null) {
+            throw new DominionException(Language.townManagerText.targetNotMember,
+                    CacheManager.instance.getPlayerName(target), town.getName());
+        }
+        TownGroupSyncHandler.assignMember(group, target);
+        Notification.info(operator, Language.townManagerText.townGroupMemberAssigned,
+                CacheManager.instance.getPlayerName(target), group.getDisplayName());
+    }
+
+    public static void removeTownGroupAssignment(@NotNull Player operator, @NotNull TownDOO town,
+                                                  @NotNull UUID target) throws Exception {
+        assertManager(operator, town);
+        if (cache().getMember(town.getId(), target) == null) {
+            throw new DominionException(Language.townManagerText.targetNotMember,
+                    CacheManager.instance.getPlayerName(target), town.getName());
+        }
+        TownGroupSyncHandler.removeMemberAssignment(town.getId(), target);
+        Notification.info(operator, Language.townManagerText.townGroupMemberRemoved,
+                CacheManager.instance.getPlayerName(target));
     }
 
     public static void assertTownName(@NotNull String name) throws DominionException, SQLException {
@@ -355,6 +463,7 @@ public class TownManager {
                 foundingCreated.bornIntoTown(town.getId());
                 foundingCreated.setClaimKind("FOUNDING");
                 ensureTownMemberGroup(foundingCreated);
+                TownGroupSyncHandler.syncOutpost(town, foundingCreated);
                 // third-party visibility: town-driven creation bypasses the
                 // provider pipeline, so fire the lifecycle event explicitly
                 // (notification only — town operations are not vetoable)
@@ -565,6 +674,7 @@ public class TownManager {
         if (member.getRole() == TownMemberDOO.TownRole.MAYOR && !bypassLimit(player)) {
             throw new DominionException(Language.townManagerText.mayorCannotLeave);
         }
+        TownGroupSyncHandler.removeDepartedMember(town.getId(), player.getUniqueId());
         TownMemberDOO.delete(town.getId(), player.getUniqueId());
         clearOutpostAdmin(town.getId(), player.getUniqueId());
         cache().reloadNow();
@@ -581,6 +691,7 @@ public class TownManager {
         if (member.getRole() != TownMemberDOO.TownRole.RESIDENT && !bypassLimit(operator)) {
             throw new DominionException(Language.townManagerText.cannotKickManager);
         }
+        TownGroupSyncHandler.removeDepartedMember(town.getId(), target);
         TownMemberDOO.delete(town.getId(), target);
         clearOutpostAdmin(town.getId(), target);
         cache().reloadNow();
@@ -845,6 +956,7 @@ public class TownManager {
             }
             created.bornIntoTown(town.getId());
             ensureTownMemberGroup(created);
+            TownGroupSyncHandler.syncOutpost(town, created);
             // third-party visibility (notification only, see createTown)
             cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
                     new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
@@ -967,6 +1079,10 @@ public class TownManager {
         UUID uuid = player.getUniqueId();
         TownMemberDOO member = cache().getMember(townId, uuid);
         if (member != null) {
+            if (member.getGroupId() > 0) {
+                Boolean groupValue = townGroupFlagValue(dominion, member.getGroupId(), flag);
+                if (groupValue != null) return groupValue;
+            }
             // null (built-in @town group missing) falls through to the
             // legacy/guest chain rather than hard-denying every member
             return townMemberFlagValue(dominion, flag);
@@ -978,6 +1094,18 @@ public class TownManager {
                 if (category != null && trustGrants(trust, category)) {
                     return true;
                 }
+            }
+        }
+        return null;
+    }
+
+    private static @Nullable Boolean townGroupFlagValue(@NotNull DominionDOO dominion,
+                                                         int townGroupId,
+                                                         @NotNull PriFlag flag) {
+        for (GroupDTO group : CacheManager.instance.getCache().getGroupCache()
+                .getDominionGroups(dominion.getId())) {
+            if (group.getTownGroupId() != null && group.getTownGroupId() == townGroupId) {
+                return group.getFlagValue(flag);
             }
         }
         return null;
@@ -1022,6 +1150,7 @@ public class TownManager {
         mergeMembers(town, dominion, operator);
         dominion.attachToTown(town.getId(), operator);
         ensureTownMemberGroup(dominion);
+        TownGroupSyncHandler.syncOutpost(town, dominion);
     }
 
     /**

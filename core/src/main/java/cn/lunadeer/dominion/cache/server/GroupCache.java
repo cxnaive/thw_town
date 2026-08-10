@@ -23,6 +23,14 @@ public class GroupCache extends Cache {
         this.serverId = serverId;
     }
 
+    public void reloadNow() {
+        try {
+            loadExecution();
+        } catch (Exception e) {
+            cn.lunadeer.dominion.utils.XLogger.error(e);
+        }
+    }
+
     public @Nullable GroupDTO getGroup(Integer id) {
         ConcurrentHashMap<Integer, GroupDTO> currentGroups = idGroups;
         return currentGroups != null ? currentGroups.get(id) : null;

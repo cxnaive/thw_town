@@ -18,6 +18,7 @@ import cn.lunadeer.dominion.utils.databse.syntax.Select;
 import cn.lunadeer.dominion.utils.databse.syntax.Update;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -26,17 +27,19 @@ public class GroupDOO implements GroupDTO {
 
     private final FieldInteger id = new FieldInteger("id");
     private final FieldInteger dom_id = new FieldInteger("dom_id");
+    private final FieldInteger townGroupId = new FieldInteger("town_group_id");
     private final FieldString name_raw = new FieldString("name");
     private final FieldString name_color = new FieldString("name_colored");
     private final Map<PriFlag, Boolean> flags = new HashMap<>();
 
     private static Field<?>[] fields() {
-        Field<?>[] fields = new Field<?>[Flags.getAllPriFlagsEnable().size() + 4];
+        Field<?>[] fields = new Field<?>[Flags.getAllPriFlagsEnable().size() + 5];
         fields[0] = new FieldInteger("id");
         fields[1] = new FieldInteger("dom_id");
         fields[2] = new FieldString("name");
         fields[3] = new FieldString("name_colored");
-        int i = 4;
+        fields[4] = new FieldInteger("town_group_id");
+        int i = 5;
         for (PriFlag f : Flags.getAllPriFlagsEnable()) {
             fields[i] = new FieldBoolean(f.getFlagName());
             i++;
@@ -53,7 +56,8 @@ public class GroupDOO implements GroupDTO {
                 (Integer) map.get("dom_id").getValue(),
                 (String) map.get("name").getValue(),
                 flags,
-                (String) map.get("name_colored").getValue());
+                (String) map.get("name_colored").getValue(),
+                (Integer) map.get("town_group_id").getValue());
     }
 
     @Override
@@ -64,6 +68,11 @@ public class GroupDOO implements GroupDTO {
     @Override
     public @NotNull Integer getDomID() {
         return dom_id.getValue();
+    }
+
+    @Override
+    public @Nullable Integer getTownGroupId() {
+        return townGroupId.getValue();
     }
 
     @Override
@@ -199,9 +208,11 @@ public class GroupDOO implements GroupDTO {
         }
     }
 
-    private GroupDOO(Integer id, Integer domID, String name, Map<PriFlag, Boolean> flags, String nameColored) {
+    private GroupDOO(Integer id, Integer domID, String name, Map<PriFlag, Boolean> flags,
+                     String nameColored, Integer townGroupId) {
         this.id.setValue(id);
         this.dom_id.setValue(domID);
+        this.townGroupId.setValue(townGroupId);
         this.name_raw.setValue(name);
         this.flags.putAll(flags);
         this.name_color.setValue(nameColored);

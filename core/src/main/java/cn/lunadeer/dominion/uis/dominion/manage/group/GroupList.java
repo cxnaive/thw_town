@@ -100,30 +100,36 @@ public class GroupList extends AbstractUI {
                         .append(DominionManage.button(player, dominionName).build())
                         .append(TextUserInterface.groupListTuiText.button)
         );
-        view.add(new Line()
-                .append(CreateGroupInputter.createTuiButtonOn(player, dominionName).needPermission(defaultPermission).build())
-        );
+        boolean townOutpost = dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                && doo.isTownOutpost();
+        if (!townOutpost) {
+            view.add(new Line()
+                    .append(CreateGroupInputter.createTuiButtonOn(player, dominionName)
+                            .needPermission(defaultPermission).build())
+            );
+        }
 
         // get data from database directly because cache update may not be in time
         List<MemberDTO> members = new ArrayList<>(selectByDominionId(dominion.getId()));
         for (GroupDTO group : groups) {
-            // built-in town group: implicit membership — no delete, no
-            // add/remove member (provider enforces it too); flags remain
-            // editable, that is the group's whole purpose
-            boolean isTownGroup = group.getNamePlain().equals(cn.lunadeer.dominion.managers.TownManager.TOWN_MEMBER_GROUP_NAME)
-                    && dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
-                    && doo.isTownOutpost();
+            // Town-managed groups (@town and custom mirrors): no delete or
+            // direct member editing (provider enforces it too); flags remain
+            // editable independently on this outpost.
+            boolean isTownGroup = cn.lunadeer.dominion.managers.TownManager
+                    .isTownManagedGroup(group, dominion);
             Line line = new Line();
+            String groupKey = toGroupKey(group);
             Button deleteGroup = new FunctionalButton(TextUserInterface.groupListTuiText.deleteButton) {
                 @Override
                 public void function() {
-                    GroupCommand.deleteGroup(player, dominionName, group.getNamePlain(), pageStr);
+                    GroupCommand.deleteGroup(player, dominionName, groupKey, pageStr);
                 }
             }.needPermission(defaultPermission).red().setHoverText(TextUserInterface.groupListTuiText.deleteDescription);
-            Button setting = GroupFlags.button(player, dominionName, group.getNamePlain());
-            Button addMember = SelectMember.button(player, dominionName, group.getNamePlain(), pageStr);
+            Button setting = GroupFlags.button(player, dominionName, groupKey);
+            Button addMember = SelectMember.button(player, dominionName, groupKey, pageStr);
             if (isTownGroup) {
-                line.append(setting.build()).append(cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group));
+                line.append(setting.build()).append(cn.lunadeer.dominion.managers.TownManager
+                        .townGroupDisplayName(group));
             } else {
                 line.append(deleteGroup.build()).append(setting.build()).append(group.getNameColoredComponent()).append(addMember.build());
             }
@@ -136,7 +142,7 @@ public class GroupList extends AbstractUI {
                 Button remove = new FunctionalButton("-") {
                     @Override
                     public void function() {
-                        GroupCommand.removeMember(player, dominionName, group.getNamePlain(), p.getLastKnownName(), pageStr);
+                        GroupCommand.removeMember(player, dominionName, groupKey, p.getLastKnownName(), pageStr);
                     }
                 }.needPermission(defaultPermission).red().setHoverText(TextUserInterface.groupListTuiText.removeMemberDescription);
                 Line playerLine = new Line().setDivider("");
@@ -222,21 +228,26 @@ public class GroupList extends AbstractUI {
                 }
         );
 
-        view.addItem(new ChestButton(ChestUserInterface.groupListCui.newGroupButton) {
-            @Override
-            public void onClick(ClickType type) {
-                CreateGroupInputter.createOn(player, dominion.getName());
-                view.close();
-            }
-        });
+        boolean townOutpost = dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo
+                && doo.isTownOutpost();
+        if (!townOutpost) {
+            view.addItem(new ChestButton(ChestUserInterface.groupListCui.newGroupButton) {
+                @Override
+                public void onClick(ClickType type) {
+                    CreateGroupInputter.createOn(player, dominion.getName());
+                    view.close();
+                }
+            });
+        }
 
         for (GroupDTO group : GroupDOO.selectByDominionId(dominion.getId())) {
             ChestButton groupChest = new ChestButton(ChestUserInterface.groupListCui.groupItemButton) {
                 @Override
                 public void onClick(ClickType type) {
-                    GroupManage.show(player, dominion.getName(), group.getNamePlain(), "1");
+                    GroupManage.show(player, dominion.getName(), toGroupKey(group), "1");
                 }
-            }.setDisplayNameArgs(cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group)).setLoreArgs(group.getMembers().size());
+            }.setDisplayNameArgs(cn.lunadeer.dominion.managers.TownManager.townGroupDisplayName(group))
+                    .setLoreArgs(group.getMembers().size());
             view.addItem(groupChest);
         }
 

@@ -81,7 +81,7 @@ public class GroupFlags extends AbstractUI {
         GroupDTO group = toGroupDTO(dominion, args[1]);
         int page = toIntegrity(args[2], 1);
 
-        ListView view = ListView.create(10, button(player, dominion.getName(), group.getNamePlain()));
+        ListView view = ListView.create(10, button(player, dominion.getName(), args[1]));
         view.title(formatString(TextUserInterface.groupSettingTuiText.title, group.getNameColoredBukkit()));
         view.navigator(
                 Line.create()
@@ -91,14 +91,17 @@ public class GroupFlags extends AbstractUI {
                         .append(GroupList.button(player, dominion.getName()).build())
                         .append(TextUserInterface.groupSettingTuiText.button)
         );
-        view.add(Line.create().append(RenameGroupInputter.createTuiButtonOn(player, dominion.getName(), group.getNamePlain()).build()));
+        if (!cn.lunadeer.dominion.managers.TownManager.isTownManagedGroup(group, dominion)) {
+            view.add(Line.create().append(RenameGroupInputter
+                    .createTuiButtonOn(player, dominion.getName(), args[1]).build()));
+        }
 
         if (group.getFlagValue(Flags.ADMIN)) {
-            view.add(createOption(player, Flags.ADMIN, true, dominion.getName(), group.getNamePlain(), args[2]));
-            view.add(createOption(player, Flags.GLOW, group.getFlagValue(Flags.GLOW), dominion.getName(), group.getNamePlain(), args[2]));
+            view.add(createOption(player, Flags.ADMIN, true, dominion.getName(), args[1], args[2]));
+            view.add(createOption(player, Flags.GLOW, group.getFlagValue(Flags.GLOW), dominion.getName(), args[1], args[2]));
         } else {
             for (PriFlag flag : Flags.getAllPriFlagsEnable()) {
-                view.add(createOption(player, flag, group.getFlagValue(flag), dominion.getName(), group.getNamePlain(), args[2]));
+                view.add(createOption(player, flag, group.getFlagValue(flag), dominion.getName(), args[1], args[2]));
             }
         }
         view.showOn(player, page);
@@ -176,7 +179,7 @@ public class GroupFlags extends AbstractUI {
                 new ChestButton(ChestUserInterface.groupSettingCui.backButton) {
                     @Override
                     public void onClick(ClickType type) {
-                        GroupManage.show(player, dominion.getName(), group.getNamePlain(), "1");
+                        GroupManage.show(player, dominion.getName(), args[1], "1");
                     }
                 }
         );
@@ -197,7 +200,7 @@ public class GroupFlags extends AbstractUI {
             view.addItem(new ChestButton(btnConfig) {
                 @Override
                 public void onClick(ClickType type) {
-                    GroupCommand.setGroupFlag(player, dominion.getName(), group.getNamePlain(), flag.getFlagName(), String.valueOf(!group.getFlagValue(flag)), String.valueOf(page));
+                    GroupCommand.setGroupFlag(player, dominion.getName(), args[1], flag.getFlagName(), String.valueOf(!group.getFlagValue(flag)), String.valueOf(page));
                 }
             });
         }

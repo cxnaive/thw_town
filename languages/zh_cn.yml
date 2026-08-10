@@ -113,6 +113,7 @@ member-provider-handler-text:
 group-provider-handler-text:
   town-outpost-no-custom-groups: 自定义权限组在城镇前哨上不生效，请使用 @town 组或 /town trust。
   town-group-reserved: '@town 组由城镇系统管理，不能删除或重命名。'
+  town-group-mirror-reserved: 小镇镜像组不能在此前哨删除、重命名或修改成员；请从小镇页面管理。
   owner-only: 只有领地所有者可以配置管理员权限组
   set-flag-success: 设置权限组 {0} 的权限 {1} 为 {2} 成功
   set-flag-failed: 配置权限组失败，原因：{0}
@@ -224,6 +225,7 @@ limitation-text:
   load-world-settings-success: 成功加载了 {0} 个世界设置：{1}
 database-manager-text:
   import-drops-town-data: 该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。
+  import-drops-town-group-data: 该备份早于小镇分组系统：本次恢复将清除现有的小镇组定义。
   exporting-database-tables: 正在导出数据库备份...
   export-table-fail: 导出数据库备份失败，原因：{0}
   export-database-success: 成功导出数据库备份文件至 {0}
@@ -628,6 +630,17 @@ town-manager-text:
   disband-enclave-dissolved: 你的领地 {0} 已随小镇 {1} 一同解散。
   join-success: 你已加入小镇 {0}。
   attach-hint: 你有 {0} 块领地可以挂靠到小镇。使用 /town attach 选择。
+  town-group-name-invalid: 小镇组名只能包含小写字母、数字、下划线和连字符。
+  town-group-name-too-long: 小镇组内部名不能超过 32 个字符。
+  town-group-display-too-long: 小镇组显示名不能超过 64 个字符。
+  town-group-exists: 小镇组 {0} 已存在于 {1}。
+  town-group-not-exist: 小镇组 {0} 不存在于 {1}。
+  town-group-created: 已在 {1} 创建小镇组 {0}。
+  town-group-deleted: 已从 {1} 删除小镇组 {0}；已分配成员恢复使用 @town。
+  town-group-member-assigned: 已将 {0} 分配到小镇组 {1}。
+  town-group-member-removed: 已取消 {0} 的小镇组分配；现在使用 @town。
+  town-group-mirror-reserved: 小镇管理的镜像组不能在此删除、重命名或修改成员；请从小镇页面管理成员。
+  town-group-mirror-tag: ' §7[来自小镇]'
   leave-success: 你已离开城镇 {0}，你的领地将保留在城镇中。
   mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散城镇。
   kick-success: 已将 {0} 踢出城镇 {1}。
@@ -668,6 +681,10 @@ town-command-text:
     &b/town join <城镇> [confirm] &7- 加入被邀请的城镇
 
     &b/town leave &7- 离开城镇（领地留在城镇）
+
+    &b/town attach [领地|all] &7- 挂靠个人领地（无参数时打开选择界面）
+
+    &b/town group <create|delete|list|info|add|remove> ... &7- 管理小镇权限组
 
     &b/town kick <玩家> &7- 踢出居民（镇长/助理）
 
@@ -710,6 +727,25 @@ town-command-text:
   need-points: 请先用选点工具选择两个点。
   player-not-found: 找不到玩家 {0}。
   member-list: '{0} 的成员：{1}'
+  attach-all-success: 已将 {0} 块领地挂靠到小镇 {1}。
+  attach-one-success: 已将领地 {0} 挂靠到小镇 {1}。
+  attach-not-owned: 你没有名为 {0} 的个人领地。
+  town-group-usage: '&b/town group create <名称> [显示名]
+
+    &b/town group delete <名称>
+
+    &b/town group list
+
+    &b/town group info <名称>
+
+    &b/town group add <玩家> <组名>
+
+    &b/town group remove <玩家>'
+  town-group-list-header: '{0} 的小镇组：'
+  town-group-list-entry: '&6{0} &7（内部名：{1}，成员：{2}）'
+  town-group-list-empty: 小镇 {0} 尚未创建自定义组。
+  town-group-info: '&6{0} &7（内部名：{1}，成员：{2}）'
+  town-group-members: '成员：{0}'
 migration-text:
   town-data-dropped: 源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。
 town-create-inputter-text:
@@ -726,8 +762,8 @@ town-disband-confirm-inputter-text:
   hint: 输入 confirm 确认解散小镇。
 town-role-text:
   mayor: 镇长
-  assistant: 管理员
-  resident: 居民
+  assistant: 副镇长
+  resident: 成员
   outsider: 访客
   founder: 创始
   joined: 加入

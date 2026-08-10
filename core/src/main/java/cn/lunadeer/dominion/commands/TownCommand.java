@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.misc.Others;
@@ -51,6 +52,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
                 + "&b/town attach [dominion|all] &7- attach dominions to your town (GUI if no args)\n"
+                + "&b/town group <create|delete|list|info|add|remove> ... &7- manage town groups\n"
                 + "&b/town kick <player> &7- kick a resident (mayor/assistant)\n"
                 + "&b/town transfer <player> &7- transfer the mayor role\n"
                 + "&b/town promote|demote <player> &7- set assistant/resident role (mayor only)\n"
@@ -85,6 +87,20 @@ public class TownCommand implements TabExecutor {
         public String needPoints = "Select two points with the select tool first.";
         public String playerNotFound = "Player {0} not found.";
         public String memberList = "Members of {0}: {1}";
+        public String attachAllSuccess = "Attached {0} dominion(s) to town {1}.";
+        public String attachOneSuccess = "Attached dominion {0} to town {1}.";
+        public String attachNotOwned = "You don't own a personal dominion named {0}.";
+        public String townGroupUsage = "&b/town group create <name> [display name]\n"
+                + "&b/town group delete <name>\n"
+                + "&b/town group list\n"
+                + "&b/town group info <name>\n"
+                + "&b/town group add <player> <group>\n"
+                + "&b/town group remove <player>";
+        public String townGroupListHeader = "Town groups of {0}:";
+        public String townGroupListEntry = "&6{0} &7({1}, members: {2})";
+        public String townGroupListEmpty = "Town {0} has no custom groups.";
+        public String townGroupInfo = "&6{0} &7(internal name: {1}, members: {2})";
+        public String townGroupMembers = "Members: {0}";
     }
 
     private static final long INVITE_TTL_MS = 5 * 60 * 1000L;
@@ -160,6 +176,7 @@ public class TownCommand implements TabExecutor {
                 case "join" -> handleJoin(sender, args);
                 case "leave" -> handleLeave(sender);
                 case "attach" -> handleAttach(sender, args);
+                case "group" -> handleGroup(sender, args);
                 case "kick" -> handleKick(sender, args);
                 case "transfer" -> handleTransfer(sender, args);
                 case "promote" -> handleSetRole(sender, args, cn.lunadeer.dominion.doos.TownMemberDOO.TownRole.ASSISTANT);
@@ -374,7 +391,7 @@ public class TownCommand implements TabExecutor {
             // Attach all personal dominions (database query for cross-server)
             int count = TownManager.attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
             CacheManager.instance.reloadCache();
-            Notification.info(player, "Attached {0} dominion(s) to town {1}.", count, town.getName());
+            Notification.info(player, Language.townCommandText.attachAllSuccess, count, town.getName());
         } else {
             // Attach specific dominion by name (database query for cross-server)
             String dominionName = args[1];
@@ -382,11 +399,79 @@ public class TownCommand implements TabExecutor {
                     .filter(d -> !d.isTownOutpost() && d.getName().equalsIgnoreCase(dominionName))
                     .findFirst()
                     .orElseThrow(() -> new cn.lunadeer.dominion.misc.DominionException(
-                            "You don't own a personal dominion named {0}.", dominionName));
+                            Language.townCommandText.attachNotOwned, dominionName));
             TownManager.attachOutpost(town, dominion, player.getUniqueId());
             CacheManager.instance.reloadCache();
-            Notification.info(player, "Attached dominion {0} to town {1}.", dominion.getName(), town.getName());
+            Notification.info(player, Language.townCommandText.attachOneSuccess,
+                    dominion.getName(), town.getName());
         }
+    }
+
+    private void handleGroup(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        Player player = requirePlayer(sender);
+        TownDOO town = resolveOwnTown(sender);
+        if (args.length == 1) {
+            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
+                    () -> cn.lunadeer.dominion.uis.town.TownGroups.show(player, town.getName(), "1"));
+            return;
+        }
+        switch (args[1].toLowerCase()) {
+            case "create" -> {
+                String displayName = args.length <= 3 ? null
+                        : String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length));
+                TownManager.createTownGroup(player, town, requireArg(args, 2), displayName);
+            }
+            case "delete" -> TownManager.deleteTownGroup(player, town,
+                    TownManager.requireTownGroup(town, requireArg(args, 2)));
+            case "list" -> {
+                List<TownGroupDOO> groups = TownManager.groupsOf(town);
+                if (groups.isEmpty()) {
+                    Notification.info(sender, Language.townCommandText.townGroupListEmpty, town.getName());
+                    return;
+                }
+                Notification.info(sender, Language.townCommandText.townGroupListHeader, town.getName());
+                for (TownGroupDOO group : groups) {
+                    Notification.info(sender, Language.townCommandText.townGroupListEntry,
+                            group.getDisplayName(), group.getName(), groupMemberCount(town, group));
+                }
+            }
+            case "info" -> {
+                TownGroupDOO group = TownManager.requireTownGroup(town, requireArg(args, 2));
+                List<String> members = groupMemberNames(town, group);
+                Notification.info(sender, Language.townCommandText.townGroupInfo,
+                        group.getDisplayName(), group.getName(), members.size());
+                Notification.info(sender, Language.townCommandText.townGroupMembers,
+                        members.isEmpty() ? "-" : String.join(", ", members));
+            }
+            case "add" -> {
+                PlayerDTO target = requirePlayerDto(args, 2);
+                TownGroupDOO group = TownManager.requireTownGroup(town, requireArg(args, 3));
+                TownManager.assignTownGroup(player, town, target.getUuid(), group);
+            }
+            case "remove" -> TownManager.removeTownGroupAssignment(player, town,
+                    requirePlayerDto(args, 2).getUuid());
+            default -> Notification.info(sender, Language.townCommandText.townGroupUsage);
+        }
+    }
+
+    private static int groupMemberCount(@NotNull TownDOO town, @NotNull TownGroupDOO group) {
+        int count = 0;
+        for (TownMemberDOO member : CacheManager.instance.getTownCache().getMembersOf(town.getId())) {
+            if (member.getGroupId() == group.getId()) count++;
+        }
+        return count;
+    }
+
+    private static @NotNull List<String> groupMemberNames(@NotNull TownDOO town,
+                                                           @NotNull TownGroupDOO group) {
+        List<String> names = new ArrayList<>();
+        for (TownMemberDOO member : CacheManager.instance.getTownCache().getMembersOf(town.getId())) {
+            if (member.getGroupId() == group.getId()) {
+                names.add(CacheManager.instance.getPlayerName(member.getPlayerUuid()));
+            }
+        }
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return names;
     }
 
 
@@ -611,7 +696,8 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
-            "admin", "info", "list");
+            "admin", "group", "info", "list");
+    private static final List<String> GROUP_SUB_COMMANDS = List.of("create", "delete", "list", "info", "add", "remove");
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
@@ -619,6 +705,7 @@ public class TownCommand implements TabExecutor {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1) {
             filter(SUB_COMMANDS, args[0], suggestions);
+        } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
                 case "attach" -> {
@@ -637,15 +724,27 @@ public class TownCommand implements TabExecutor {
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
                         filter(playerNames(), args[1], suggestions);
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
+                case "group" -> filter(GROUP_SUB_COMMANDS, args[1], suggestions);
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
-                case "join", "disband" -> filter(List.of("confirm"), args[2], suggestions);
+                case "create", "join", "disband" -> filter(List.of("confirm"), args[2], suggestions);
                 case "trust", "untrust" -> filter(List.of("town", "outpost"), args[2], suggestions);
                 case "admin" -> filter(playerNames(), args[2], suggestions);
+                case "group" -> {
+                    if (args[1].equalsIgnoreCase("delete") || args[1].equalsIgnoreCase("info")) {
+                        filter(townGroupNames(sender), args[2], suggestions);
+                    } else if (args[1].equalsIgnoreCase("add")) {
+                        filter(townMemberNames(sender, false), args[2], suggestions);
+                    } else if (args[1].equalsIgnoreCase("remove")) {
+                        filter(townMemberNames(sender, true), args[2], suggestions);
+                    }
+                }
             }
         } else if (args.length == 4) {
-            if (args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust")) {
+            if (args[0].equalsIgnoreCase("group") && args[1].equalsIgnoreCase("add")) {
+                filter(townGroupNames(sender), args[3], suggestions);
+            } else if (args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust")) {
                 if (args[2].equalsIgnoreCase("outpost")) {
                     filter(dominionNames(), args[3], suggestions);
                 } else if (args[0].equalsIgnoreCase("trust")) {
@@ -681,5 +780,27 @@ public class TownCommand implements TabExecutor {
 
     private static @NotNull List<String> dominionNames() {
         return CacheManager.instance.getAllDominionNames();
+    }
+
+    private static @NotNull List<String> townGroupNames(@NotNull CommandSender sender) {
+        if (!(sender instanceof Player player)) return List.of();
+        TownDOO town = TownManager.ownTownOf(player);
+        if (town == null) return List.of();
+        return TownManager.groupsOf(town).stream().map(TownGroupDOO::getName).toList();
+    }
+
+    private static @NotNull List<String> townMemberNames(@NotNull CommandSender sender,
+                                                          boolean assignedOnly) {
+        if (!(sender instanceof Player player)) return List.of();
+        TownDOO town = TownManager.ownTownOf(player);
+        if (town == null) return List.of();
+        List<String> names = new ArrayList<>();
+        for (TownMemberDOO member : CacheManager.instance.getTownCache().getMembersOf(town.getId())) {
+            if (!assignedOnly || member.getGroupId() > 0) {
+                names.add(CacheManager.instance.getPlayerName(member.getPlayerUuid()));
+            }
+        }
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return names;
     }
 }
