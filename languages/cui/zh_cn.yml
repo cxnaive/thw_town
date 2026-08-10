@@ -1716,3 +1716,71 @@ town-outposts-cui:
     lore:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
+town-attach-selector-tui-text:
+  title: 选择挂靠领地到 {0}
+  button: 选择领地
+  dominion-line: '{0} §b{1} §7({2}, {3})'
+  selected: '[✓]'
+  unselected: '[ ]'
+  toggle-button: 切换
+  confirm-button: 确认
+  cancel-button: 取消
+  attach-success: 已将 {0} 块领地挂靠到小镇 {1}。
+  none-selected: 未选择任何领地。
+  no-dominions: 你没有可挂靠的个人领地。
+town-attach-selector-cui:
+  title: §6✦ §e挂靠到 {0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <#######
+    - '#iiiiiii'
+    - '#iiiiiii'
+    - '#iiiiiii'
+    - c#####C>
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - 'Page: {0}/{1}'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  selected-item-button:
+    symbol: i
+    name: §a✓ §e{0}
+    lore:
+    - §7类型：§b{0}
+    - §7世界：§b{1}
+    - ''
+    - §a§l已选择
+    - §c▶ 点击取消选择
+    material: GRASS_BLOCK
+  unselected-item-button:
+    symbol: i
+    name: §c✗ §e{0}
+    lore:
+    - §7类型：§b{0}
+    - §7世界：§b{1}
+    - ''
+    - §7未选择
+    - §a▶ 点击选择
+    material: RED_STAINED_GLASS
+  confirm-button:
+    symbol: C
+    name: §a§l确认
+    lore:
+    - §7挂靠所选领地
+    - §a▶ 点击确认
+    material: LIME_CONCRETE
+  cancel-button:
+    symbol: c
+    name: §c§l取消
+    lore:
+    - §7放弃选择
+    - §c▶ 点击取消
+    material: RED_CONCRETE

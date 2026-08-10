@@ -46,10 +46,11 @@ public class TownCommand implements TabExecutor {
 
     public static class TownCommandText extends ConfigurationPart {
         public String onlyPlayer = "This command can only be executed by a player.";
-        public String usage = "&b/town create <name> &7- create a town (select dominions to attach later)\n"
+        public String usage = "&b/town create <name> &7- create a town\n"
                 + "&b/town invite <player> &7- invite a player (mayor/assistant)\n"
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
+                + "&b/town attach [dominion|all] &7- attach dominions to your town (GUI if no args)\n"
                 + "&b/town kick <player> &7- kick a resident (mayor/assistant)\n"
                 + "&b/town transfer <player> &7- transfer the mayor role\n"
                 + "&b/town promote|demote <player> &7- set assistant/resident role (mayor only)\n"
@@ -158,6 +159,7 @@ public class TownCommand implements TabExecutor {
                 case "invite" -> handleInvite(sender, args);
                 case "join" -> handleJoin(sender, args);
                 case "leave" -> handleLeave(sender);
+                case "attach" -> handleAttach(sender, args);
                 case "kick" -> handleKick(sender, args);
                 case "transfer" -> handleTransfer(sender, args);
                 case "promote" -> handleSetRole(sender, args, cn.lunadeer.dominion.doos.TownMemberDOO.TownRole.ASSISTANT);
@@ -359,6 +361,32 @@ public class TownCommand implements TabExecutor {
     private void handleLeave(@NotNull CommandSender sender) throws Exception {
         Player player = requirePlayer(sender);
         TownManager.leaveTown(player, resolveOwnTown(sender));
+    }
+
+    private void handleAttach(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        Player player = requirePlayer(sender);
+        TownDOO town = resolveOwnTown(sender);
+        
+        if (args.length == 1) {
+            // Open GUI selector
+            cn.lunadeer.dominion.uis.town.TownAttachSelector.show(player, town.getName(), "1");
+        } else if (args[1].equalsIgnoreCase("all")) {
+            // Attach all personal dominions (database query for cross-server)
+            int count = TownManager.attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
+            CacheManager.instance.reloadCache();
+            Notification.info(player, "Attached {0} dominion(s) to town {1}.", count, town.getName());
+        } else {
+            // Attach specific dominion by name (database query for cross-server)
+            String dominionName = args[1];
+            DominionDOO dominion = DominionDOO.selectByOwner(player.getUniqueId()).stream()
+                    .filter(d -> !d.isTownOutpost() && d.getName().equalsIgnoreCase(dominionName))
+                    .findFirst()
+                    .orElseThrow(() -> new cn.lunadeer.dominion.misc.DominionException(
+                            "You don't own a personal dominion named {0}.", dominionName));
+            TownManager.attachOutpost(town, dominion, player.getUniqueId());
+            CacheManager.instance.reloadCache();
+            Notification.info(player, "Attached dominion {0} to town {1}.", dominion.getName(), town.getName());
+        }
     }
 
 
@@ -581,7 +609,6 @@ public class TownCommand implements TabExecutor {
     }
 
     // ------------------------------------------------------------------
-
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
             "admin", "info", "list");
@@ -594,6 +621,11 @@ public class TownCommand implements TabExecutor {
             filter(SUB_COMMANDS, args[0], suggestions);
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
+                case "attach" -> {
+                    List<String> options = new ArrayList<>(List.of("all"));
+                    options.addAll(dominionNames());
+                    filter(options, args[1], suggestions);
+                }
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
                         filter(playerNames(), args[1], suggestions);
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
