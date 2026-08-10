@@ -1562,6 +1562,45 @@ town-trusts-cui:
     - §7授权一名玩家（小镇范围）。
     - §a▶ 点击添加
     material: WRITABLE_BOOK
+  outpost-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - §7管理该属地的授权。
+    - §a▶ 点击打开
+    material: GRASS_BLOCK
+  back-button:
+    symbol: <
+    name: §c« 返回
+    lore:
+    - §e▶ 点击返回
+    material: RED_STAINED_GLASS_PANE
+outpost-trusts-cui:
+  title: §6✦ §e授权：{0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p######An
+  trust-item-button:
+    symbol: i
+    name: §e{0}
+    lore:
+    - §7建造/破坏/交互/使用物品：§b{0}
+    - ''
+    - §a▶ 左键：逐项切换旗子（有编辑权者）
+    - §c▶ 右键：移除（有编辑权者）
+    material: NAME_TAG
+  add-item-button:
+    symbol: A
+    name: §a添加授权
+    lore:
+    - §7授权一名玩家（仅此属地）。
+    - §a▶ 点击添加
+    material: WRITABLE_BOOK
   back-button:
     symbol: <
     name: §c« 返回

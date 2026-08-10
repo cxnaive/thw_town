@@ -654,7 +654,9 @@ public class TownManager {
                                             @Nullable DominionDOO outpost) throws DominionException {
         if (bypassLimit(operator)) return;
         if (scope == TownTrustDOO.TrustScope.OUTPOST && outpost != null
-                && operator.getUniqueId().equals(outpost.getOutpostAdminUuid())) {
+                && isOutpostManager(operator, outpost)) {
+            // any outpost manager (mayor/assistant, the contributor, the
+            // appointed outpost admin) manages this outpost's trusts
             return;
         }
         assertManager(operator, town);

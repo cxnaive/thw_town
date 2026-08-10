@@ -200,6 +200,16 @@ town-trusts-tui-text:
   remove-button: X
   flag-on: §a{0}
   flag-off: §8{0}
+  outposts-header: §6--- 属地授权：选择一块属地 ---
+  outpost-line: §e{0} §7→ 管理
+outpost-trusts-tui-text:
+  title: 属地 {0} 的授权
+  trust-line: §b{0}
+  add-button: 添加授权
+  add-hint: 输入要授权的玩家名（仅此属地，默认全关——添加后再逐项开启）。
+  remove-button: X
+  flag-on: §a{0}
+  flag-off: §8{0}
 town-bank-tui-text:
   title: '{0} 的银行'
   button: 银行

@@ -33,15 +33,34 @@ import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
 import static cn.lunadeer.dominion.utils.Misc.formatString;
 
 /**
- * Town trust grants (plan §13.3): town-scoped entries first, then
- * per-outpost. Each flag is a toggle (trust() is an upsert); town scope
- * edits need mayor/assistant, outpost scope additionally allows that
- * outpost's appointed admin — same rule as the command layer.
+ * Town-level trust page (plan §13.3): manages TOWN-scoped grants and
+ * lists the town's outposts as jump entries into {@link OutpostTrusts}.
+ * Town-scope edits need mayor/assistant; per-outpost management lives
+ * on the outpost page and follows isOutpostManager (contributor
+ * included).
  */
 public class TownTrusts extends AbstractUI {
 
     public static void show(CommandSender sender, String townName, String pageStr) {
-        new TownTrusts().displayByPreference(sender, townName, pageStr);
+        TownTrusts ui = new TownTrusts();
+        // cross-server outposts come from the database — prefetch async,
+        // render on the main thread (same discipline as TownOutposts)
+        cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+            try {
+                ui.prefetched = DominionDOO.selectByTownId(TownManager.requireTown(townName).getId());
+            } catch (Exception e) {
+                Notification.error(sender, e);
+                return;
+            }
+            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
+                    () -> ui.displayByPreference(sender, townName, pageStr));
+        });
+    }
+
+    private List<DominionDOO> prefetched;
+
+    private List<DominionDOO> outposts(Integer townId) throws Exception {
+        return prefetched != null ? prefetched : DominionDOO.selectByTownId(townId);
     }
 
     public static ListViewButton button(CommandSender sender, String townName) {
@@ -66,29 +85,11 @@ public class TownTrusts extends AbstractUI {
         public String removeButton = "X";
         public String flagOn = "§a{0}";
         public String flagOff = "§8{0}";
+        public String outpostsHeader = "§6--- Outpost trusts: pick an outpost ---";
+        public String outpostLine = "§e{0} §7→ manage";
     }
 
     private static final String[] FLAG_NAMES = {"build", "destroy", "switch", "item_use"};
-
-    private static boolean canEdit(Player player, TownDOO town, TownTrustDOO trust) {
-        if (cn.lunadeer.dominion.misc.Others.bypassLimit(player)) return true;
-        if (TownManager.isManager(town, player.getUniqueId())) return true;
-        if (trust.getScopeType() == TownTrustDOO.TrustScope.OUTPOST) {
-            DominionDTO dto = CacheManager.instance.getDominion(trust.getScopeId());
-            return dto instanceof DominionDOO doo
-                    && player.getUniqueId().equals(doo.getOutpostAdminUuid());
-        }
-        return false;
-    }
-
-    /** Editable in the UI: authority plus, for outpost scope, local resolution. */
-    private static boolean canEditInUi(Player player, TownDOO town, TownTrustDOO trust) {
-        if (!canEdit(player, town, trust)) return false;
-        // a remote outpost's grant cannot be resolved through this
-        // server's dominion cache — render it read-only rather than
-        // letting edits fail or silently no-op
-        return trust.getScopeType() != TownTrustDOO.TrustScope.OUTPOST || outpostOf(trust) != null;
-    }
 
     private static String scopeLabel(TownTrustDOO trust) {
         if (trust.getScopeType() == TownTrustDOO.TrustScope.TOWN) {
@@ -121,19 +122,13 @@ public class TownTrusts extends AbstractUI {
                     }
                 }.needPermission(defaultPermission).build()));
             }
-            // copy before sorting — the cache list is shared mutable state
-            List<TownTrustDOO> trusts = new java.util.ArrayList<>(CacheManager.instance.getTownCache().getTrustsOf(town.getId()));
-            // town scope first, then outposts
-            trusts.sort((a, b) -> {
-                if (a.getScopeType() != b.getScopeType()) {
-                    return a.getScopeType() == TownTrustDOO.TrustScope.TOWN ? -1 : 1;
-                }
-                return a.getScopeId().compareTo(b.getScopeId());
-            });
-            for (TownTrustDOO trust : trusts) {
+            // town-scope rows only — outpost trusts live on OutpostTrusts
+            for (TownTrustDOO trust : CacheManager.instance.getTownCache().getTrustsOf(town.getId())) {
+                if (trust.getScopeType() != TownTrustDOO.TrustScope.TOWN) continue;
                 Line line = Line.create().append(formatString(TextUserInterface.townTrustsTuiText.trustLine,
-                        CacheManager.instance.getPlayerName(trust.getPlayerUuid()), scopeLabel(trust)));
-                if (canEditInUi(player, town, trust)) {
+                        CacheManager.instance.getPlayerName(trust.getPlayerUuid()),
+                        TextUserInterface.townTrustsTuiText.townScopeLabel));
+                if (manager) {
                     boolean[] values = {trust.isBuild(), trust.isDestroy(), trust.isSwitch(), trust.isItemUse()};
                     for (int i = 0; i < FLAG_NAMES.length; i++) {
                         final int idx = i;
@@ -146,7 +141,7 @@ public class TownTrusts extends AbstractUI {
                                     boolean[] next = {trust.isBuild(), trust.isDestroy(), trust.isSwitch(), trust.isItemUse()};
                                     next[idx] = !next[idx];
                                     TownManager.trust(player, town, trust.getPlayerUuid(),
-                                            trust.getScopeType(), outpostOf(trust),
+                                            trust.getScopeType(), null,
                                             next[0], next[1], next[2], next[3]);
                                 }, () -> show(player, town.getName(), "1"));
                             }
@@ -157,12 +152,27 @@ public class TownTrusts extends AbstractUI {
                         public void function() {
                             TownUI.action(player,
                                     () -> TownManager.untrust(player, town, trust.getPlayerUuid(),
-                                            trust.getScopeType(), outpostOf(trust)),
+                                            trust.getScopeType(), null),
                                     () -> show(player, town.getName(), "1"));
                         }
                     }.needPermission(defaultPermission).build());
                 }
                 view.add(line);
+            }
+            // outpost jump entries — visible to everyone; the edit gate is
+            // per-outpost (isOutpostManager) on the target page
+            List<DominionDOO> outposts = outposts(town.getId());
+            if (!outposts.isEmpty()) {
+                view.add(Line.create().append(TextUserInterface.townTrustsTuiText.outpostsHeader));
+                for (DominionDOO outpost : outposts) {
+                    view.add(Line.create().append(new FunctionalButton(formatString(
+                            TextUserInterface.townTrustsTuiText.outpostLine, outpost.getName())) {
+                        @Override
+                        public void function() {
+                            OutpostTrusts.show(player, outpost.getName(), "1");
+                        }
+                    }.needPermission(defaultPermission).build()));
+                }
             }
             view.showOn(player, page);
         } catch (Exception e) {
@@ -232,6 +242,9 @@ public class TownTrusts extends AbstractUI {
         public ButtonConfiguration addItemButton = ButtonConfiguration.createMaterial(
                 'A', Material.WRITABLE_BOOK, "§aAdd trust",
                 List.of("§7Trust a player (town scope).", "§a▶ Click to add"));
+        public ButtonConfiguration outpostItemButton = ButtonConfiguration.createMaterial(
+                'i', Material.GRASS_BLOCK, "§e{0}",
+                List.of("§7Manage this outpost's trusts.", "§a▶ Click to open"));
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
                 '<', Material.RED_STAINED_GLASS_PANE, "§c« Back",
                 List.of("§e▶ Click to go back"));
@@ -249,14 +262,14 @@ public class TownTrusts extends AbstractUI {
             view.applyListConfiguration(ChestUserInterface.townTrustsCui.listConfiguration, toIntegrity(args[1], 1));
 
             for (TownTrustDOO trust : CacheManager.instance.getTownCache().getTrustsOf(town.getId())) {
-                String scope = trust.getScopeType() == TownTrustDOO.TrustScope.TOWN
-                        ? "town" : "outpost #" + trust.getScopeId();
+                if (trust.getScopeType() != TownTrustDOO.TrustScope.TOWN) continue;
+                String scope = "town";
                 String flags = (trust.isBuild() ? "B" : "-") + (trust.isDestroy() ? "D" : "-")
                         + (trust.isSwitch() ? "S" : "-") + (trust.isItemUse() ? "I" : "-");
                 ChestButton btn = new ChestButton(ChestUserInterface.townTrustsCui.trustItemButton) {
                     @Override
                     public void onClick(ClickType type) {
-                        if (!canEditInUi(player, town, trust)) return;
+                        if (!manager) return;
                         TownUI.action(player, () -> {
                             if (type.isLeftClick()) {
                                 // cycle: all-off -> build -> +destroy -> +switch -> +item_use -> all-off
@@ -267,11 +280,11 @@ public class TownTrusts extends AbstractUI {
                                 else if (!trust.isItemUse()) next = new boolean[]{true, true, true, true};
                                 else next = new boolean[]{false, false, false, false};
                                 TownManager.trust(player, town, trust.getPlayerUuid(),
-                                        trust.getScopeType(), outpostOf(trust),
+                                        trust.getScopeType(), null,
                                         next[0], next[1], next[2], next[3]);
                             } else if (type.isRightClick()) {
                                 TownManager.untrust(player, town, trust.getPlayerUuid(),
-                                        trust.getScopeType(), outpostOf(trust));
+                                        trust.getScopeType(), null);
                             }
                         }, () -> show(player, town.getName(), "1"));
                     }
@@ -279,6 +292,17 @@ public class TownTrusts extends AbstractUI {
                 btn = btn.setDisplayNameArgs(CacheManager.instance.getPlayerName(trust.getPlayerUuid()));
                 btn = btn.setLoreArgs(scope, flags);
                 view = view.addItem(btn);
+            }
+            // outpost jump entries — open the per-outpost trust page
+            for (DominionDOO outpost : outposts(town.getId())) {
+                ChestButton jump = new ChestButton(ChestUserInterface.townTrustsCui.outpostItemButton) {
+                    @Override
+                    public void onClick(ClickType type) {
+                        OutpostTrusts.show(player, outpost.getName(), "1");
+                    }
+                };
+                jump = jump.setDisplayNameArgs(outpost.getName());
+                view = view.addItem(jump);
             }
             final ChestListView viewFinal = view;
             if (manager) {
