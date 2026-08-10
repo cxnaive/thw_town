@@ -85,6 +85,36 @@ public final class TownGroupSyncHandler {
         return group;
     }
 
+    /**
+     * Update the user-facing name while keeping the internal group key stable.
+     * Every outpost mirror uses the same display name in name_colored.
+     */
+    public static void updateDisplayName(@NotNull TownGroupDOO group,
+                                         @NotNull String displayName) throws Exception {
+        transaction(connection -> {
+            int updated;
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE town_group SET display_name = ? WHERE id = ? AND town_id = ?")) {
+                statement.setString(1, displayName);
+                statement.setInt(2, group.getId());
+                statement.setInt(3, group.getTownId());
+                updated = statement.executeUpdate();
+            }
+            if (updated != 1) {
+                throw new SQLException("Town group disappeared while updating its display name: "
+                        + group.getId());
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE dominion_group SET name_colored = ? WHERE town_group_id = ?")) {
+                statement.setString(1, displayName);
+                statement.setInt(2, group.getId());
+                statement.executeUpdate();
+            }
+            return null;
+        });
+        reloadCaches();
+    }
+
     public static void deleteGroup(@NotNull TownGroupDOO group) throws Exception {
         transaction(connection -> {
             try (PreparedStatement statement = connection.prepareStatement(

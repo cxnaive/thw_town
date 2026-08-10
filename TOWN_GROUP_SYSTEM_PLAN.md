@@ -212,6 +212,7 @@ Town
 
 ```text
 /town group create <name> [display_name]          # 镇长/副镇长
+/town group rename <name> <display_name>          # 修改显示名，支持中文和空格
 /town group delete <name>                         # 镇长/副镇长
 /town group list                                  # 所有人可看
 /town group info <name>                           # 所有人可看
@@ -222,6 +223,7 @@ Town
 - 权限检查：`assertManager(sender, town)`（现有，MAYOR 或 ASSISTANT）；
 - `create`/`delete`/`add`/`remove` 走异步任务 + 事务；
 - Tab 补全：组名、成员名。
+- 内部名是稳定的小写 ASCII ID；显示名单独保存，可使用中文、空格和颜色代码。
 
 ## 7. UI 设计（复用现有，最小侵入）
 
@@ -235,7 +237,9 @@ Town
 ### 7.2 小镇组管理（新增，TownGroups UI）
 
 - 列出小镇所有组 + 成员数；
-- 创建/删除组、分配/移除成员；
+- 创建/删除组、修改显示名、分配/移除成员；
+- 添加成员从现有小镇成员选择，不再要求手输玩家名；若成员已在其他小镇组中，
+  选择后会按单组约束移动到当前组，并在选择页显示其角色和当前组。
 - TUI + CUI 双界面（对齐现有 Town 系列 UI）。
 
 ### 7.3 翻译
@@ -312,7 +316,7 @@ Town
 - Town/Group/Member 缓存在事务提交后立即刷新。
 
 ### Phase 3：命令接口（已完成）
-- `/town group create/delete/list/info/add/remove` 已实现；
+- `/town group create/rename/delete/list/info/add/remove` 已实现；
 - 创建、删除、分配和移除复用 `assertManager` 与事务同步层；
 - 已补组动作、玩家和组名 Tab 补全，并修复原先第二参数补全错误访问
   `args[1]` 的越界问题；
@@ -321,8 +325,8 @@ Town
 ### Phase 4：UI + 翻译（已完成）
 - TownInfo 的 TUI/CUI 均提供“挂靠领地”和“小镇组”入口（仅镇成员
   显示挂靠入口）；
-- 新增 `TownGroups` + `TownGroupManage` 双 TUI/CUI：列表、创建、删除、
-  分配和移除成员；
+- 新增 `TownGroups` + `TownGroupManage` 双 TUI/CUI：列表、创建、修改显示名、
+  删除、分配和移除成员；成员分配从现有小镇成员选择页完成；
 - 镇属地的普通本地组创建入口隐藏；`@town` 与小镇镜像组均隐藏
   删除/重命名/成员编辑，仅保留本 Outpost 的 flag 设置；
 - 镜像组显示“[来自小镇]”标记，Provider 层同时强制保护，避免绕过 UI；

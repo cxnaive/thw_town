@@ -1830,7 +1830,8 @@ town-groups-cui:
     name: §a创建小镇组
     lore:
     - §7创建会同步到所有镇属前哨的组。
-    - §a▶ 点击输入名称
+    - '§7输入示例：§fbuilders 建筑组'
+    - §a▶ 点击输入内部名和显示名
     material: LIME_DYE
   group-item-button:
     symbol: i
@@ -1846,7 +1847,7 @@ town-group-manage-cui:
   list-configuration:
     item-symbol: i
     layout:
-    - <######D#
+    - <#####RD#
     - '#iiiiiii#'
     - '#iiiiiii#'
     - '#iiiiiii#'
@@ -1873,9 +1874,16 @@ town-group-manage-cui:
     symbol: A
     name: §a添加成员
     lore:
-    - §7将小镇成员分配到此组。
-    - §a▶ 点击输入玩家名
+    - §7从已有小镇成员中选择并分配到此组。
+    - §a▶ 点击选择成员
     material: LIME_DYE
+  rename-button:
+    symbol: R
+    name: §b修改显示名
+    lore:
+    - §7支持中文和空格，内部名保持不变。
+    - §b▶ 点击输入显示名
+    material: NAME_TAG
   delete-button:
     symbol: D
     name: §c删除小镇组
@@ -1887,6 +1895,41 @@ town-group-manage-cui:
   - §7已分配到此小镇组。
   - ''
   - §c▶ 点击移除
+town-group-member-selector-cui:
+  title: §6✦ §e为 {0} 选择成员 §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - '第 {0}/{1} 页'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - '第 {0}/{1} 页'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  back-button:
+    symbol: <
+    name: §c« 返回小镇组
+    lore:
+    - §e▶ 点击返回
+    material: RED_STAINED_GLASS_PANE
+  member-item-name: §a➕ §e{0}
+  member-item-lore:
+  - '§7角色：§b{0}'
+  - '§7当前组：§b{1}'
+  - ''
+  - §a▶ 点击分配到当前组
+  - §8若成员已在其他组，将移动到当前组。
 town-trust-editor-cui:
   town-title: '§6✦ §e{0} 的信任权限 §6✦'
   outpost-title: '§6✦ §e属地 {0} 的信任权限 §6✦'

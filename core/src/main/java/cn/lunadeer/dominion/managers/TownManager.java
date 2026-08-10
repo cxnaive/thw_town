@@ -84,6 +84,7 @@ public class TownManager {
         public String townGroupExists = "Town group {0} already exists in {1}.";
         public String townGroupNotExist = "Town group {0} does not exist in {1}.";
         public String townGroupCreated = "Created town group {0} in {1}.";
+        public String townGroupDisplayUpdated = "Renamed town group {0} to {1}.";
         public String townGroupDeleted = "Deleted town group {0} from {1}; assigned members now use @town.";
         public String townGroupMemberAssigned = "Assigned {0} to town group {1}.";
         public String townGroupMemberRemoved = "Removed {0} from their town group; they now use @town.";
@@ -266,6 +267,26 @@ public class TownManager {
         Notification.info(operator, Language.townManagerText.townGroupCreated,
                 group.getDisplayName(), town.getName());
         return group;
+    }
+
+    public static void updateTownGroupDisplayName(@NotNull Player operator,
+                                                   @NotNull TownDOO town,
+                                                   @NotNull TownGroupDOO group,
+                                                   @Nullable String displayName) throws Exception {
+        assertManager(operator, town);
+        if (group.getTownId() != town.getId()) {
+            throw new DominionException(Language.townManagerText.townGroupNotExist,
+                    group.getName(), town.getName());
+        }
+        String display = displayName == null || displayName.isBlank()
+                || displayName.trim().equals("-") ? group.getName() : displayName.trim();
+        if (display.length() > 64) {
+            throw new DominionException(Language.townManagerText.townGroupDisplayTooLong);
+        }
+        String oldDisplay = group.getDisplayName();
+        TownGroupSyncHandler.updateDisplayName(group, display);
+        Notification.info(operator, Language.townManagerText.townGroupDisplayUpdated,
+                oldDisplay, display);
     }
 
     public static void deleteTownGroup(@NotNull Player operator, @NotNull TownDOO town,

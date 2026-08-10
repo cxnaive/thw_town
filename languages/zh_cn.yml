@@ -636,6 +636,7 @@ town-manager-text:
   town-group-exists: 小镇组 {0} 已存在于 {1}。
   town-group-not-exist: 小镇组 {0} 不存在于 {1}。
   town-group-created: 已在 {1} 创建小镇组 {0}。
+  town-group-display-updated: 已将小镇组 {0} 的显示名改为 {1}。
   town-group-deleted: 已从 {1} 删除小镇组 {0}；已分配成员恢复使用 @town。
   town-group-member-assigned: 已将 {0} 分配到小镇组 {1}。
   town-group-member-removed: 已取消 {0} 的小镇组分配；现在使用 @town。
@@ -684,7 +685,7 @@ town-command-text:
 
     &b/town attach [领地|all] &7- 挂靠个人领地（无参数时打开选择界面）
 
-    &b/town group <create|delete|list|info|add|remove> ... &7- 管理小镇权限组
+    &b/town group <create|rename|delete|list|info|add|remove> ... &7- 管理小镇权限组
 
     &b/town kick <玩家> &7- 踢出居民（镇长/助理）
 
@@ -731,6 +732,8 @@ town-command-text:
   attach-one-success: 已将领地 {0} 挂靠到小镇 {1}。
   attach-not-owned: 你没有名为 {0} 的个人领地。
   town-group-usage: '&b/town group create <名称> [显示名]
+
+    &b/town group rename <内部名> <显示名>
 
     &b/town group delete <名称>
 

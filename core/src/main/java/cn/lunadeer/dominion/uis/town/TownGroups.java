@@ -52,7 +52,8 @@ public class TownGroups extends AbstractUI {
         public String title = "Town Groups of {0}";
         public String button = "GROUPS";
         public String createButton = "CREATE";
-        public String createHint = "Enter the internal group name, optionally followed by a display name.";
+        public String createHint = "Enter: <internal name> <display name>, for example: builders 建筑组. The internal name may use lowercase letters, numbers, '_' or '-'.";
+        public String createDisplayHint = "Now enter the display name, for example: 建筑组. Chinese and spaces are supported; enter '-' to use the internal name.";
         public String groupLine = "§b{0} §7({1}) - members: §b{2}";
         public String openButton = "MANAGE";
         public String openDescription = "View members and manage this town group.";
@@ -68,7 +69,8 @@ public class TownGroups extends AbstractUI {
                 List.of("§e▶ Click to go back"));
         public ButtonConfiguration createButton = ButtonConfiguration.createMaterial(
                 'A', Material.LIME_DYE, "§aCreate Town Group",
-                List.of("§7Create a group mirrored to every outpost.", "§a▶ Click to enter a name"));
+                List.of("§7Create a group mirrored to every outpost.",
+                        "§7Example: §fbuilders 建筑组", "§a▶ Click to enter names"));
         public ButtonConfiguration groupItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.CHEST, "§e{0}",
                 List.of("§7Internal name: §f{0}", "§7Members: §b{1}", "", "§e▶ Click to manage"));
@@ -101,14 +103,30 @@ public class TownGroups extends AbstractUI {
                     Notification.warn(player, TextUserInterface.townGroupsTuiText.createHint);
                     return;
                 }
+                // Keep the old one-line input form compatible for command/UI users
+                // who already enter "internal-name display name".
                 String[] tokens = trimmed.split("\\s+", 2);
-                String displayName = tokens.length == 2 ? tokens[1] : null;
-                TownUI.action(player,
-                        () -> TownManager.createTownGroup(player, TownManager.requireTown(townName),
-                                tokens[0], displayName),
-                        () -> show(player, townName, "1"));
+                if (tokens.length == 2) {
+                    create(player, townName, tokens[0], tokens[1]);
+                    return;
+                }
+                new InputterRunner(player, TextUserInterface.townGroupsTuiText.createDisplayHint) {
+                    @Override
+                    public void run(String displayInput) {
+                        create(player, townName, tokens[0], displayInput);
+                    }
+                };
             }
         };
+    }
+
+    private static void create(Player player, String townName, String internalName, String displayInput) {
+        String displayName = displayInput == null || displayInput.isBlank()
+                || displayInput.trim().equals("-") ? null : displayInput.trim();
+        TownUI.action(player,
+                () -> TownManager.createTownGroup(player, TownManager.requireTown(townName),
+                        internalName, displayName),
+                () -> show(player, townName, "1"));
     }
 
     @Override

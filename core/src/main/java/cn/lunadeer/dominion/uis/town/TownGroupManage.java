@@ -46,7 +46,8 @@ public class TownGroupManage extends AbstractUI {
         public String internalName = "§7Internal name: §b{0}";
         public String memberLine = "§b{0}";
         public String addButton = "ADD MEMBER";
-        public String addHint = "Enter the name of a town member to assign to this group.";
+        public String renameButton = "DISPLAY NAME";
+        public String renameHint = "Enter a new display name (Chinese and spaces are supported), or '-' to use the internal name.";
         public String removeButton = "REMOVE";
         public String deleteButton = "DELETE GROUP";
         public String deleteConfirm = "§cClick again within 5 seconds to delete town group {0}.";
@@ -56,13 +57,16 @@ public class TownGroupManage extends AbstractUI {
     public static class TownGroupManageCui extends ConfigurationPart {
         public String title = "§6✦ §eTown Group: {0} §6✦";
         public ListViewConfiguration listConfiguration = new ListViewConfiguration(
-                'i', List.of("<######D#", "#iiiiiii#", "#iiiiiii#", "#iiiiiii#", "p######An"));
+                'i', List.of("<#####RD#", "#iiiiiii#", "#iiiiiii#", "#iiiiiii#", "p######An"));
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
                 '<', Material.RED_STAINED_GLASS_PANE, "§c« Back to Town Groups",
                 List.of("§e▶ Click to go back"));
         public ButtonConfiguration addButton = ButtonConfiguration.createMaterial(
                 'A', Material.LIME_DYE, "§aAdd Member",
-                List.of("§7Assign a town member to this group.", "§a▶ Click to enter a name"));
+                List.of("§7Assign an existing town member to this group.", "§a▶ Click to select a member"));
+        public ButtonConfiguration renameButton = ButtonConfiguration.createMaterial(
+                'R', Material.NAME_TAG, "§bChange Display Name",
+                List.of("§7Chinese and spaces are supported.", "§b▶ Click to enter a display name"));
         public ButtonConfiguration deleteButton = ButtonConfiguration.createMaterial(
                 'D', Material.TNT, "§cDelete Group",
                 List.of("§7Assigned members will use @town.", "§c▶ Click twice to confirm"));
@@ -94,18 +98,12 @@ public class TownGroupManage extends AbstractUI {
         return result;
     }
 
-    private static void addMemberOn(Player player, Context context) {
-        new InputterRunner(player, TextUserInterface.townGroupManageTuiText.addHint) {
+    private static void renameOn(Player player, Context context) {
+        new InputterRunner(player, TextUserInterface.townGroupManageTuiText.renameHint) {
             @Override
             public void run(String input) {
-                var target = CacheManager.instance.getPlayer(input.trim());
-                if (target == null) {
-                    Notification.error(player,
-                            cn.lunadeer.dominion.configuration.Language.townCommandText.playerNotFound, input.trim());
-                    return;
-                }
                 TownUI.action(player,
-                        () -> TownManager.assignTownGroup(player, context.town(), target.getUuid(), context.group()),
+                        () -> TownManager.updateTownGroupDisplayName(player, context.town(), context.group(), input),
                         () -> show(player, context.town().getName(), context.group().getName(), "1"));
             }
         };
@@ -144,7 +142,14 @@ public class TownGroupManage extends AbstractUI {
                     .append(new FunctionalButton(TextUserInterface.townGroupManageTuiText.addButton) {
                         @Override
                         public void function() {
-                            addMemberOn(player, context);
+                            TownGroupMemberSelector.show(player, context.town().getName(),
+                                    context.group().getName(), "1");
+                        }
+                    }.needPermission(defaultPermission).build())
+                    .append(new FunctionalButton(TextUserInterface.townGroupManageTuiText.renameButton) {
+                        @Override
+                        public void function() {
+                            renameOn(player, context);
                         }
                     }.needPermission(defaultPermission).build())
                     .append(new FunctionalButton(TextUserInterface.townGroupManageTuiText.deleteButton) {
@@ -195,8 +200,16 @@ public class TownGroupManage extends AbstractUI {
                     new ChestButton(ChestUserInterface.townGroupManageCui.addButton) {
                         @Override
                         public void onClick(ClickType type) {
+                            TownGroupMemberSelector.show(player, context.town().getName(),
+                                    context.group().getName(), "1");
+                        }
+                    });
+            view.setButton(ChestUserInterface.townGroupManageCui.renameButton.getSymbol(),
+                    new ChestButton(ChestUserInterface.townGroupManageCui.renameButton) {
+                        @Override
+                        public void onClick(ClickType type) {
                             view.close();
-                            addMemberOn(player, context);
+                            renameOn(player, context);
                         }
                     });
             view.setButton(ChestUserInterface.townGroupManageCui.deleteButton.getSymbol(),

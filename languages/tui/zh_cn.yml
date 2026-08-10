@@ -247,7 +247,8 @@ town-groups-tui-text:
   title: '{0} 的小镇组'
   button: 小镇组
   create-button: 创建
-  create-hint: 请输入内部组名，可在后面输入显示名。
+  create-hint: '请输入“内部名 显示名”，例如：builders 建筑组。内部名仅限小写字母、数字、下划线和连字符。'
+  create-display-hint: 现在请输入显示名，例如：建筑组。支持中文和空格；输入 - 则使用内部名。
   group-line: '§b{0} §7（{1}，成员：§b{2}）'
   open-button: 管理
   open-description: 查看成员并管理此小镇组。
@@ -258,8 +259,17 @@ town-group-manage-tui-text:
   internal-name: '§7内部名：§b{0}'
   member-line: §b{0}
   add-button: 添加成员
-  add-hint: 请输入要分配到此组的小镇成员名。
+  rename-button: 修改显示名
+  rename-hint: 请输入新的显示名（支持中文和空格）；输入 - 则恢复为内部名。
   remove-button: 移除
   delete-button: 删除小镇组
   delete-confirm: '§c5秒内再次点击确认删除小镇组 {0}。'
   no-members: 此组尚未分配成员。
+town-group-member-selector-tui-text:
+  title: 为 {0} 选择成员
+  button: 选择成员
+  back-button: 返回
+  member-line: '§b{0} §7- 角色：§e{1} §7| 当前组：§b{2}'
+  select-button: 选择
+  select-description: 将此成员分配到该组；若其已在其他组，将移动到当前组。
+  no-candidates: 所有小镇成员都已在当前组中。

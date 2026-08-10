@@ -52,7 +52,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
                 + "&b/town attach [dominion|all] &7- attach dominions to your town (GUI if no args)\n"
-                + "&b/town group <create|delete|list|info|add|remove> ... &7- manage town groups\n"
+                + "&b/town group <create|rename|delete|list|info|add|remove> ... &7- manage town groups\n"
                 + "&b/town kick <player> &7- kick a resident (mayor/assistant)\n"
                 + "&b/town transfer <player> &7- transfer the mayor role\n"
                 + "&b/town promote|demote <player> &7- set assistant/resident role (mayor only)\n"
@@ -91,6 +91,7 @@ public class TownCommand implements TabExecutor {
         public String attachOneSuccess = "Attached dominion {0} to town {1}.";
         public String attachNotOwned = "You don't own a personal dominion named {0}.";
         public String townGroupUsage = "&b/town group create <name> [display name]\n"
+                + "&b/town group rename <name> <display name>\n"
                 + "&b/town group delete <name>\n"
                 + "&b/town group list\n"
                 + "&b/town group info <name>\n"
@@ -421,6 +422,12 @@ public class TownCommand implements TabExecutor {
                         : String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length));
                 TownManager.createTownGroup(player, town, requireArg(args, 2), displayName);
             }
+            case "rename" -> {
+                TownGroupDOO group = TownManager.requireTownGroup(town, requireArg(args, 2));
+                requireArg(args, 3);
+                String displayName = String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length));
+                TownManager.updateTownGroupDisplayName(player, town, group, displayName);
+            }
             case "delete" -> TownManager.deleteTownGroup(player, town,
                     TownManager.requireTownGroup(town, requireArg(args, 2)));
             case "list" -> {
@@ -697,7 +704,8 @@ public class TownCommand implements TabExecutor {
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
             "admin", "group", "info", "list");
-    private static final List<String> GROUP_SUB_COMMANDS = List.of("create", "delete", "list", "info", "add", "remove");
+    private static final List<String> GROUP_SUB_COMMANDS = List.of(
+            "create", "rename", "delete", "list", "info", "add", "remove");
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
@@ -732,7 +740,8 @@ public class TownCommand implements TabExecutor {
                 case "trust", "untrust" -> filter(List.of("town", "outpost"), args[2], suggestions);
                 case "admin" -> filter(playerNames(), args[2], suggestions);
                 case "group" -> {
-                    if (args[1].equalsIgnoreCase("delete") || args[1].equalsIgnoreCase("info")) {
+                    if (args[1].equalsIgnoreCase("rename") || args[1].equalsIgnoreCase("delete")
+                            || args[1].equalsIgnoreCase("info")) {
                         filter(townGroupNames(sender), args[2], suggestions);
                     } else if (args[1].equalsIgnoreCase("add")) {
                         filter(townMemberNames(sender, false), args[2], suggestions);
