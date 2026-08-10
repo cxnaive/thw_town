@@ -46,7 +46,7 @@ public class TownCommand implements TabExecutor {
 
     public static class TownCommandText extends ConfigurationPart {
         public String onlyPlayer = "This command can only be executed by a player.";
-        public String usage = "&b/town create <name> &7- create a town (your land attaches, or a free founding outpost)\n"
+        public String usage = "&b/town create <name> &7- create a town (select dominions to attach later)\n"
                 + "&b/town invite <player> &7- invite a player (mayor/assistant)\n"
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
@@ -325,9 +325,6 @@ public class TownCommand implements TabExecutor {
                 attachable.add(dominion);
             }
         }
-        if (!attachable.isEmpty() && !Configuration.town.allowJoinWithLegacyLand) {
-            throw new cn.lunadeer.dominion.misc.DominionException(Language.townManagerText.joinWithLegacyLandDisabled);
-        }
         // every validation that does not need consent must run before the
         // invite is consumed, so a failed join never burns it
         TownManager.assertCanJoinNewTown(player);
@@ -363,6 +360,7 @@ public class TownCommand implements TabExecutor {
         Player player = requirePlayer(sender);
         TownManager.leaveTown(player, resolveOwnTown(sender));
     }
+
 
     private void handleKick(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
@@ -557,6 +555,7 @@ public class TownCommand implements TabExecutor {
         return String.join(", ", names);
     }
 
+
     private static boolean parseBool(@NotNull String[] args, int index) throws Exception {
         String v = requireArg(args, index).toLowerCase();
         return v.equals("true") || v.equals("yes") || v.equals("1");
@@ -584,7 +583,7 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
 
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
-            "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
+            "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
             "admin", "info", "list");
 
     @Override
@@ -593,7 +592,6 @@ public class TownCommand implements TabExecutor {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1) {
             filter(SUB_COMMANDS, args[0], suggestions);
-        } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->

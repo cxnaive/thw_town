@@ -183,8 +183,6 @@ public class Configuration extends ConfigurationFile {
                 "invites and visitors are unaffected. -1 for unlimited."
         })
         public int maxMemberships = 1;
-        @Comments("Whether players owning legacy land may join a town (their land attaches).")
-        public boolean allowJoinWithLegacyLand = true;
         @Comments("Cost of the founding outpost charged from the founder's wallet.")
         public double foundingCost = 0;
         @Comments({

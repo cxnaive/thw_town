@@ -69,13 +69,13 @@ public class TownManager {
         public String notInTown = "You are not a member of town {0}.";
         public String notTownManager = "Only the mayor or assistants of {0} can do this.";
         public String maxMembershipsReached = "You already belong to {0} town(s), the server limit is {1}.";
-        public String joinWithLegacyLandDisabled = "Players owning legacy land cannot join towns on this server.";
-        public String createSuccess = "Town {0} created. {1} outpost(s) attached.";
+        public String createSuccess = "Town {0} created.";
         public String createSuccessFounding = "Town {0} created with a founding outpost.";
         public String disbandSuccess = "Town {0} disbanded. {1} outpost(s) dissolved and archived.";
         public String disbandSuccessReturn = "Town {0} disbanded: {1} outpost(s) returned to contributors, {2} dissolved.";
         public String disbandEnclaveDissolved = "Your dominion {0} was dissolved together with town {1}.";
-        public String joinSuccess = "You joined town {0}. {1} outpost(s) attached to the town.";
+        public String joinSuccess = "You joined town {0}.";
+        public String attachHint = "You have {0} dominion(s) that can be attached to the town. Use /town attach to select.";
         public String leaveSuccess = "You left town {0}. Your land stays with the town.";
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
         public String kickSuccess = "Kicked {0} from town {1}.";
@@ -375,8 +375,8 @@ public class TownManager {
                 }
                 Notification.info(founder, Language.townManagerText.createSuccessFounding, name);
             } else {
-                int attached = attachPlayerDominions(town, founder.getUniqueId(), founder.getUniqueId());
-                Notification.info(founder, Language.townManagerText.createSuccess, name, attached);
+                // No auto-attach: player manually selects dominions via /town attach (phase 2)
+                Notification.info(founder, Language.townManagerText.createSuccess, name);
             }
         } catch (Exception e) {
             // a failure after the town row was inserted must not leave
@@ -504,9 +504,6 @@ public class TownManager {
         if (cache().getMember(town.getId(), player.getUniqueId()) != null) {
             throw new DominionException(Language.townManagerText.alreadyInTown, town.getName());
         }
-        if (!ownedDominions(player.getUniqueId()).isEmpty() && !Configuration.town.allowJoinWithLegacyLand) {
-            throw new DominionException(Language.townManagerText.joinWithLegacyLandDisabled);
-        }
         assertCanJoinNewTown(player);
         TownMemberDOO.insert(town.getId(), player.getUniqueId(),
                 TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.JOINED);
@@ -518,34 +515,8 @@ public class TownManager {
             cache().reloadNow();
             throw new DominionException(Language.townManagerText.townNotExist, town.getName());
         }
-        int attached;
-        try {
-            attached = attachPlayerDominions(town, player.getUniqueId(), player.getUniqueId());
-        } catch (Exception e) {
-            // same compensation as createTown: a partially failed attach
-            // must not leave this player's land locked to a town they
-            // cannot manage (member rows consumed by merge are preserved
-            // in dominion_member_archive)
-            XLogger.error("joinTown failed mid-attach (town={0}, player={1}); rolling back. {2}",
-                    town.getId(), player.getUniqueId(), e.getMessage());
-            try {
-                for (DominionDOO attachedDom : DominionDOO.selectByTownId(town.getId())) {
-                    // only roll back what THIS join attached — the town may
-                    // hold other members' land
-                    if (player.getUniqueId().equals(attachedDom.getAttachedBy())) {
-                        attachedDom.detachFromTown();
-                    }
-                }
-                TownMemberDOO.delete(town.getId(), player.getUniqueId());
-                cache().reloadNow();
-            } catch (Exception rollbackError) {
-                XLogger.error("Rollback of failed joinTown ALSO failed (town={0}): {1}",
-                        town.getId(), rollbackError.getMessage());
-            }
-            throw e;
-        }
         cache().reloadNow();
-        Notification.info(player, Language.townManagerText.joinSuccess, town.getName(), attached);
+        Notification.info(player, Language.townManagerText.joinSuccess, town.getName());
     }
 
     // ===== Role and Source Display Helpers =====

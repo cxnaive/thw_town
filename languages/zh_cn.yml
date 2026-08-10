@@ -619,12 +619,13 @@ town-manager-text:
   not-in-town: 你不是城镇 {0} 的成员。
   not-town-manager: 只有 {0} 的镇长或助理可以执行此操作。
   max-memberships-reached: 你已加入 {0} 个城镇，服务器上限为 {1}。
-  join-with-legacy-land-disabled: 本服务器不允许拥有旧领地的玩家加入城镇。
-  create-success: 城镇 {0} 创建成功，已挂靠 {1} 块前哨领地。
-  create-success-founding: 城镇 {0} 创建成功，已生成建国前哨。
-  disband-success: 城镇 {0} 已解散，{1} 块前哨已解散并归档。
-  disband-success-return: 城镇 {0} 已解散，{1} 块前哨已返还贡献者，{2} 块已解散。
-  join-success: 你已加入城镇 {0}，{1} 块领地已挂靠至城镇。
+  create-success: 小镇 {0} 已创建。
+  create-success-founding: 小镇 {0} 已创建，并生成一块建国属地。
+  disband-success: 小镇 {0} 已解散，{1} 块前哨已解散并归档。
+  disband-success-return: 小镇 {0} 已解散：{1} 块前哨已归还贡献者，{2} 块已解散。
+  disband-enclave-dissolved: 你的领地 {0} 已随小镇 {1} 一同解散。
+  join-success: 你已加入小镇 {0}。
+  attach-hint: 你有 {0} 块领地可以挂靠到小镇。使用 /town attach 选择。
   leave-success: 你已离开城镇 {0}，你的领地将保留在城镇中。
   mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散城镇。
   kick-success: 已将 {0} 踢出城镇 {1}。
