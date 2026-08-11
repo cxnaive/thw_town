@@ -265,12 +265,8 @@ public class GroupFlags extends AbstractUI {
         cn.lunadeer.dominion.doos.DominionDOO outpost =
                 (cn.lunadeer.dominion.doos.DominionDOO) dominion;
         int groupKey = cn.lunadeer.dominion.managers.TownPermissionManager.groupKey(group);
-        for (PriFlag flag : cn.lunadeer.dominion.managers.TownPermissionManager
-                .getManageableTemplateFlags()) {
-            Boolean value = cn.lunadeer.dominion.managers.TownPermissionManager
-                    .getOutpostOverride(outpost, groupKey, flag);
-            if (value != null) townOverrides.put(flag.getFlagName(), value);
-        }
+        townOverrides.putAll(cn.lunadeer.dominion.managers.TownPermissionManager
+                .getOutpostOverrides(outpost, groupKey));
     }
 
     @Override

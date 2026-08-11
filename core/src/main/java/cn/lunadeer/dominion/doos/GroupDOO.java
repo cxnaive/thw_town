@@ -191,6 +191,16 @@ public class GroupDOO implements GroupDTO {
         return parse(res.get(0));
     }
 
+    public static List<GroupDOO> select(Collection<Integer> ids) throws SQLException {
+        if (ids.isEmpty()) return List.of();
+        String placeholders = String.join(", ", Collections.nCopies(ids.size(), "?"));
+        List<Map<String, Field<?>>> res = Select.select(fields())
+                .from("dominion_group")
+                .where("id IN (" + placeholders + ")", ids.toArray())
+                .execute();
+        return res.stream().map(GroupDOO::parse).toList();
+    }
+
     public static List<GroupDOO> selectByDominionId(Integer domID) throws SQLException {
         List<Map<String, Field<?>>> res = Select.select(fields())
                 .from("dominion_group")

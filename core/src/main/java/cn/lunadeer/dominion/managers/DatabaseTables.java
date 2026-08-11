@@ -553,6 +553,10 @@ public class DatabaseTables {
         if (!Show.show().columns().from("dominion").execute().containsKey("town_id")) {
             Alter.alter().table("dominion").add().column(Column.of(new FieldInteger("town_id"))).execute();
         }
+        // Template propagation starts from all dominions attached to one
+        // town. Keep that lookup bounded by the town's outpost count rather
+        // than scanning every dominion on the server.
+        ensureIndex("idx_dominion_town_id", "dominion", "town_id");
         if (!Show.show().columns().from("dominion").execute().containsKey("claim_kind")) {
             Alter.alter().table("dominion").add()
                     .column(Column.of(new FieldString("claim_kind")).notNull().defaultSqlVal("'NORMAL'")).execute();
@@ -958,32 +962,43 @@ public class DatabaseTables {
     /**
      * Ensure indexes independently from table/column creation. A previous
      * startup may have created the schema object and then failed before its
-     * unique index; checking this on every migration makes that state
+     * required index; checking this on every migration makes that state
      * recoverable. The post-failure metadata check also tolerates another
      * backend server winning the same CREATE race.
      */
     private static void ensureUniqueIndex(String indexName, String tableName,
                                           String columns) throws SQLException {
+        ensureIndex(indexName, tableName, columns, true);
+    }
+
+    private static void ensureIndex(String indexName, String tableName,
+                                    String columns) throws SQLException {
+        ensureIndex(indexName, tableName, columns, false);
+    }
+
+    private static void ensureIndex(String indexName, String tableName,
+                                    String columns, boolean unique) throws SQLException {
         try (Connection connection = DatabaseManager.instance.getConnection()) {
-            if (hasIndex(connection, tableName, indexName)) return;
+            if (hasIndex(connection, tableName, indexName, unique)) return;
             try {
                 connection.createStatement().execute(
-                        "CREATE UNIQUE INDEX " + indexName + " ON "
+                        "CREATE " + (unique ? "UNIQUE " : "") + "INDEX " + indexName + " ON "
                                 + tableName + "(" + columns + ")");
             } catch (SQLException createError) {
-                if (hasIndex(connection, tableName, indexName)) return;
-                throw new SQLException("Failed to create unique index " + indexName,
+                if (hasIndex(connection, tableName, indexName, unique)) return;
+                throw new SQLException("Failed to create " + (unique ? "unique " : "")
+                                + "index " + indexName,
                         createError);
             }
         }
     }
 
     private static boolean hasIndex(Connection connection, String tableName,
-                                    String indexName) throws SQLException {
+                                    String indexName, boolean uniqueOnly) throws SQLException {
         for (String candidate : List.of(tableName, tableName.toUpperCase(),
                 tableName.toLowerCase())) {
             try (ResultSet indexes = connection.getMetaData().getIndexInfo(
-                    connection.getCatalog(), null, candidate, true, false)) {
+                    connection.getCatalog(), null, candidate, uniqueOnly, false)) {
                 while (indexes.next()) {
                     String existing = indexes.getString("INDEX_NAME");
                     if (existing != null && existing.equalsIgnoreCase(indexName)) return true;

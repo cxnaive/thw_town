@@ -88,10 +88,7 @@ public final class TownGroupSyncHandler {
             if (TownPermissionManager.isTemplateMode(connection, town.getId())) {
                 TownPermissionManager.initializeGroupTemplate(
                         connection, town.getId(), townGroupId);
-                for (Integer outpostId : outpostIds) {
-                    TownPermissionManager.syncOutpostFlags(
-                            connection, town.getId(), outpostId);
-                }
+                TownPermissionManager.syncTownFlags(connection, town.getId());
             }
             return townGroupId;
         });

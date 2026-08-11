@@ -79,10 +79,7 @@ public class TownTemplateFlags extends AbstractUI {
             throw new DominionException(Language.townManagerText.templateModeRequired, town.getName());
         }
         int groupKey = TownManager.townTemplateGroupKey(town, groupName);
-        for (PriFlag flag : TownPermissionManager.getManageableTemplateFlags()) {
-            values.put(flag.getFlagName(),
-                    TownPermissionManager.getTemplateValue(town, groupKey, flag));
-        }
+        values.putAll(TownPermissionManager.getTemplateValues(town, groupKey));
     }
 
     private static TownDOO visibleTown(Player player, String townName) throws Exception {
@@ -193,9 +190,10 @@ public class TownTemplateFlags extends AbstractUI {
     protected void showConsole(CommandSender sender, String... args) throws Exception {
         TownDOO town = TownManager.requireTown(args[0]);
         int groupKey = TownManager.townTemplateGroupKey(town, args[1]);
+        Map<String, Boolean> template = TownPermissionManager.getTemplateValues(town, groupKey);
         for (PriFlag flag : TownPermissionManager.getManageableTemplateFlags()) {
             Notification.info(sender, "{0}: {1}", flag.getFlagName(),
-                    TownPermissionManager.getTemplateValue(town, groupKey, flag));
+                    template.get(flag.getFlagName()));
         }
     }
 }

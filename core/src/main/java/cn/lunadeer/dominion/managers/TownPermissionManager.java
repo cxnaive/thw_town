@@ -3,6 +3,8 @@ package cn.lunadeer.dominion.managers;
 import cn.lunadeer.dominion.api.dtos.GroupDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
+import cn.lunadeer.dominion.cache.CacheManager;
+import cn.lunadeer.dominion.cache.server.ServerCache;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
@@ -16,7 +18,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -30,6 +36,21 @@ import java.util.UUID;
 public final class TownPermissionManager {
 
     public static final int TOWN_DEFAULT_GROUP_ID = 0;
+
+    private record MirrorRef(int serverId, int groupId) {
+    }
+
+    private record MirrorRow(int dominionId, int serverId, int groupId,
+                             int townGroupId) {
+    }
+
+    private record OverrideKey(int dominionId, int townGroupId,
+                               String flagName) {
+    }
+
+    private record FlagMirror(int serverId, int groupId, boolean currentValue,
+                              @Nullable Boolean overrideValue) {
+    }
 
     @FunctionalInterface
     private interface TransactionWork<T> {
@@ -63,15 +84,7 @@ public final class TownPermissionManager {
             // Heal any outpost that a second backend managed to attach in
             // that narrow window; a still-blocked attach will perform the
             // same sync after it acquires this town lock.
-            try (PreparedStatement select = connection.prepareStatement(
-                    "SELECT id FROM dominion WHERE town_id = ?")) {
-                select.setInt(1, town.getId());
-                try (ResultSet rows = select.executeQuery()) {
-                    List<Integer> ids = new ArrayList<>();
-                    while (rows.next()) ids.add(rows.getInt(1));
-                    for (Integer id : ids) syncOutpostFlags(connection, town.getId(), id);
-                }
-            }
+            syncTownFlags(connection, town.getId());
             return null;
         });
     }
@@ -143,19 +156,16 @@ public final class TownPermissionManager {
                 delete.executeUpdate();
             }
 
-            int outposts = 0;
+            int outposts;
             try (PreparedStatement select = connection.prepareStatement(
-                    "SELECT id FROM dominion WHERE town_id = ? ORDER BY id")) {
+                    "SELECT COUNT(*) FROM dominion WHERE town_id = ?")) {
                 select.setInt(1, town.getId());
-                try (ResultSet rows = select.executeQuery()) {
-                    List<Integer> ids = new ArrayList<>();
-                    while (rows.next()) ids.add(rows.getInt(1));
-                    for (Integer id : ids) {
-                        syncOutpostFlags(connection, town.getId(), id);
-                        outposts++;
-                    }
+                try (ResultSet row = select.executeQuery()) {
+                    row.next();
+                    outposts = row.getInt(1);
                 }
             }
+            syncTownFlags(connection, town.getId());
 
             int updated;
             try (PreparedStatement update = connection.prepareStatement(
@@ -174,39 +184,32 @@ public final class TownPermissionManager {
 
     public static void syncOutpostFlags(@NotNull TownDOO town,
                                         @NotNull DominionDOO outpost) throws Exception {
-        transaction(connection -> {
+        List<MirrorRef> mirrors = transaction(connection -> {
             lockTown(connection, town.getId());
             requireOutpostOfTown(connection, town.getId(), outpost.getId());
-            if (!isTemplateMode(connection, town.getId())) return null;
-            syncOutpostFlags(connection, town.getId(), outpost.getId());
-            return null;
+            if (!isTemplateMode(connection, town.getId())) return List.of();
+            return syncFlags(connection, town.getId(), outpost.getId());
         });
-        TownGroupSyncHandler.reloadCaches();
+        reloadGroupCaches(mirrors);
     }
 
     public static void setTemplateFlag(@NotNull TownDOO town, int townGroupId,
                                        @NotNull PriFlag flag, boolean value) throws Exception {
-        transaction(connection -> {
+        List<MirrorRef> mirrors = transaction(connection -> {
             lockTown(connection, town.getId());
             requireTemplateMode(connection, town.getId());
             requireManageableTemplateFlag(flag);
             if (townGroupId != TOWN_DEFAULT_GROUP_ID) {
                 requireTownGroup(connection, town.getId(), townGroupId);
             }
+            Boolean previous = selectValue(connection, "town_group_flag", "town_id",
+                    town.getId(), townGroupId, flag.getFlagName());
+            if (previous != null && previous == value) return List.of();
             replaceValue(connection, "town_group_flag", "town_id", town.getId(),
                     townGroupId, flag.getFlagName(), value);
-            try (PreparedStatement select = connection.prepareStatement(
-                    "SELECT id FROM dominion WHERE town_id = ?")) {
-                select.setInt(1, town.getId());
-                try (ResultSet rows = select.executeQuery()) {
-                    List<Integer> ids = new ArrayList<>();
-                    while (rows.next()) ids.add(rows.getInt(1));
-                    for (Integer id : ids) syncOutpostFlags(connection, town.getId(), id);
-                }
-            }
-            return null;
+            return syncTownFlag(connection, town.getId(), townGroupId, flag, value);
         });
-        TownGroupSyncHandler.reloadCaches();
+        reloadGroupCaches(mirrors);
     }
 
     /**
@@ -239,13 +242,13 @@ public final class TownPermissionManager {
                 requireManageableTemplateFlag(flag);
                 replaceValue(connection, "town_group_outpost_override", "dominion_id",
                         outpost.getId(), townGroupId, flag.getFlagName(), value);
-                syncOutpostFlags(connection, townId, outpost.getId());
+                updateMirrorFlag(connection, outpost.getId(), group.getId(), flag, value);
             } else {
                 updateMirrorFlag(connection, outpost.getId(), group.getId(), flag, value);
             }
             return null;
         });
-        TownGroupSyncHandler.reloadCaches();
+        reloadGroupCache(outpost.getServerId(), group.getId());
     }
 
     /** Deleting the sparse row restores inheritance immediately. */
@@ -276,10 +279,13 @@ public final class TownPermissionManager {
                 delete.setString(3, flag.getFlagName());
                 delete.executeUpdate();
             }
-            syncOutpostFlags(connection, townId, outpost.getId());
+            Boolean inherited = selectValue(connection, "town_group_flag", "town_id",
+                    townId, townGroupId, flag.getFlagName());
+            updateMirrorFlag(connection, outpost.getId(), group.getId(), flag,
+                    inherited != null ? inherited : flag.getDefaultValue());
             return null;
         });
-        TownGroupSyncHandler.reloadCaches();
+        reloadGroupCache(outpost.getServerId(), group.getId());
     }
 
     public static boolean getTemplateValue(@NotNull TownDOO town, int townGroupId,
@@ -291,6 +297,28 @@ public final class TownPermissionManager {
         }
     }
 
+    /** Read a complete template in one database round trip. */
+    public static @NotNull Map<String, Boolean> getTemplateValues(@NotNull TownDOO town,
+                                                                  int townGroupId) throws SQLException {
+        Map<String, Boolean> values = new HashMap<>();
+        try (Connection connection = DatabaseManager.instance.getConnection();
+             PreparedStatement select = connection.prepareStatement(
+                     "SELECT flag_name, flag_value FROM town_group_flag "
+                             + "WHERE town_id = ? AND town_group_id = ?")) {
+            select.setInt(1, town.getId());
+            select.setInt(2, townGroupId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    values.put(rows.getString("flag_name"), rows.getBoolean("flag_value"));
+                }
+            }
+        }
+        for (PriFlag flag : getManageableTemplateFlags()) {
+            values.putIfAbsent(flag.getFlagName(), flag.getDefaultValue());
+        }
+        return values;
+    }
+
     public static @Nullable Boolean getOutpostOverride(@NotNull DominionDOO outpost,
                                                         int townGroupId,
                                                         @NotNull PriFlag flag) throws SQLException {
@@ -298,6 +326,25 @@ public final class TownPermissionManager {
             return selectValue(connection, "town_group_outpost_override", "dominion_id",
                     outpost.getId(), townGroupId, flag.getFlagName());
         }
+    }
+
+    /** Read all sparse overrides for one outpost group in one round trip. */
+    public static @NotNull Map<String, Boolean> getOutpostOverrides(
+            @NotNull DominionDOO outpost, int townGroupId) throws SQLException {
+        Map<String, Boolean> values = new HashMap<>();
+        try (Connection connection = DatabaseManager.instance.getConnection();
+             PreparedStatement select = connection.prepareStatement(
+                     "SELECT flag_name, flag_value FROM town_group_outpost_override "
+                             + "WHERE dominion_id = ? AND town_group_id = ?")) {
+            select.setInt(1, outpost.getId());
+            select.setInt(2, townGroupId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    values.put(rows.getString("flag_name"), rows.getBoolean("flag_value"));
+                }
+            }
+        }
+        return values;
     }
 
     public static int groupKey(@NotNull GroupDTO group) {
@@ -326,76 +373,218 @@ public final class TownPermissionManager {
 
     private static void ensureDefaultTemplate(Connection connection, int townId,
                                               int townGroupId) throws SQLException {
-        for (PriFlag flag : Flags.getAllPriFlags()) {
-            if (selectValue(connection, "town_group_flag", "town_id", townId,
-                    townGroupId, flag.getFlagName()) == null) {
-                insertValue(connection, "town_group_flag", "town_id", townId,
-                        townGroupId, flag.getFlagName(), flag.getDefaultValue());
+        Map<String, Boolean> existing = new HashMap<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT flag_name, flag_value FROM town_group_flag "
+                        + "WHERE town_id = ? AND town_group_id = ?")) {
+            select.setInt(1, townId);
+            select.setInt(2, townGroupId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    existing.put(rows.getString("flag_name"), rows.getBoolean("flag_value"));
+                }
             }
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO town_group_flag(town_id, town_group_id, flag_name, flag_value) "
+                        + "VALUES (?, ?, ?, ?)")) {
+            boolean hasInserts = false;
+            for (PriFlag flag : Flags.getAllPriFlags()) {
+                if (existing.containsKey(flag.getFlagName())) continue;
+                insert.setInt(1, townId);
+                insert.setInt(2, townGroupId);
+                insert.setString(3, flag.getFlagName());
+                insert.setBoolean(4, flag.getDefaultValue());
+                insert.addBatch();
+                hasInserts = true;
+            }
+            if (hasInserts) insert.executeBatch();
         }
     }
 
     private static void copyTemplateIfMissing(Connection connection, int townId,
                                               int sourceGroupId, int targetGroupId) throws SQLException {
-        for (PriFlag flag : Flags.getAllPriFlags()) {
-            if (selectValue(connection, "town_group_flag", "town_id", townId,
-                    targetGroupId, flag.getFlagName()) != null) continue;
-            Boolean value = selectValue(connection, "town_group_flag", "town_id", townId,
-                    sourceGroupId, flag.getFlagName());
-            insertValue(connection, "town_group_flag", "town_id", townId,
-                    targetGroupId, flag.getFlagName(), value != null ? value : flag.getDefaultValue());
+        Map<String, Boolean> source = new HashMap<>();
+        Map<String, Boolean> target = new HashMap<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT town_group_id, flag_name, flag_value FROM town_group_flag "
+                        + "WHERE town_id = ? AND town_group_id IN (?, ?)")) {
+            select.setInt(1, townId);
+            select.setInt(2, sourceGroupId);
+            select.setInt(3, targetGroupId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    Map<String, Boolean> destination = rows.getInt("town_group_id") == sourceGroupId
+                            ? source : target;
+                    destination.put(rows.getString("flag_name"), rows.getBoolean("flag_value"));
+                }
+            }
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO town_group_flag(town_id, town_group_id, flag_name, flag_value) "
+                        + "VALUES (?, ?, ?, ?)")) {
+            boolean hasInserts = false;
+            for (PriFlag flag : Flags.getAllPriFlags()) {
+                if (target.containsKey(flag.getFlagName())) continue;
+                insert.setInt(1, townId);
+                insert.setInt(2, targetGroupId);
+                insert.setString(3, flag.getFlagName());
+                insert.setBoolean(4, source.getOrDefault(
+                        flag.getFlagName(), flag.getDefaultValue()));
+                insert.addBatch();
+                hasInserts = true;
+            }
+            if (hasInserts) insert.executeBatch();
         }
     }
 
     static void syncOutpostFlags(Connection connection, int townId,
                                  int dominionId) throws SQLException {
-        List<Integer> groupIds = new ArrayList<>();
-        try (PreparedStatement groups = connection.prepareStatement(
-                "SELECT DISTINCT town_group_id FROM town_group_flag WHERE town_id = ?")) {
-            groups.setInt(1, townId);
-            try (ResultSet rows = groups.executeQuery()) {
-                while (rows.next()) groupIds.add(rows.getInt(1));
-            }
-        }
-        for (Integer groupId : groupIds) {
-            int mirrorId = mirrorId(connection, dominionId, groupId);
-            if (mirrorId <= 0) continue;
-            for (PriFlag flag : Flags.getAllPriFlags()) {
-                Boolean value = selectValue(connection, "town_group_outpost_override",
-                        "dominion_id", dominionId, groupId, flag.getFlagName());
-                if (value == null) {
-                    value = selectValue(connection, "town_group_flag", "town_id",
-                            townId, groupId, flag.getFlagName());
-                }
-                if (value == null) value = flag.getDefaultValue();
-                // flag names originate exclusively from the registered
-                // schema columns, never from player input.
-                try (PreparedStatement update = connection.prepareStatement(
-                        "UPDATE dominion_group SET " + flag.getFlagName() + " = ? WHERE id = ?")) {
-                    update.setBoolean(1, value);
-                    update.setInt(2, mirrorId);
-                    update.executeUpdate();
-                }
-            }
-        }
+        syncFlags(connection, townId, dominionId);
     }
 
-    private static int mirrorId(Connection connection, int dominionId,
-                                int townGroupId) throws SQLException {
-        String sql = townGroupId == TOWN_DEFAULT_GROUP_ID
-                ? "SELECT id FROM dominion_group WHERE dom_id = ? AND name = ?"
-                : "SELECT id FROM dominion_group WHERE dom_id = ? AND town_group_id = ?";
-        try (PreparedStatement select = connection.prepareStatement(sql)) {
-            select.setInt(1, dominionId);
-            if (townGroupId == TOWN_DEFAULT_GROUP_ID) {
-                select.setString(2, TownManager.TOWN_MEMBER_GROUP_NAME);
-            } else {
-                select.setInt(2, townGroupId);
-            }
-            try (ResultSet row = select.executeQuery()) {
-                return row.next() ? row.getInt(1) : -1;
+    static void syncTownFlags(Connection connection, int townId) throws SQLException {
+        syncFlags(connection, townId, null);
+    }
+
+    /**
+     * Rebuild complete effective mirror rows with three reads and one JDBC
+     * batch, instead of selecting template/override and updating once per
+     * flag. {@code dominionId == null} synchronizes the entire town.
+     */
+    private static List<MirrorRef> syncFlags(Connection connection, int townId,
+                                             @Nullable Integer dominionId) throws SQLException {
+        Map<Integer, Map<String, Boolean>> templates = new HashMap<>();
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT town_group_id, flag_name, flag_value FROM town_group_flag WHERE town_id = ?")) {
+            select.setInt(1, townId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    templates.computeIfAbsent(rows.getInt("town_group_id"), ignored -> new HashMap<>())
+                            .put(rows.getString("flag_name"), rows.getBoolean("flag_value"));
+                }
             }
         }
+
+        Map<OverrideKey, Boolean> overrides = new HashMap<>();
+        String overrideSql = "SELECT o.dominion_id, o.town_group_id, o.flag_name, o.flag_value "
+                + "FROM town_group_outpost_override o JOIN dominion d ON d.id = o.dominion_id "
+                + "WHERE d.town_id = ?" + (dominionId == null ? "" : " AND o.dominion_id = ?");
+        try (PreparedStatement select = connection.prepareStatement(overrideSql)) {
+            select.setInt(1, townId);
+            if (dominionId != null) select.setInt(2, dominionId);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    overrides.put(new OverrideKey(rows.getInt("dominion_id"),
+                                    rows.getInt("town_group_id"), rows.getString("flag_name")),
+                            rows.getBoolean("flag_value"));
+                }
+            }
+        }
+
+        List<MirrorRow> mirrors = new ArrayList<>();
+        String mirrorSql = "SELECT d.id AS dominion_id, d.server_id, dg.id AS group_id, "
+                + "dg.name, dg.town_group_id FROM dominion d "
+                + "JOIN dominion_group dg ON dg.dom_id = d.id WHERE d.town_id = ?"
+                + (dominionId == null ? "" : " AND d.id = ?")
+                + " AND (dg.town_group_id IS NOT NULL OR dg.name = ?)";
+        try (PreparedStatement select = connection.prepareStatement(mirrorSql)) {
+            int index = 1;
+            select.setInt(index++, townId);
+            if (dominionId != null) select.setInt(index++, dominionId);
+            select.setString(index, TownManager.TOWN_MEMBER_GROUP_NAME);
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    int townGroupId = rows.getInt("town_group_id");
+                    if (rows.wasNull()) {
+                        if (!TownManager.TOWN_MEMBER_GROUP_NAME.equals(rows.getString("name"))) continue;
+                        townGroupId = TOWN_DEFAULT_GROUP_ID;
+                    }
+                    if (!templates.containsKey(townGroupId)) continue;
+                    mirrors.add(new MirrorRow(rows.getInt("dominion_id"),
+                            rows.getInt("server_id"), rows.getInt("group_id"), townGroupId));
+                }
+            }
+        }
+
+        if (mirrors.isEmpty()) return List.of();
+        List<PriFlag> flags = Flags.getAllPriFlags();
+        StringBuilder updateSql = new StringBuilder("UPDATE dominion_group SET ");
+        for (PriFlag flag : flags) {
+            if (updateSql.charAt(updateSql.length() - 1) != ' ') updateSql.append(", ");
+            updateSql.append(flag.getFlagName()).append(" = ?");
+        }
+        updateSql.append(" WHERE id = ?");
+        try (PreparedStatement update = connection.prepareStatement(updateSql.toString())) {
+            for (MirrorRow mirror : mirrors) {
+                Map<String, Boolean> template = templates.get(mirror.townGroupId());
+                int index = 1;
+                for (PriFlag flag : flags) {
+                    Boolean value = overrides.get(new OverrideKey(mirror.dominionId(),
+                            mirror.townGroupId(), flag.getFlagName()));
+                    if (value == null) value = template.get(flag.getFlagName());
+                    update.setBoolean(index++, value != null ? value : flag.getDefaultValue());
+                }
+                update.setInt(index, mirror.groupId());
+                update.addBatch();
+            }
+            update.executeBatch();
+        }
+        return mirrors.stream().map(row -> new MirrorRef(row.serverId(), row.groupId())).toList();
+    }
+
+    /** Incrementally propagate one changed template flag to all its mirrors. */
+    private static List<MirrorRef> syncTownFlag(Connection connection, int townId,
+                                                int townGroupId, PriFlag flag,
+                                                boolean templateValue) throws SQLException {
+        String groupPredicate = townGroupId == TOWN_DEFAULT_GROUP_ID
+                ? "dg.town_group_id IS NULL AND dg.name = ?"
+                : "dg.town_group_id = ?";
+        String sql = "SELECT d.server_id, dg.id AS group_id, dg." + flag.getFlagName()
+                + " AS current_value, o.flag_value AS override_value FROM dominion d "
+                + "JOIN dominion_group dg ON dg.dom_id = d.id "
+                + "LEFT JOIN town_group_outpost_override o ON o.dominion_id = d.id "
+                + "AND o.town_group_id = ? AND o.flag_name = ? "
+                + "WHERE d.town_id = ? AND " + groupPredicate;
+        List<FlagMirror> mirrors = new ArrayList<>();
+        try (PreparedStatement select = connection.prepareStatement(sql)) {
+            select.setInt(1, townGroupId);
+            select.setString(2, flag.getFlagName());
+            select.setInt(3, townId);
+            if (townGroupId == TOWN_DEFAULT_GROUP_ID) {
+                select.setString(4, TownManager.TOWN_MEMBER_GROUP_NAME);
+            } else {
+                select.setInt(4, townGroupId);
+            }
+            try (ResultSet rows = select.executeQuery()) {
+                while (rows.next()) {
+                    boolean override = rows.getBoolean("override_value");
+                    Boolean overrideValue = rows.wasNull() ? null : override;
+                    mirrors.add(new FlagMirror(rows.getInt("server_id"), rows.getInt("group_id"),
+                            rows.getBoolean("current_value"), overrideValue));
+                }
+            }
+        }
+
+        List<MirrorRef> toReload = new ArrayList<>();
+        try (PreparedStatement update = connection.prepareStatement(
+                "UPDATE dominion_group SET " + flag.getFlagName() + " = ? WHERE id = ?")) {
+            boolean hasUpdates = false;
+            for (FlagMirror mirror : mirrors) {
+                boolean effective = mirror.overrideValue() != null
+                        ? mirror.overrideValue() : templateValue;
+                if (mirror.currentValue() != effective) {
+                    toReload.add(new MirrorRef(mirror.serverId(), mirror.groupId()));
+                }
+                if (mirror.currentValue() == effective) continue;
+                update.setBoolean(1, effective);
+                update.setInt(2, mirror.groupId());
+                update.addBatch();
+                hasUpdates = true;
+            }
+            if (hasUpdates) update.executeBatch();
+        }
+        return toReload;
     }
 
     private static void updateMirrorFlag(Connection connection, int dominionId,
@@ -410,6 +599,25 @@ public final class TownPermissionManager {
             if (update.executeUpdate() != 1) {
                 throw new SQLException("Group mirror disappeared during flag update: " + mirrorId);
             }
+        }
+    }
+
+    private static void reloadGroupCache(int serverId, int groupId) {
+        ServerCache cache = CacheManager.instance.getCache(serverId);
+        if (cache != null) cache.getGroupCache().reloadNow(groupId);
+    }
+
+    private static void reloadGroupCaches(List<MirrorRef> mirrors) {
+        // Fetch every changed group for a server in one query instead of one
+        // cache read per outpost. LinkedHashSet also deduplicates defensively.
+        Map<Integer, Set<Integer>> byServer = new HashMap<>();
+        for (MirrorRef mirror : mirrors) {
+            byServer.computeIfAbsent(mirror.serverId(), ignored -> new LinkedHashSet<>())
+                    .add(mirror.groupId());
+        }
+        for (Map.Entry<Integer, Set<Integer>> entry : byServer.entrySet()) {
+            ServerCache cache = CacheManager.instance.getCache(entry.getKey());
+            if (cache != null) cache.getGroupCache().reloadNow(entry.getValue());
         }
     }
 
