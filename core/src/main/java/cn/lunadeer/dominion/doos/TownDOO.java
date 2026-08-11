@@ -37,12 +37,19 @@ public class TownDOO {
         DISBANDED
     }
 
+    /** One-way permission model transition for a town. */
+    public enum PermissionMode {
+        LEGACY,
+        TEMPLATE_V1
+    }
+
     private final FieldInteger id = new FieldInteger("id");
     private final FieldString name = new FieldString("name");
     private final FieldString founderUuid = new FieldString("founder_uuid");
     private final FieldString mayorUuid = new FieldString("mayor_uuid");
     private final FieldLong balanceCents = new FieldLong("balance", 0L);
     private final FieldString status = new FieldString("status", TownStatus.ACTIVE.name());
+    private final FieldString permissionMode = new FieldString("permission_mode", PermissionMode.LEGACY.name());
     private final FieldTimestamp createdAt = new FieldTimestamp("created_at");
 
     private static Field<?>[] fields() {
@@ -53,6 +60,7 @@ public class TownDOO {
                 new FieldString("mayor_uuid"),
                 new FieldLong("balance"),
                 new FieldString("status"),
+                new FieldString("permission_mode"),
                 new FieldTimestamp("created_at"),
         };
     }
@@ -65,15 +73,18 @@ public class TownDOO {
                 UUID.fromString((String) map.get("mayor_uuid").getValue()),
                 (Long) map.get("balance").getValue(),
                 (String) map.get("status").getValue(),
+                (String) map.get("permission_mode").getValue(),
                 (Timestamp) map.get("created_at").getValue()
         );
     }
 
     public static @NotNull TownDOO insert(@NotNull String name, @NotNull UUID founder) throws SQLException {
-        TownDOO town = new TownDOO(null, name, founder, founder, 0L, TownStatus.ACTIVE.name(), null);
+        TownDOO town = new TownDOO(null, name, founder, founder, 0L, TownStatus.ACTIVE.name(),
+                PermissionMode.TEMPLATE_V1.name(), null);
         Map<String, Field<?>> res = Insert.insert()
                 .into("town")
-                .values(town.name, town.founderUuid, town.mayorUuid, town.balanceCents, town.status)
+                .values(town.name, town.founderUuid, town.mayorUuid, town.balanceCents, town.status,
+                        town.permissionMode)
                 .returning(fields())
                 .execute();
         if (res.isEmpty()) {
@@ -108,6 +119,10 @@ public class TownDOO {
     }
 
     public static void deleteById(@NotNull Integer id) throws SQLException {
+        // Explicit cleanup protects databases created by older SQLite
+        // configurations where ON DELETE CASCADE was declared but disabled.
+        Delete.delete().from("town_group_flag").where("town_id = ?", id).execute();
+        Delete.delete().from("town_group").where("town_id = ?", id).execute();
         Delete.delete().from("town").where("id = ?", id).execute();
     }
 
@@ -217,6 +232,20 @@ public class TownDOO {
         return v == null ? TownStatus.ACTIVE : TownStatus.valueOf(v);
     }
 
+    public @NotNull PermissionMode getPermissionMode() {
+        String value = permissionMode.getValue();
+        if (value == null) return PermissionMode.LEGACY;
+        try {
+            return PermissionMode.valueOf(value);
+        } catch (IllegalArgumentException ignored) {
+            return PermissionMode.LEGACY;
+        }
+    }
+
+    public boolean isTemplatePermissionMode() {
+        return getPermissionMode() == PermissionMode.TEMPLATE_V1;
+    }
+
     public @NotNull TownDOO setStatus(@NotNull TownStatus newStatus) throws SQLException {
         this.status.setValue(newStatus.name());
         Update.update("town").set(this.status).where("id = ?", id.getValue()).execute();
@@ -228,13 +257,15 @@ public class TownDOO {
     }
 
     private TownDOO(Integer id, String name, UUID founderUuid, UUID mayorUuid,
-                    Long balanceCents, String status, Timestamp createdAt) {
+                    Long balanceCents, String status, String permissionMode, Timestamp createdAt) {
         this.id.setValue(id);
         this.name.setValue(name);
         this.founderUuid.setValue(founderUuid.toString());
         this.mayorUuid.setValue(mayorUuid.toString());
         this.balanceCents.setValue(balanceCents);
         this.status.setValue(status);
+        this.permissionMode.setValue(permissionMode == null
+                ? PermissionMode.LEGACY.name() : permissionMode);
         this.createdAt.setValue(createdAt);
     }
 }

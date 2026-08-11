@@ -58,6 +58,7 @@ public class TownGroups extends AbstractUI {
         public String openButton = "MANAGE";
         public String openDescription = "View members and manage this town group.";
         public String noGroups = "This town has no custom groups.";
+        public String defaultTemplateLine = "§eTown Members §7(@town) - town-wide default template";
     }
 
     public static class TownGroupsCui extends ConfigurationPart {
@@ -74,6 +75,10 @@ public class TownGroups extends AbstractUI {
         public ButtonConfiguration groupItemButton = ButtonConfiguration.createMaterial(
                 'i', Material.CHEST, "§e{0}",
                 List.of("§7Internal name: §f{0}", "§7Members: §b{1}", "", "§e▶ Click to manage"));
+        public ButtonConfiguration defaultTemplateButton = ButtonConfiguration.createMaterial(
+                'i', Material.WRITABLE_BOOK, "§eTown Member Template",
+                List.of("§7Internal name: §f@town", "§7Inherited by unassigned town members.",
+                        "", "§e▶ Click to edit permissions"));
     }
 
     private static TownDOO requireVisibleTown(Player player, String townName) throws Exception {
@@ -147,6 +152,12 @@ public class TownGroups extends AbstractUI {
                 }
             }.needPermission(defaultPermission).build()));
         }
+        if (town.isTemplatePermissionMode()) {
+            view.add(Line.create()
+                    .append(TextUserInterface.townGroupsTuiText.defaultTemplateLine)
+                    .append(TownTemplateFlags.button(player, town.getName(),
+                            TownManager.TOWN_MEMBER_GROUP_NAME).build()));
+        }
         if (groups.isEmpty()) {
             view.add(Line.create().append(TextUserInterface.townGroupsTuiText.noGroups));
         }
@@ -189,6 +200,15 @@ public class TownGroups extends AbstractUI {
                             createOn(player, town.getName());
                         }
                     });
+        }
+        if (town.isTemplatePermissionMode()) {
+            view.addItem(new ChestButton(ChestUserInterface.townGroupsCui.defaultTemplateButton) {
+                @Override
+                public void onClick(ClickType type) {
+                    TownTemplateFlags.show(player, town.getName(),
+                            TownManager.TOWN_MEMBER_GROUP_NAME, "1");
+                }
+            });
         }
         for (TownGroupDOO group : TownManager.groupsOf(town)) {
             view.addItem(new ChestButton(ChestUserInterface.townGroupsCui.groupItemButton) {

@@ -661,7 +661,7 @@ dominion-manage-cui:
     - '§7Admin only: detach this outpost'
     - §7from its town back to the contributor.
     - ''
-    - §c▶ Click to release
+    - §c▶ Click twice to release
     material: SHEARS
 copy-menu-cui:
   title: §6✦ §a§lCopy Settings §6✦
@@ -1156,6 +1156,16 @@ group-setting-cui:
   - '       &f{2}'
   - ''
   - '&7Click to toggle this flag.'
+  override-inherited: '&e&l[INHERIT: {0}]'
+  override-allow: '&a&l[OVERRIDE: ALLOW]'
+  override-deny: '&c&l[OVERRIDE: DENY]'
+  override-lore:
+  - '&7State: {0}'
+  - '&7Des: &f{1}'
+  - '       &f{2}'
+  - ''
+  - '&eLeft click: toggle local override'
+  - '&bRight click: restore inheritance'
 select-member-cui:
   title: §6✦ §5§lSelect Member for Group {0} §6✦
   list-configuration:
@@ -1504,6 +1514,16 @@ town-info-cui:
     - §7Disband this town.
     - §4▶ Click to confirm
     material: TNT
+  upgrade-button:
+    symbol: i
+    name: §6Upgrade Permission Mode
+    lore:
+    - §7Reset all town-managed outpost permissions.
+    - §7All outposts will inherit town templates.
+    - §cThis cannot be undone.
+    - ''
+    - §6▶ Click twice to upgrade
+    material: ENCHANTED_BOOK
   back-button:
     symbol: <
     name: §c« Back
@@ -1785,3 +1805,28 @@ town-trust-editor-cui:
     - §c▶ Click twice to confirm
     material: BARRIER
   remove-confirm: '§cClick Remove trust again within 5 seconds to remove {0}.'
+town-template-flags-cui:
+  title: '§6✦ §eTown Template: {0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+  back-button:
+    symbol: <
+    name: §c« Back to Town Groups
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+  flag-item-name: '§7Permission: §e{0}'
+  flag-state-true: §a§l[ALLOW]
+  flag-state-false: §c§l[DENY]
+  flag-item-lore:
+  - '§7Template: {0}'
+  - §7{1}
+  - §7{2}
+  - ''
+  - §e▶ Click to toggle

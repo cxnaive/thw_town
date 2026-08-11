@@ -83,6 +83,12 @@ public class TownInfo extends AbstractUI {
         public String balanceLine = "§7Bank balance: §b{0}";
         public String outpostCountLine = "§7Outposts: §b{0}";
         public String yourRoleLine = "§7Your role: §b{0}";
+        public String permissionModeLegacy = "§7Permission mode: §6Legacy per-outpost";
+        public String permissionModeTemplate = "§7Permission mode: §aTown templates";
+        public String upgradeButton = "UPGRADE PERMISSIONS";
+        public String upgradeDescription = "One-way reset: all outposts will inherit town templates.";
+        public String upgradeWaiting = "§7Only the mayor may perform this irreversible upgrade.";
+        public String upgradeConfirm = "§cClick again within 5 seconds to upgrade {0}. Every town-managed outpost group permission will be reset to inheritance. This cannot be undone.";
         public String membersButton = "MEMBERS";
         public String membersDescription = "View and manage town members.";
         public String trustsButton = "TRUSTS";
@@ -129,6 +135,24 @@ public class TownInfo extends AbstractUI {
             if (role != null) {
                 view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.yourRoleLine,
                         TownManager.roleDisplay(role))));
+            }
+            if (town.isTemplatePermissionMode()) {
+                view.add(Line.create().append(TextUserInterface.townInfoTuiText.permissionModeTemplate));
+            } else {
+                view.add(Line.create().append(TextUserInterface.townInfoTuiText.permissionModeLegacy));
+                if (role == TownMemberDOO.TownRole.MAYOR
+                        || cn.lunadeer.dominion.misc.Others.bypassLimit(player)) {
+                    view.add(Line.create()
+                            .append(new FunctionalButton(TextUserInterface.townInfoTuiText.upgradeButton) {
+                                @Override
+                                public void function() {
+                                    confirmPermissionUpgrade(player, town);
+                                }
+                            }.needPermission(defaultPermission).build())
+                            .append(TextUserInterface.townInfoTuiText.upgradeDescription));
+                } else {
+                    view.add(Line.create().append(TextUserInterface.townInfoTuiText.upgradeWaiting));
+                }
             }
 
             view.add(Line.create()
@@ -222,6 +246,11 @@ public class TownInfo extends AbstractUI {
         public ButtonConfiguration disbandButton = ButtonConfiguration.createMaterial(
                 'i', Material.TNT, "§4Disband",
                 List.of("§7Disband this town.", "§4▶ Click to confirm"));
+        public ButtonConfiguration upgradeButton = ButtonConfiguration.createMaterial(
+                'i', Material.ENCHANTED_BOOK, "§6Upgrade Permission Mode",
+                List.of("§7Reset all town-managed outpost permissions.",
+                        "§7All outposts will inherit town templates.",
+                        "§cThis cannot be undone.", "", "§6▶ Click twice to upgrade"));
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
                 '<', Material.RED_STAINED_GLASS_PANE, "§c« Back",
                 List.of("§e▶ Click to go back"));
@@ -258,12 +287,16 @@ public class TownInfo extends AbstractUI {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.groupsButton,
                         () -> TownGroups.show(player, town.getName(), "1")));
             }
-
             if (manager) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.inviteButton,
                         () -> TownMembers.createInviteOn(player, town.getName()), true));
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.disbandButton,
                         () -> TownDisbandConfirmInputter.createOn(player, town.getName()), true));
+            }
+            if (!town.isTemplatePermissionMode()
+                    && (role == TownMemberDOO.TownRole.MAYOR || bypassInfo)) {
+                view = view.addItem(nav(player, ChestUserInterface.townInfoCui.upgradeButton,
+                        () -> confirmPermissionUpgrade(player, town)));
             }
             if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypassInfo)) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.leaveButton,
@@ -286,6 +319,15 @@ public class TownInfo extends AbstractUI {
 
     private static ChestButton nav(Player player, ButtonConfiguration config, Runnable action) {
         return nav(player, config, action, false);
+    }
+
+    private static void confirmPermissionUpgrade(Player player, TownDOO town) {
+        cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                player, "town-permission-upgrade:" + town.getId(),
+                () -> TownUI.action(player,
+                        () -> TownManager.upgradePermissionMode(player, town),
+                        () -> TownGroups.show(player, town.getName(), "1")),
+                formatString(TextUserInterface.townInfoTuiText.upgradeConfirm, town.getName()));
     }
 
     private static ChestButton nav(Player player, ButtonConfiguration config, Runnable action,

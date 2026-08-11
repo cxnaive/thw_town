@@ -33,6 +33,7 @@ dominion-list-tui-text:
 dominion-manage-tui-text:
   release-description: 'Admin only: detach this outpost from its town back to the contributor.'
   release-button: RELEASE
+  release-confirm: §cClick again within 5 seconds to release {0}. Town groups, mirror members and outpost trust will be removed.
   trusts-description: Manage per-player trust grants of this town outpost.
   title: Manage {0}
   button: MANAGE
@@ -115,6 +116,10 @@ group-setting-tui-text:
   title: Group {0} Settings
   description: Manage the settings of group {0}.
   button: SETTING
+  inherit: INHERIT
+  allow: ALLOW
+  deny: DENY
+  reset: RESET
 select-member-tui-text:
   title: Select Member
   description: Select a member to add to the group.
@@ -163,6 +168,12 @@ town-info-tui-text:
   balance-line: '§7Bank balance: §b{0}'
   outpost-count-line: '§7Outposts: §b{0}'
   your-role-line: '§7Your role: §b{0}'
+  permission-mode-legacy: '§7Permission mode: §6Legacy per-outpost'
+  permission-mode-template: '§7Permission mode: §aTown templates'
+  upgrade-button: UPGRADE PERMISSIONS
+  upgrade-description: 'One-way reset: all outposts will inherit town templates.'
+  upgrade-waiting: §7Only the mayor may perform this irreversible upgrade.
+  upgrade-confirm: §cClick again within 5 seconds to upgrade {0}. Every town-managed outpost group permission will be reset to inheritance. This cannot be undone.
   members-button: MEMBERS
   members-description: View and manage town members.
   trusts-button: TRUSTS
@@ -213,3 +224,8 @@ town-outposts-tui-text:
   outpost-line: §b{0} §7- {1} ({2}, server {3})
   remote-hint: §8(on another server)
   teleport-button: TELEPORT
+town-template-flags-tui-text:
+  title: 'Town Template: {0}'
+  button: TEMPLATE
+  description: Edit the town-wide default permissions inherited by outposts.
+  mode-hint: §7Changes apply to every outpost still using inheritance.

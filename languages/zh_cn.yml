@@ -226,6 +226,7 @@ limitation-text:
 database-manager-text:
   import-drops-town-data: 该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。
   import-drops-town-group-data: 该备份早于小镇分组系统：本次恢复将清除现有的小镇组定义。
+  import-drops-town-permission-data: 该备份早于小镇权限模板系统：本次恢复将清除现有模板与属地覆盖，恢复后的小镇使用旧权限模式。
   exporting-database-tables: 正在导出数据库备份...
   export-table-fail: 导出数据库备份失败，原因：{0}
   export-database-success: 成功导出数据库备份文件至 {0}
@@ -642,6 +643,12 @@ town-manager-text:
   town-group-member-removed: 已取消 {0} 的小镇组分配；现在使用 @town。
   town-group-mirror-reserved: 小镇管理的镜像组不能在此删除、重命名或修改成员；请从小镇页面管理成员。
   town-group-mirror-tag: ' §7[来自小镇]'
+  template-mode-required: 小镇 {0} 尚未升级到“小镇模板权限模式”。
+  template-mode-already-enabled: 小镇 {0} 已经在使用“小镇模板权限模式”。
+  template-mode-mayor-only: 只有 {0} 的镇长可以执行这项不可逆升级。
+  template-mode-upgrade-success: 小镇 {0} 已升级到模板权限模式；{1} 块附属领地现在全部继承小镇模板。请立即检查并设置模板。
+  template-flag-updated: 已将小镇模板 {0} 的权限 {1} 设为 {2}。
+  outpost-override-cleared: 权限 {0}（组 {1}）已恢复继承小镇模板。
   leave-success: 你已离开城镇 {0}，你的领地将保留在城镇中。
   mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散城镇。
   kick-success: 已将 {0} 踢出城镇 {1}。
@@ -663,6 +670,7 @@ town-manager-text:
   release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
   release-not-outpost: 领地 {0} 不是城镇前哨。
   release-founding-denied: 建国前哨不可被释放，它随城镇一同消亡。
+  release-admin-only: 只有 OP 可以释放镇属领地。
   only-member-can-deposit: 只有 {0} 的成员才能向其金库存款。
   outpost-admin-set: 已将前哨 {0} 的次级管理员设为 {1}。
   outpost-admin-cleared: 已清除前哨 {0} 的次级管理员。
@@ -703,6 +711,10 @@ town-command-text:
 
     &b/town admin <前哨> [玩家] &7- 设置/清除前哨次级管理员
 
+    &b/town upgrade [confirm] &7- 一次性升级到小镇权限模板（仅镇长）
+
+    &b/town release <领地> [confirm] &7- 将镇属领地归还贡献者（仅 OP）
+
     &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
 
     &b/town untrust <玩家> [town|outpost <名称>]
@@ -731,6 +743,8 @@ town-command-text:
   attach-all-success: 已将 {0} 块领地挂靠到小镇 {1}。
   attach-one-success: 已将领地 {0} 挂靠到小镇 {1}。
   attach-not-owned: 你没有名为 {0} 的个人领地。
+  upgrade-confirm: 升级 {0} 会重置所有镇属领地的小镇组权限，并让全部领地继承新模板。此操作不可撤销。执行 /town upgrade confirm 继续。
+  release-confirm: 释放 {0} 会将其归还给贡献者 {1}，并删除属地 Trust 及全部小镇组镜像。执行 /town release {0} confirm 继续。
   town-group-usage: '&b/town group create <名称> [显示名]
 
     &b/town group rename <内部名> <显示名>

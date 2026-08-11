@@ -52,6 +52,7 @@ public class ChestUserInterface extends ConfigurationFile {
     public static cn.lunadeer.dominion.uis.town.TownGroups.TownGroupsCui townGroupsCui = new cn.lunadeer.dominion.uis.town.TownGroups.TownGroupsCui();
     public static cn.lunadeer.dominion.uis.town.TownGroupManage.TownGroupManageCui townGroupManageCui = new cn.lunadeer.dominion.uis.town.TownGroupManage.TownGroupManageCui();
     public static cn.lunadeer.dominion.uis.town.TownGroupMemberSelector.TownGroupMemberSelectorCui townGroupMemberSelectorCui = new cn.lunadeer.dominion.uis.town.TownGroupMemberSelector.TownGroupMemberSelectorCui();
+    public static cn.lunadeer.dominion.uis.town.TownTemplateFlags.TownTemplateFlagsCui townTemplateFlagsCui = new cn.lunadeer.dominion.uis.town.TownTemplateFlags.TownTemplateFlagsCui();
     public static cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsCui townTrustsCui = new cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsCui();
     public static cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsCui outpostTrustsCui = new cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsCui();
     public static cn.lunadeer.dominion.uis.town.TownTrustEditor.TownTrustEditorCui townTrustEditorCui = new cn.lunadeer.dominion.uis.town.TownTrustEditor.TownTrustEditorCui();

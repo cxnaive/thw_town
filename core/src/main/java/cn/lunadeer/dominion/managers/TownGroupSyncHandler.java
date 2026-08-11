@@ -2,9 +2,11 @@ package cn.lunadeer.dominion.managers;
 
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.cache.server.ServerCache;
+import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
+import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +15,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,6 +53,7 @@ public final class TownGroupSyncHandler {
                                                      @NotNull String name,
                                                      @NotNull String displayName) throws Exception {
         int id = transaction(connection -> {
+            TownPermissionManager.lockTown(connection, town.getId());
             int townGroupId;
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO town_group(town_id, name, display_name, priority) VALUES (?, ?, ?, 0)",
@@ -68,13 +73,24 @@ public final class TownGroupSyncHandler {
                 throw new SQLException("Failed to resolve inserted town group id.");
             }
 
+            List<Integer> outpostIds = new ArrayList<>();
             try (PreparedStatement outposts = connection.prepareStatement(
                     "SELECT id FROM dominion WHERE town_id = ?")) {
                 outposts.setInt(1, town.getId());
                 try (ResultSet rows = outposts.executeQuery()) {
-                    while (rows.next()) {
-                        ensureMirror(connection, rows.getInt("id"), townGroupId, name, displayName);
-                    }
+                    while (rows.next()) outpostIds.add(rows.getInt("id"));
+                }
+            }
+            for (Integer outpostId : outpostIds) {
+                ensureTownMemberMirror(connection, outpostId);
+                ensureMirror(connection, outpostId, townGroupId, name, displayName);
+            }
+            if (TownPermissionManager.isTemplateMode(connection, town.getId())) {
+                TownPermissionManager.initializeGroupTemplate(
+                        connection, town.getId(), townGroupId);
+                for (Integer outpostId : outpostIds) {
+                    TownPermissionManager.syncOutpostFlags(
+                            connection, town.getId(), outpostId);
                 }
             }
             return townGroupId;
@@ -92,6 +108,7 @@ public final class TownGroupSyncHandler {
     public static void updateDisplayName(@NotNull TownGroupDOO group,
                                          @NotNull String displayName) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, group.getTownId());
             int updated;
             try (PreparedStatement statement = connection.prepareStatement(
                     "UPDATE town_group SET display_name = ? WHERE id = ? AND town_id = ?")) {
@@ -117,6 +134,20 @@ public final class TownGroupSyncHandler {
 
     public static void deleteGroup(@NotNull TownGroupDOO group) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, group.getTownId());
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM town_group_outpost_override WHERE town_group_id = ? "
+                            + "AND dominion_id IN (SELECT id FROM dominion WHERE town_id = ?)")) {
+                statement.setInt(1, group.getId());
+                statement.setInt(2, group.getTownId());
+                statement.executeUpdate();
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM town_group_flag WHERE town_id = ? AND town_group_id = ?")) {
+                statement.setInt(1, group.getTownId());
+                statement.setInt(2, group.getId());
+                statement.executeUpdate();
+            }
             try (PreparedStatement statement = connection.prepareStatement(
                     "DELETE FROM dominion_member WHERE group_id IN "
                             + "(SELECT id FROM dominion_group WHERE town_group_id = ?)")) {
@@ -145,8 +176,84 @@ public final class TownGroupSyncHandler {
         reloadCaches();
     }
 
+    /**
+     * Remove every town-owned compatibility row before an outpost is
+     * returned to its contributor. Ordinary personal groups are preserved.
+     */
+    public static void releaseOutpost(int dominionId) throws Exception {
+        int serverId = transaction(connection -> {
+            int owningServer;
+            int townId;
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT town_id FROM dominion WHERE id = ? AND town_id IS NOT NULL")) {
+                statement.setInt(1, dominionId);
+                try (ResultSet row = statement.executeQuery()) {
+                    if (!row.next()) {
+                        throw new SQLException("Outpost disappeared during release: " + dominionId);
+                    }
+                    townId = row.getInt(1);
+                }
+            }
+            TownPermissionManager.lockTown(connection, townId);
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT server_id, claim_kind FROM dominion WHERE id = ? AND town_id = ?")) {
+                statement.setInt(1, dominionId);
+                statement.setInt(2, townId);
+                try (ResultSet row = statement.executeQuery()) {
+                    if (!row.next()) {
+                        throw new SQLException("Outpost disappeared during release: " + dominionId);
+                    }
+                    owningServer = row.getInt("server_id");
+                    if ("FOUNDING".equals(row.getString("claim_kind"))) {
+                        throw new DominionException(
+                                Language.townManagerText.releaseFoundingDenied);
+                    }
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM town_group_outpost_override WHERE dominion_id = ?")) {
+                statement.setInt(1, dominionId);
+                statement.executeUpdate();
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM dominion_member WHERE dom_id = ?")) {
+                statement.setInt(1, dominionId);
+                statement.executeUpdate();
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM dominion_group WHERE dom_id = ? "
+                            + "AND (town_group_id IS NOT NULL OR name = ?)")) {
+                statement.setInt(1, dominionId);
+                statement.setString(2, TownManager.TOWN_MEMBER_GROUP_NAME);
+                statement.executeUpdate();
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM town_trust WHERE scope_type = 'OUTPOST' AND scope_id = ?")) {
+                statement.setInt(1, dominionId);
+                statement.executeUpdate();
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE dominion SET town_id = NULL, attached_by = NULL, attached_at = NULL, "
+                            + "outpost_admin_uuid = NULL WHERE id = ? AND town_id IS NOT NULL")) {
+                statement.setInt(1, dominionId);
+                if (statement.executeUpdate() != 1) {
+                    throw new SQLException("Outpost disappeared during release: " + dominionId);
+                }
+            }
+            return owningServer;
+        });
+        reloadCaches();
+        ServerCache owningCache = CacheManager.instance.getCache().getServerId() == serverId
+                ? CacheManager.instance.getCache()
+                : CacheManager.instance.getOtherServerCaches().get(serverId);
+        if (owningCache != null) {
+            owningCache.getDominionCache().load(dominionId);
+        }
+    }
+
     public static void assignMember(@NotNull TownGroupDOO group, @NotNull UUID player) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, group.getTownId());
             int updated;
             try (PreparedStatement statement = connection.prepareStatement(
                     "UPDATE town_member SET group_id = ? WHERE town_id = ? AND player_uuid = ?")) {
@@ -180,6 +287,7 @@ public final class TownGroupSyncHandler {
 
     public static void removeMemberAssignment(int townId, @NotNull UUID player) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, townId);
             try (PreparedStatement statement = connection.prepareStatement(
                     "UPDATE town_member SET group_id = -1 WHERE town_id = ? AND player_uuid = ?")) {
                 statement.setInt(1, townId);
@@ -195,6 +303,7 @@ public final class TownGroupSyncHandler {
     /** Remove only mirror rows when a formal town membership is deleted. */
     public static void removeDepartedMember(int townId, @NotNull UUID player) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, townId);
             deleteMirrorMemberships(connection, townId, player);
             return null;
         });
@@ -207,6 +316,10 @@ public final class TownGroupSyncHandler {
      */
     public static void syncOutpost(@NotNull TownDOO town, @NotNull DominionDOO outpost) throws Exception {
         transaction(connection -> {
+            TownPermissionManager.lockTown(connection, town.getId());
+            TownPermissionManager.requireOutpostOfTown(
+                    connection, town.getId(), outpost.getId());
+            ensureTownMemberMirror(connection, outpost.getId());
             Map<Integer, Integer> mirrorByTownGroup = new LinkedHashMap<>();
             try (PreparedStatement groups = connection.prepareStatement(
                     "SELECT id, name, display_name FROM town_group WHERE town_id = ? ORDER BY priority DESC, id")) {
@@ -234,6 +347,10 @@ public final class TownGroupSyncHandler {
                     }
                 }
             }
+            if (TownPermissionManager.isTemplateMode(connection, town.getId())) {
+                TownPermissionManager.syncOutpostFlags(
+                        connection, town.getId(), outpost.getId());
+            }
             return null;
         });
         reloadCaches();
@@ -260,6 +377,27 @@ public final class TownGroupSyncHandler {
         return id > 0 ? id : queryId(connection,
                 "SELECT id FROM dominion_group WHERE dom_id = ? AND town_group_id = ?",
                 dominionId, townGroupId);
+    }
+
+    private static int ensureTownMemberMirror(Connection connection,
+                                              int dominionId) throws SQLException {
+        int existing = queryId(connection,
+                "SELECT id FROM dominion_group WHERE dom_id = ? AND name = ?",
+                dominionId, TownManager.TOWN_MEMBER_GROUP_NAME);
+        if (existing > 0) return existing;
+        int id;
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO dominion_group(dom_id, name, name_colored) VALUES (?, ?, ?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, dominionId);
+            statement.setString(2, TownManager.TOWN_MEMBER_GROUP_NAME);
+            statement.setString(3, TownManager.TOWN_MEMBER_GROUP_NAME);
+            statement.executeUpdate();
+            id = generatedId(statement);
+        }
+        return id > 0 ? id : queryId(connection,
+                "SELECT id FROM dominion_group WHERE dom_id = ? AND name = ?",
+                dominionId, TownManager.TOWN_MEMBER_GROUP_NAME);
     }
 
     private static void ensureMirrorMember(Connection connection, int dominionId,

@@ -101,9 +101,9 @@ public class AdministratorCommand {
     }.needPermission(adminPermission).register();
 
     /**
-     * /dom town release <dominion> — admin arbitration channel (plan §3):
-     * detaches an outpost from its town and returns it to the contributor.
-     * Founding outposts can never be released (invariant 5).
+     * /dom town attach remains the administrator arbitration channel.
+     * The legacy release entry only redirects to /town release so it cannot
+     * bypass the explicit confirmation required by that destructive action.
      */
     public static SecondaryCommand town = new SecondaryCommand("town", List.of(
             new Option(List.of("release", "attach")),
@@ -123,18 +123,20 @@ public class AdministratorCommand {
             String dominionName = getArgumentValue(1);
             
             if (action.equals("release")) {
-                // /dom town release <dominion>
-                cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
-                    try {
-                        DominionDTO dto = CacheManager.instance.getDominion(dominionName);
-                        if (!(dto instanceof DominionDOO doo)) {
-                            throw new DominionException(Language.townCommandText.dominionNotExist, dominionName);
-                        }
-                        TownManager.releaseOutpost(sender, doo);
-                    } catch (Exception e) {
-                        Notification.error(sender, e);
-                    }
-                });
+                if (!sender.isOp()) {
+                    Notification.error(sender,
+                            new DominionException(Language.townManagerText.releaseAdminOnly));
+                    return;
+                }
+                DominionDTO dto = CacheManager.instance.getDominion(dominionName);
+                if (!(dto instanceof DominionDOO doo)) {
+                    Notification.error(sender,
+                            new DominionException(Language.townCommandText.dominionNotExist,
+                                    dominionName));
+                    return;
+                }
+                Notification.warn(sender, Language.townCommandText.releaseConfirm,
+                        doo.getName(), CacheManager.instance.getPlayerName(doo.getOwner()));
             } else if (action.equals("attach")) {
                 // /dom town attach <dominion> <town>
                 String townName = getArgumentValue(2);

@@ -643,7 +643,7 @@ dominion-manage-cui:
     - §7仅管理员：将此属地从小镇
     - §7释放回贡献者个人。
     - ''
-    - §c▶ 点击释放
+    - §c▶ 连续点击两次确认释放
     material: SHEARS
 copy-menu-cui:
   title: §6✦ §a§l复制设置 §6✦
@@ -1139,6 +1139,16 @@ group-setting-cui:
   - '       &f{2}'
   - ''
   - '&7点击切换此标志。'
+  override-inherited: '&e&l[继承：{0}]'
+  override-allow: '&a&l[覆盖：允许]'
+  override-deny: '&c&l[覆盖：拒绝]'
+  override-lore:
+  - '&7状态：{0}'
+  - '&7描述：&f{1}'
+  - '       &f{2}'
+  - ''
+  - '&e左键：切换属地覆盖'
+  - '&b右键：恢复继承'
 select-member-cui:
   title: §6✦ §5§l选择成员用于群组 {0} §6✦
   list-configuration:
@@ -1498,6 +1508,16 @@ town-info-cui:
     - §7解散此小镇。
     - §4▶ 点击确认
     material: TNT
+  upgrade-button:
+    symbol: i
+    name: §6升级权限模式
+    lore:
+    - §7重置全部镇属领地的小镇组权限。
+    - §7所有附属领地将继承小镇模板。
+    - §c此操作不可撤销。
+    - ''
+    - §6▶ 连续点击两次确认升级
+    material: ENCHANTED_BOOK
   back-button:
     symbol: <
     name: §c« 返回
@@ -1842,12 +1862,21 @@ town-groups-cui:
     - ''
     - §e▶ 点击管理
     material: CHEST
+  default-template-button:
+    symbol: i
+    name: §e小镇成员权限模板
+    lore:
+    - §7内部名：§f@town
+    - §7未分组的小镇成员继承此模板。
+    - ''
+    - §e▶ 点击编辑权限
+    material: WRITABLE_BOOK
 town-group-manage-cui:
   title: §6✦ §e小镇组：{0} §6✦
   list-configuration:
     item-symbol: i
     layout:
-    - <#####RD#
+    - <####TRD#
     - '#iiiiiii#'
     - '#iiiiiii#'
     - '#iiiiiii#'
@@ -1884,6 +1913,13 @@ town-group-manage-cui:
     - §7支持中文和空格，内部名保持不变。
     - §b▶ 点击输入显示名
     material: NAME_TAG
+  template-button:
+    symbol: T
+    name: §e权限模板
+    lore:
+    - §7所有附属领地默认继承的镇级权限。
+    - §e▶ 点击编辑
+    material: WRITABLE_BOOK
   delete-button:
     symbol: D
     name: §c删除小镇组
@@ -1895,6 +1931,43 @@ town-group-manage-cui:
   - §7已分配到此小镇组。
   - ''
   - §c▶ 点击移除
+town-template-flags-cui:
+  title: §6✦ §e小镇权限模板：{0} §6✦
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - p#######n
+    preview-button:
+      symbol: p
+      name: <<<
+      lore:
+      - '第 {0}/{1} 页'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
+    next-button:
+      symbol: n
+      name: '>>>'
+      lore:
+      - '第 {0}/{1} 页'
+      material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
+  back-button:
+    symbol: <
+    name: §c« 返回小镇组
+    lore:
+    - §e▶ 点击返回
+    material: RED_STAINED_GLASS_PANE
+  flag-item-name: §7权限：§e{0}
+  flag-state-true: §a§l[允许]
+  flag-state-false: §c§l[拒绝]
+  flag-item-lore:
+  - §7模板值：{0}
+  - §7{1}
+  - §7{2}
+  - ''
+  - §e▶ 点击切换
 town-group-member-selector-cui:
   title: §6✦ §e为 {0} 选择成员 §6✦
   list-configuration:

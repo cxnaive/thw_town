@@ -72,7 +72,15 @@ public class GroupProviderHandler extends GroupProvider {
                     assertDominionAdmin(event.getOperator(), event.getDominion());
                 }
                 assertGroupBelongDominion(event.getGroup(), event.getDominion());
-                GroupDTO groupModified = event.getGroup().setFlagValue(event.getFlag(), event.getNewValue());
+                GroupDTO groupModified;
+                if (event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO outpost
+                        && outpost.isTownOutpost()
+                        && TownManager.isTownManagedGroup(event.getGroup(), event.getDominion())) {
+                    groupModified = TownManager.setTownOutpostOverride(outpost, event.getGroup(),
+                            event.getFlag(), event.getNewValue());
+                } else {
+                    groupModified = event.getGroup().setFlagValue(event.getFlag(), event.getNewValue());
+                }
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.setFlagSuccess,
                         groupModified.getNamePlain(), event.getFlag().getDisplayName(), event.getNewValue());
                 return groupModified;

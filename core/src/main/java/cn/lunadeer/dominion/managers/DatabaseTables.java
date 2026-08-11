@@ -370,6 +370,15 @@ public class DatabaseTables {
                     .column(town_created_at)
                     .execute();
         }
+        // Existing towns must remain on the legacy per-outpost model until
+        // their mayor explicitly accepts the destructive one-way upgrade.
+        // New towns write TEMPLATE_V1 explicitly in TownDOO.insert().
+        if (!Show.show().columns().from("town").execute().containsKey("permission_mode")) {
+            Alter.alter().table("town").add()
+                    .column(Column.of(new FieldString("permission_mode"))
+                            .notNull().defaultSqlVal("'LEGACY'"))
+                    .execute();
+        }
 
         // 5.1.0 town groups: one town-level definition is mirrored onto
         // each attached outpost in Phase 2.  Keep the definition table
@@ -394,13 +403,8 @@ public class DatabaseTables {
                     .column(town_group_priority)
                     .column(town_group_created_at)
                     .execute();
-            try (Connection conn = DatabaseManager.instance.getConnection()) {
-                conn.createStatement().execute(
-                        "CREATE UNIQUE INDEX idx_town_group_uk ON town_group(town_id, name);");
-            } catch (Exception e) {
-                throw new SQLException("Failed to create town_group indexes", e);
-            }
         }
+        ensureUniqueIndex("idx_town_group_uk", "town_group", "town_id, name");
 
         // 5.1.0: a nullable link identifies an outpost-local group mirror.
         // NULL preserves the legacy group semantics; Phase 2 will populate
@@ -408,17 +412,38 @@ public class DatabaseTables {
         if (!Show.show().columns().from("dominion_group").execute().containsKey("town_group_id")) {
             Alter.alter().table("dominion_group").add()
                     .column(Column.of(new FieldInteger("town_group_id"))).execute();
-            try (Connection conn = DatabaseManager.instance.getConnection()) {
-                // NULL town_group_id rows are ordinary local groups; all
-                // supported databases allow multiple NULLs in a UNIQUE
-                // index, while a mirror is unique per outpost/definition.
-                conn.createStatement().execute(
-                        "CREATE UNIQUE INDEX idx_dominion_group_town_mirror "
-                                + "ON dominion_group(dom_id, town_group_id);");
-            } catch (Exception e) {
-                throw new SQLException("Failed to create town group mirror index", e);
-            }
         }
+        // NULL town_group_id rows are ordinary local groups; all supported
+        // databases allow multiple NULLs in a UNIQUE index, while a mirror
+        // is unique per outpost/definition.
+        ensureUniqueIndex("idx_dominion_group_town_mirror", "dominion_group",
+                "dom_id, town_group_id");
+
+        // 5.1.0 one-way town permission templates. town_group_id = 0 is
+        // the built-in @town member template; positive ids reference a
+        // town_group definition.  An absent override row means INHERIT.
+        if (!Show.show().tables().execute().contains("town_group_flag")) {
+            Create.create().table("town_group_flag")
+                    .column(Column.of(new FieldInteger("town_id")).notNull()
+                            .foreign("town", new FieldInteger("id")))
+                    .column(Column.of(new FieldInteger("town_group_id")).notNull().defaultSqlVal("0"))
+                    .column(Column.of(new FieldString("flag_name")).notNull())
+                    .column(Column.of(new FieldBoolean("flag_value")).notNull().defaultSqlVal("false"))
+                    .execute();
+        }
+        ensureUniqueIndex("idx_town_group_flag_uk", "town_group_flag",
+                "town_id, town_group_id, flag_name");
+        if (!Show.show().tables().execute().contains("town_group_outpost_override")) {
+            Create.create().table("town_group_outpost_override")
+                    .column(Column.of(new FieldInteger("dominion_id")).notNull()
+                            .foreign("dominion", new FieldInteger("id")))
+                    .column(Column.of(new FieldInteger("town_group_id")).notNull().defaultSqlVal("0"))
+                    .column(Column.of(new FieldString("flag_name")).notNull())
+                    .column(Column.of(new FieldBoolean("flag_value")).notNull().defaultSqlVal("false"))
+                    .execute();
+        }
+        ensureUniqueIndex("idx_town_group_outpost_override_uk",
+                "town_group_outpost_override", "dominion_id, town_group_id, flag_name");
 
         // 5.0.0 town era: town_member
         // Composite uniqueness (town_id, player_uuid) via explicit index:
@@ -634,6 +659,7 @@ public class DatabaseTables {
         public String importCoreMissing = "Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.";
         public String importDropsTownData = "This backup predates the town era: ALL existing town data (towns, members, trusts) will be dropped by this restore.";
         public String importDropsTownGroupData = "This backup predates town groups: existing town group definitions will be dropped by this restore.";
+        public String importDropsTownPermissionData = "This backup predates town permission templates: existing templates and outpost overrides will be dropped; restored towns use legacy mode.";
         public String exportTablesSummary = "Exported {0} table(s).";
     }
 
@@ -656,6 +682,8 @@ public class DatabaseTables {
             "world_map",
             "town",
             "town_group",
+            "town_group_flag",
+            "town_group_outpost_override",
             "town_member",
             "town_trust",
             "dominion_member_archive",
@@ -686,6 +714,8 @@ public class DatabaseTables {
             "world_map",
             "town",
             "town_group",
+            "town_group_flag",
+            "town_group_outpost_override",
             "town_member",
             "town_trust",
             "dominion_member_archive",
@@ -833,6 +863,13 @@ public class DatabaseTables {
                     Notification.warn(sender, Language.databaseManagerText.importDropsTownGroupData);
                     XLogger.warn("Restore drops town group definitions: backup predates town groups.");
                 }
+                boolean abandoningTownPermissionData = existingTables.contains("town_group_flag")
+                        && (!toImport.contains("town_group_flag")
+                        || !toImport.contains("town_group_outpost_override"));
+                if (abandoningTownPermissionData) {
+                    Notification.warn(sender, Language.databaseManagerText.importDropsTownPermissionData);
+                    XLogger.warn("Restore drops town permission templates: backup predates template mode.");
+                }
 
                 // Parse every csv BEFORE touching the database: the same
                 // strict parser is used for validation and insertion, so a
@@ -850,6 +887,12 @@ public class DatabaseTables {
                     boolean oldAutoCommit = conn.getAutoCommit();
                     conn.setAutoCommit(false);
                     try {
+                        if (abandoningTownPermissionData) {
+                            if (existingTables.contains("town_group_outpost_override")) {
+                                conn.createStatement().execute("DELETE FROM town_group_outpost_override");
+                            }
+                            conn.createStatement().execute("DELETE FROM town_group_flag");
+                        }
                         if (abandoningTownGroupData) {
                             conn.createStatement().execute("DELETE FROM town_group");
                         }
@@ -868,6 +911,10 @@ public class DatabaseTables {
                         }
                         for (String table : toImport) {
                             insertRows(conn, table, parsed.get(table));
+                        }
+                        if (abandoningTownPermissionData && existingTables.contains("town")) {
+                            conn.createStatement().execute(
+                                    "UPDATE town SET permission_mode = 'LEGACY'");
                         }
                         conn.commit();
                     } catch (Exception e) {
@@ -906,6 +953,44 @@ public class DatabaseTables {
             // servers reload on restart (imports are a maintenance action).
             CacheManager.instance.reloadCache();
         });
+    }
+
+    /**
+     * Ensure indexes independently from table/column creation. A previous
+     * startup may have created the schema object and then failed before its
+     * unique index; checking this on every migration makes that state
+     * recoverable. The post-failure metadata check also tolerates another
+     * backend server winning the same CREATE race.
+     */
+    private static void ensureUniqueIndex(String indexName, String tableName,
+                                          String columns) throws SQLException {
+        try (Connection connection = DatabaseManager.instance.getConnection()) {
+            if (hasIndex(connection, tableName, indexName)) return;
+            try {
+                connection.createStatement().execute(
+                        "CREATE UNIQUE INDEX " + indexName + " ON "
+                                + tableName + "(" + columns + ")");
+            } catch (SQLException createError) {
+                if (hasIndex(connection, tableName, indexName)) return;
+                throw new SQLException("Failed to create unique index " + indexName,
+                        createError);
+            }
+        }
+    }
+
+    private static boolean hasIndex(Connection connection, String tableName,
+                                    String indexName) throws SQLException {
+        for (String candidate : List.of(tableName, tableName.toUpperCase(),
+                tableName.toLowerCase())) {
+            try (ResultSet indexes = connection.getMetaData().getIndexInfo(
+                    connection.getCatalog(), null, candidate, true, false)) {
+                while (indexes.next()) {
+                    String existing = indexes.getString("INDEX_NAME");
+                    if (existing != null && existing.equalsIgnoreCase(indexName)) return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

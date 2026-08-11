@@ -114,8 +114,9 @@ public class GroupCommand {
             GroupDTO group = toGroupDTO(dominion, groupName);
             PriFlag flag = toPriFlag(flagName);
             boolean value = toBoolean(valueStr);
-            GroupProvider.getInstance().setGroupFlag(sender, dominion, group, flag, value);
-            GroupFlags.show(sender, dominionName, groupName, pageStr);
+            GroupProvider.getInstance().setGroupFlag(sender, dominion, group, flag, value)
+                    .thenRun(() -> cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
+                            () -> GroupFlags.show(sender, dominionName, groupName, pageStr)));
         } catch (Exception e) {
             Notification.error(sender, e);
         }

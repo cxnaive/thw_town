@@ -4,6 +4,7 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.api.dtos.GroupDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
+import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.commands.GroupCommand;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
@@ -33,7 +34,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionAdmin;
@@ -42,8 +45,26 @@ import static cn.lunadeer.dominion.utils.Misc.*;
 
 public class GroupFlags extends AbstractUI {
 
+    private final Map<String, Boolean> townOverrides = new HashMap<>();
+
     public static void show(CommandSender sender, String dominionName, String groupName, String pageStr) {
-        new GroupFlags().displayByPreference(sender, dominionName, groupName, pageStr);
+        GroupFlags ui = new GroupFlags();
+        if (sender instanceof Player player) {
+            try {
+                DominionDTO dominion = toDominionDTO(dominionName);
+                GroupDTO group = toGroupDTO(dominion, groupName);
+                if (ui.isTemplateManaged(dominion, group)) {
+                    cn.lunadeer.dominion.uis.town.TownUI.prefetchThenRender(player,
+                            () -> ui.prefetchOverrides(dominion, group),
+                            () -> ui.displayByPreference(player, dominionName, groupName, pageStr));
+                    return;
+                }
+            } catch (Exception e) {
+                Notification.error(sender, e);
+                return;
+            }
+        }
+        ui.displayByPreference(sender, dominionName, groupName, pageStr);
     }
 
     public static SecondaryCommand flags = new SecondaryCommand("group_flags", List.of(
@@ -63,6 +84,10 @@ public class GroupFlags extends AbstractUI {
         public String title = "Group {0} Settings";
         public String description = "Manage the settings of group {0}.";
         public String button = "SETTING";
+        public String inherit = "INHERIT";
+        public String allow = "ALLOW";
+        public String deny = "DENY";
+        public String reset = "RESET";
     }
 
     public static ListViewButton button(CommandSender sender, String dominionName, String groupName) {
@@ -96,12 +121,22 @@ public class GroupFlags extends AbstractUI {
                     .createTuiButtonOn(player, dominion.getName(), args[1]).build()));
         }
 
-        if (group.getFlagValue(Flags.ADMIN)) {
-            view.add(createOption(player, Flags.ADMIN, true, dominion.getName(), args[1], args[2]));
-            view.add(createOption(player, Flags.GLOW, group.getFlagValue(Flags.GLOW), dominion.getName(), args[1], args[2]));
+        boolean templateManaged = isTemplateManaged(dominion, group);
+        if (templateManaged) {
+            for (PriFlag flag : cn.lunadeer.dominion.managers.TownPermissionManager
+                    .getManageableTemplateFlags()) {
+                view.add(createTownOption(player, dominion, group, flag,
+                        group.getFlagValue(flag), args[1], args[2]));
+            }
+        } else if (group.getFlagValue(Flags.ADMIN)) {
+            view.add(createOption(player, Flags.ADMIN, true,
+                    dominion.getName(), args[1], args[2]));
+            view.add(createOption(player, Flags.GLOW, group.getFlagValue(Flags.GLOW),
+                    dominion.getName(), args[1], args[2]));
         } else {
             for (PriFlag flag : Flags.getAllPriFlagsEnable()) {
-                view.add(createOption(player, flag, group.getFlagValue(flag), dominion.getName(), args[1], args[2]));
+                view.add(createOption(player, flag, group.getFlagValue(flag),
+                        dominion.getName(), args[1], args[2]));
             }
         }
         view.showOn(player, page);
@@ -127,6 +162,49 @@ public class GroupFlags extends AbstractUI {
                     }.needPermission(defaultPermission).red().build())
                     .append(Component.text(flag.getDisplayName()).hoverEvent(Component.text(flag.getDescription())));
         }
+    }
+
+    private Line createTownOption(Player player, DominionDTO dominion, GroupDTO group,
+                                  PriFlag flag, boolean effective, String groupName,
+                                  String pageStr) {
+        boolean overridden = townOverrides.containsKey(flag.getFlagName());
+        Boolean local = townOverrides.get(flag.getFlagName());
+        String state = overridden
+                ? (Boolean.TRUE.equals(local) ? TextUserInterface.groupSettingTuiText.allow
+                : TextUserInterface.groupSettingTuiText.deny)
+                : TextUserInterface.groupSettingTuiText.inherit + ": "
+                + (effective ? TextUserInterface.groupSettingTuiText.allow
+                : TextUserInterface.groupSettingTuiText.deny);
+        Line line = Line.create().append("§7[§e" + state + "§7] ")
+                .append(Component.text(flag.getDisplayName())
+                        .hoverEvent(Component.text(flag.getDescription())));
+        line.append(new FunctionalButton(TextUserInterface.groupSettingTuiText.allow) {
+            @Override
+            public void function() {
+                GroupCommand.setGroupFlag(player, dominion.getName(), groupName,
+                        flag.getFlagName(), "true", pageStr);
+            }
+        }.needPermission(defaultPermission).green().build());
+        line.append(new FunctionalButton(TextUserInterface.groupSettingTuiText.deny) {
+            @Override
+            public void function() {
+                GroupCommand.setGroupFlag(player, dominion.getName(), groupName,
+                        flag.getFlagName(), "false", pageStr);
+            }
+        }.needPermission(defaultPermission).red().build());
+        if (overridden) {
+            line.append(new FunctionalButton(TextUserInterface.groupSettingTuiText.reset) {
+                @Override
+                public void function() {
+                    cn.lunadeer.dominion.uis.town.TownUI.action(player,
+                            () -> cn.lunadeer.dominion.managers.TownManager.clearTownOutpostOverride(
+                                    player, (cn.lunadeer.dominion.doos.DominionDOO) dominion,
+                                    group, flag),
+                            () -> show(player, dominion.getName(), groupName, pageStr));
+                }
+            }.needPermission(defaultPermission).build());
+        }
+        return line;
     }
 
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ TUI ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
@@ -164,6 +242,35 @@ public class GroupFlags extends AbstractUI {
                 "",
                 "&7Click to toggle this flag."
         );
+        public String overrideInherited = "&e&l[INHERIT: {0}]";
+        public String overrideAllow = "&a&l[OVERRIDE: ALLOW]";
+        public String overrideDeny = "&c&l[OVERRIDE: DENY]";
+        public List<String> overrideLore = List.of(
+                "&7State: {0}", "&7Des: &f{1}", "       &f{2}", "",
+                "&eLeft click: toggle local override", "&bRight click: restore inheritance");
+    }
+
+    private boolean isTemplateManaged(DominionDTO dominion, GroupDTO group) {
+        if (!(dominion instanceof cn.lunadeer.dominion.doos.DominionDOO outpost)
+                || !outpost.isTownOutpost()
+                || !cn.lunadeer.dominion.managers.TownManager.isTownManagedGroup(group, dominion)) {
+            return false;
+        }
+        cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
+                .getTown(outpost.getTownId());
+        return town != null && town.isTemplatePermissionMode();
+    }
+
+    private void prefetchOverrides(DominionDTO dominion, GroupDTO group) throws Exception {
+        cn.lunadeer.dominion.doos.DominionDOO outpost =
+                (cn.lunadeer.dominion.doos.DominionDOO) dominion;
+        int groupKey = cn.lunadeer.dominion.managers.TownPermissionManager.groupKey(group);
+        for (PriFlag flag : cn.lunadeer.dominion.managers.TownPermissionManager
+                .getManageableTemplateFlags()) {
+            Boolean value = cn.lunadeer.dominion.managers.TownPermissionManager
+                    .getOutpostOverride(outpost, groupKey, flag);
+            if (value != null) townOverrides.put(flag.getFlagName(), value);
+        }
     }
 
     @Override
@@ -171,6 +278,7 @@ public class GroupFlags extends AbstractUI {
         DominionDTO dominion = toDominionDTO(args[0]);
         assertDominionAdmin(player, dominion);
         GroupDTO group = toGroupDTO(dominion, args[1]);
+        boolean templateManaged = isTemplateManaged(dominion, group);
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
         view.setTitle(formatString(ChestUserInterface.groupSettingCui.title, group.getNameColoredBukkit()));
         view.applyListConfiguration(ChestUserInterface.groupSettingCui.listConfiguration, toIntegrity(args[2]));
@@ -184,13 +292,35 @@ public class GroupFlags extends AbstractUI {
                 }
         );
 
-        for (int i = 0; i < Flags.getAllPriFlagsEnable().size(); i++) {
-            PriFlag flag = Flags.getAllPriFlagsEnable().get(i);
+        List<PriFlag> visibleFlags = templateManaged
+                ? cn.lunadeer.dominion.managers.TownPermissionManager
+                .getManageableTemplateFlags()
+                : Flags.getAllPriFlagsEnable();
+        for (int i = 0; i < visibleFlags.size(); i++) {
+            PriFlag flag = visibleFlags.get(i);
             Integer page = (int) Math.ceil((double) (i + 1) / view.getPageSize());
-            String flagState = group.getFlagValue(flag) ? ChestUserInterface.groupSettingCui.flagItemStateTrue : ChestUserInterface.groupSettingCui.flagItemStateFalse;
+            boolean effective = group.getFlagValue(flag);
+            boolean overridden = townOverrides.containsKey(flag.getFlagName());
+            String flagState;
+            if (templateManaged) {
+                Boolean local = townOverrides.get(flag.getFlagName());
+                flagState = overridden
+                        ? (Boolean.TRUE.equals(local)
+                        ? ChestUserInterface.groupSettingCui.overrideAllow
+                        : ChestUserInterface.groupSettingCui.overrideDeny)
+                        : formatString(ChestUserInterface.groupSettingCui.overrideInherited,
+                        effective ? TextUserInterface.groupSettingTuiText.allow
+                                : TextUserInterface.groupSettingTuiText.deny);
+            } else {
+                flagState = effective ? ChestUserInterface.groupSettingCui.flagItemStateTrue
+                        : ChestUserInterface.groupSettingCui.flagItemStateFalse;
+            }
             String flagName = formatString(ChestUserInterface.groupSettingCui.flagItemName, flag.getDisplayName());
             List<String> descriptions = foldLore2Line(flag.getDescription(), 30);
-            List<String> flagLore = formatStringList(ChestUserInterface.groupSettingCui.flagItemLore, flagState, descriptions.get(0), descriptions.get(1));
+            List<String> flagLore = formatStringList(templateManaged
+                            ? ChestUserInterface.groupSettingCui.overrideLore
+                            : ChestUserInterface.groupSettingCui.flagItemLore,
+                    flagState, descriptions.get(0), descriptions.get(1));
             ButtonConfiguration btnConfig = ButtonConfiguration.createMaterial(
                     ChestUserInterface.groupSettingCui.listConfiguration.itemSymbol.charAt(0),
                     flag.getMaterial(),
@@ -200,7 +330,19 @@ public class GroupFlags extends AbstractUI {
             view.addItem(new ChestButton(btnConfig) {
                 @Override
                 public void onClick(ClickType type) {
-                    GroupCommand.setGroupFlag(player, dominion.getName(), args[1], flag.getFlagName(), String.valueOf(!group.getFlagValue(flag)), String.valueOf(page));
+                    if (templateManaged && type.isRightClick()) {
+                        if (overridden) {
+                            cn.lunadeer.dominion.uis.town.TownUI.action(player,
+                                    () -> cn.lunadeer.dominion.managers.TownManager
+                                            .clearTownOutpostOverride(player,
+                                                    (cn.lunadeer.dominion.doos.DominionDOO) dominion,
+                                                    group, flag),
+                                    () -> show(player, dominion.getName(), args[1], String.valueOf(page)));
+                        }
+                        return;
+                    }
+                    GroupCommand.setGroupFlag(player, dominion.getName(), args[1],
+                            flag.getFlagName(), String.valueOf(!effective), String.valueOf(page));
                 }
             });
         }
@@ -220,16 +362,21 @@ public class GroupFlags extends AbstractUI {
         // items
         DominionDTO dominion = toDominionDTO(args[0]);
         GroupDTO group = toGroupDTO(dominion, args[1]);
+        List<PriFlag> visibleFlags = isTemplateManaged(dominion, group)
+                ? cn.lunadeer.dominion.managers.TownPermissionManager
+                .getManageableTemplateFlags()
+                : Flags.getAllPriFlagsEnable();
         int page = toIntegrity(args[2], 1);
-        Triple<Integer, Integer, Integer> pageInfo = pageUtil(page, 8, Flags.getAllPriFlagsEnable().size());
+        Triple<Integer, Integer, Integer> pageInfo = pageUtil(page, 8, visibleFlags.size());
         for (int i = pageInfo.getLeft(); i < pageInfo.getMiddle(); i++) {
-            PriFlag flag = Flags.getAllPriFlagsEnable().get(i);
+            PriFlag flag = visibleFlags.get(i);
             String flagState = group.getFlagValue(flag) ? ChestUserInterface.groupSettingCui.flagItemStateTrue : ChestUserInterface.groupSettingCui.flagItemStateFalse;
             String flagName = formatString(ChestUserInterface.groupSettingCui.flagItemName, flag.getDisplayName());
             Notification.info(sender, "§6▶ {0} §7(§b{1}§7)", flagName, flag.getFlagName());
             Notification.info(sender, "§6  \t{0}\t&7{1}", flagState, flag.getDescription());
         }
         // page info
-        Notification.info(sender, Language.consoleText.pageInfo, page, pageInfo.getRight(), Flags.getAllPriFlagsEnable().size());
+        Notification.info(sender, Language.consoleText.pageInfo,
+                page, pageInfo.getRight(), visibleFlags.size());
     }
 }

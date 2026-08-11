@@ -73,6 +73,7 @@ public class DominionManage extends AbstractUI {
         public String trustsDescription = "Manage per-player trust grants of this town outpost.";
         public String releaseButton = "RELEASE";
         public String releaseDescription = "Admin only: detach this outpost from its town back to the contributor.";
+        public String releaseConfirm = "§cClick again within 5 seconds to release {0}. Town groups, mirror members and outpost trust will be removed.";
     }
 
     public static ListViewButton button(CommandSender sender, String dominionName) {
@@ -186,17 +187,15 @@ public class DominionManage extends AbstractUI {
                     .append(Language.townOutpostAdminInputterText.description);
             view.add(outpostAdmin);
         }
-        if (town != null && cn.lunadeer.dominion.misc.Others.bypassLimit(player)
+        if (town != null && player.isOp()
                 && !"FOUNDING".equals(((cn.lunadeer.dominion.doos.DominionDOO) dominion).getClaimKind())) {
             // admin arbitration: release the outpost back to its contributor
             Line release = Line.create()
                     .append(new FunctionalButton(TextUserInterface.dominionManageTuiText.releaseButton) {
                         @Override
                         public void function() {
-                            cn.lunadeer.dominion.uis.town.TownUI.action(player,
-                                    () -> cn.lunadeer.dominion.managers.TownManager.releaseOutpost(player,
-                                            (cn.lunadeer.dominion.doos.DominionDOO) dominion),
-                                    () -> DominionList.show(player, "1"));
+                            confirmRelease(player,
+                                    (cn.lunadeer.dominion.doos.DominionDOO) dominion);
                         }
                     }.needPermission(defaultPermission).build())
                     .append(TextUserInterface.dominionManageTuiText.releaseDescription);
@@ -590,21 +589,30 @@ public class DominionManage extends AbstractUI {
                     }
                 });
             }
-            if (cn.lunadeer.dominion.misc.Others.bypassLimit(player)
+            if (player.isOp()
                     && !"FOUNDING".equals(((cn.lunadeer.dominion.doos.DominionDOO) dominion).getClaimKind())) {
                 view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.releaseButton) {
-                    @Override
-                    public void onClick(ClickType type) {
-                        cn.lunadeer.dominion.uis.town.TownUI.action(player,
-                                () -> cn.lunadeer.dominion.managers.TownManager.releaseOutpost(player,
-                                        (cn.lunadeer.dominion.doos.DominionDOO) dominion),
-                                () -> DominionList.show(player, "1"));
-                    }
+                        @Override
+                        public void onClick(ClickType type) {
+                            confirmRelease(player,
+                                    (cn.lunadeer.dominion.doos.DominionDOO) dominion);
+                        }
                 });
             }
         }
 
         view.open();
+    }
+
+    private static void confirmRelease(Player player,
+                                       cn.lunadeer.dominion.doos.DominionDOO outpost) {
+        cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                player, "town-release:" + outpost.getId(),
+                () -> cn.lunadeer.dominion.uis.town.TownUI.action(player,
+                        () -> cn.lunadeer.dominion.managers.TownManager.releaseOutpost(player, outpost),
+                        () -> DominionList.show(player, "1")),
+                formatString(TextUserInterface.dominionManageTuiText.releaseConfirm,
+                        outpost.getName()));
     }
 
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ CUI ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

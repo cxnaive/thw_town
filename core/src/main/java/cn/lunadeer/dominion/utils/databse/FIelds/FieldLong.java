@@ -40,7 +40,11 @@ public class FieldLong extends Field<Long> {
 
     public static List<String> getTypeStrings() {
         return switch (DatabaseManager.instance.getType()) {
-            case MYSQL -> List.of("BIGINT");
+            // MySQL 8 reports BIGINT, while MySQL 5.7/MariaDB commonly
+            // retain the legacy display width and report BIGINT(20).
+            // The width is presentation metadata, not a different value
+            // range, so both map to the same Java Long field.
+            case MYSQL -> List.of("BIGINT", "BIGINT(20)");
             case SQLITE -> List.of("BIGINT");
             case PGSQL -> List.of("BIGINT");
             default ->

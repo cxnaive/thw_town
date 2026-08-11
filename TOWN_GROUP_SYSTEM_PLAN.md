@@ -1,18 +1,20 @@
 # 小镇分组系统实现方案（v5.1.0）
 
-状态：Phase 0–4 已实现（v5.1.0）；真实数据库/多人服运行时验收待部署环境执行
+状态：Phase 0–4 已实现；TEMPLATE_V1 一次性升级模式与完整 Release 已实现（v5.1.0）；真实数据库/多人服运行时验收待部署环境执行
 目标插件：Dominion（当前仓库）
 依赖版本：5.0.2（已上线，含 Town 基础 + @town 内置组）
 
 ## 1. 目标与边界
 
-在现有小镇系统上增加**小镇级成员分组**：镇长/副镇长可以定义组（如 管理员、建筑师、商人），把成员分进组，并让每个 Outpost（前哨领地）自动获得这些组，**各组权限由各 Outpost 独立设置**（"领地里面自己去设置"）。
+在现有小镇系统上增加**小镇级成员分组**：镇长/副镇长可以定义组（如管理员、建筑师、商人），把成员分进组。新建小镇使用 `TEMPLATE_V1`：每个组有镇级默认模板，各 Outpost 只保存稀疏的 `继承/允许/拒绝` 覆盖。
 
 ```text
-现状: Town -> @town 内置组(隐式全员) -> 各 Outpost 独立 flag
-目标: Town -> town_group(自定义组) + @town(保留)
-              ├── 镜像到每个 Outpost（dominion_group, town_group_id 链接）
-              └── 成员按 town_member.group_id 分配，各 Outpost 独立设 flag
+旧镇: Town(permission_mode=LEGACY) -> 各 Outpost 独立最终 flag
+新镇: Town(permission_mode=TEMPLATE_V1)
+      ├── @town 镇级模板
+      ├── town_group 自定义组模板
+      └── Outpost 稀疏 override（无记录 = 继承）
+             └── dominion_group 保存最终生效值，兼容现有 API
 ```
 
 非目标：
@@ -20,7 +22,7 @@
 - 不做多组成员（一个玩家一个组，与 `dominion_member.group_id` 单值语义一致）；
 - 不改身份系统（`TownRole = {MAYOR, ASSISTANT, RESIDENT}`，无 FOUNDER 角色；
   `town.founder_uuid` 仅是历史标记，无权限检查）；
-- 不动 `@town` 内置组机制（隐式成员、受保护、每 Outpost 独立 flag）；
+- 不改变 `@town` 的隐式成员和受保护语义；TEMPLATE_V1 下其 flag 改为镇级模板 + Outpost override；
 - 不动 Trust 授权系统（`/town trust` 与组并存，trust 只增不减）；
 - 不做 Outpost 级"自定义组同步回小镇"（单向：小镇 -> Outpost）。
 
@@ -46,7 +48,7 @@ public static final String TOWN_MEMBER_GROUP_NAME = "@town";   // TownManager:12
 
 - Outpost 挂靠时自动创建（`ensureTownMemberGroup`，TownManager:1105）；
 - 所有小镇成员**隐式持有**（不可添加/删除成员，`townGroupMembersImplicit`）；
-- 每 Outpost 独立设置 flag（走现有组 flag 命令/UI）；
+- LEGACY 镇每 Outpost 独立设置 flag；TEMPLATE_V1 镇显示三态 override；
 - 受保护：不可删除/重命名（`townGroupReserved`，GroupProviderHandler）；
 - 权限级联已实现（`checkTownOutpostPrivilege`，TownManager:962）：
   `member(有) -> @town flag；无则 trust；再无则 legacy/guest 链`。
@@ -65,15 +67,17 @@ v5.1.0 后该限制继续适用：Outpost 上的**普通领地本地组**仍被�
 ### 2.4 当前数据结构（Phase 1 完成后）
 
 ```sql
-town(id, name, founder_uuid, mayor_uuid, balance, status, created_at)
+town(id, name, founder_uuid, mayor_uuid, balance, status, permission_mode, created_at)
 town_group(id, town_id, name, display_name, priority, created_at)
+town_group_flag(town_id, town_group_id, flag_name, flag_value)
+town_group_outpost_override(dominion_id, town_group_id, flag_name, flag_value)
 town_member(town_id, player_uuid, role, source, group_id, joined_at)  -- PK(town_id,player_uuid)
 town_trust(town_id, player_uuid, scope_type, scope_id, build, destroy, switch, item_use, created_by, created_at)
 dominion_group(id, dom_id, name, town_group_id, <flag 列...>) -- 领地组，flag 在组行
 dominion_member(id, dom_id, player_uuid, group_id, admin, <pri-flag 列...>)  -- 已有 group_id！
 ```
 
-## 3. 数据库设计（最小改动：1 新表 + 2 新列）
+## 3. 数据库设计
 
 ### 3.1 新表 `town_group`（小镇组定义）
 
@@ -118,8 +122,8 @@ ALTER TABLE town_member ADD COLUMN group_id INTEGER DEFAULT -1;
 备份注册需要补两处：
 
 ```java
-PLUGIN_TABLES: 加入 "town_group"（备份白名单）
-IMPORT_ORDER:  在 "town" 之后、"town_member" 之前插入 "town_group"
+PLUGIN_TABLES: 加入 "town_group"、"town_group_flag"、"town_group_outpost_override"
+IMPORT_ORDER:  town 之后依次恢复组定义、模板和 override
 ```
 
 当前 `REQUIRED_CORE` 是恢复旧 Dominion 数据所需的五张基础表名单，
@@ -134,17 +138,43 @@ IMPORT_ORDER:  在 "town" 之后、"town_member" 之前插入 "town_group"
 所有 DDL 走 `Show.show().tables()/columns()` 守卫的幂等 Alter/Create
 （对齐 DatabaseTables.migrate() 现有模式）。
 
+### 3.5 一次性模板权限模式
+
+```sql
+ALTER TABLE town ADD COLUMN permission_mode TEXT NOT NULL DEFAULT 'LEGACY';
+
+CREATE TABLE town_group_flag (
+    town_id INTEGER NOT NULL,
+    town_group_id INTEGER NOT NULL, -- 0=@town，>0=town_group.id
+    flag_name TEXT NOT NULL,
+    flag_value BOOLEAN NOT NULL,
+    UNIQUE(town_id, town_group_id, flag_name)
+);
+
+CREATE TABLE town_group_outpost_override (
+    dominion_id INTEGER NOT NULL,
+    town_group_id INTEGER NOT NULL,
+    flag_name TEXT NOT NULL,
+    flag_value BOOLEAN NOT NULL,
+    UNIQUE(dominion_id, town_group_id, flag_name)
+);
+```
+
+- 旧镇因列默认值保持 `LEGACY`，不会静默改变权限；
+- 新镇由 `TownDOO.insert` 显式写入 `TEMPLATE_V1`，不可降级；
+- override 无行表示继承，有行表示本 Outpost 明确允许/拒绝；
+- `dominion_group` 继续保存最终 Boolean，供现有权限检查和第三方 API 使用。
+
 ## 4. 核心概念与权限优先级
 
 ### 4.1 层级
 
 ```text
 Town
-├── town_group（组定义：admin / builder / ...）
-│   ├── town_member.group_id（成员分配，单组）
-│   └── 镜像到每个 Outpost：
-│       dominion_group(town_group_id=G) ── flag 由该 Outpost 独立设置
-├── @town 内置组（隐式全员，默认权限）
+├── @town / custom group 镇级模板
+├── town_member.group_id（成员分配，单组）
+├── 每个 Outpost 的稀疏 override
+├── dominion_group 最终值镜像（模板或 override）
 └── /town trust（个人授权，只增不减）
 ```
 
@@ -174,9 +204,9 @@ Town
 ### 5.1 创建小镇组（/town group create）
 
 1. INSERT `town_group`；
-2. 为每个现有 Outpost 创建镜像 `dominion_group(name, town_group_id=G)`
-   （flag 用组默认值，创建后各 Outpost 独立调整）；
-3. 刷新 TownCache + DominionCache。
+2. TEMPLATE_V1 下复制 `@town` 镇级模板作为新组模板；
+3. 为每个现有 Outpost 创建镜像并按模板/override 写入最终值；
+4. 刷新 TownCache + DominionCache。
 
 ### 5.2 删除小镇组（/town group delete）
 
@@ -208,6 +238,15 @@ Town
 - 解散：`town` 级联删 `town_group`（FK）；Outpost 解散时
   `dominion_group` 随领地删除（现有逻辑），镜像组随之消失。
 
+### 5.6 旧镇一次性升级
+
+1. 仅镇长（或 OP bypass）可二次确认执行 `/town upgrade confirm`；
+2. 使用当前 `flags.yml` 默认值重建 `@town` 模板，自定义组复制 `@town`；
+3. 删除全部 Outpost override；
+4. 所有镇管理镜像重写为模板最终值，即全部进入继承；
+5. 最后一条 SQL 将模式从 `LEGACY` 改为 `TEMPLATE_V1`；任一步失败整事务回滚；
+6. 模式不可关闭，升级成功后直接引导镇长进入模板设置页。
+
 ## 6. 命令设计
 
 ```text
@@ -218,6 +257,8 @@ Town
 /town group info <name>                           # 所有人可看
 /town group add <player> <group>                  # 镇长/副镇长（分配成员）
 /town group remove <player>                       # 镇长/副镇长（取消分组）
+/town upgrade [confirm]                           # 镇长一次性升级权限模式
+/town release <outpost> [confirm]                 # 仅实际 OP 仲裁归还
 ```
 
 - 权限检查：`assertManager(sender, town)`（现有，MAYOR 或 ASSISTANT）；
@@ -231,7 +272,8 @@ Town
 
 - 镜像组显示"§7[来自小镇]"标记（`group.getTownGroupId() != null`）；
 - 镜像组不可删除/重命名（对齐 @town 的 `townGroupReserved` 保护）；
-- 镜像组 flag 可编辑（这就是"领地里面自己去设置"）；
+- LEGACY 下镜像组仍直接编辑最终值；TEMPLATE_V1 下显示“继承/允许/拒绝”，
+  左键创建局部 override，右键或 RESET 删除 override 恢复继承；
 - 镜像组成员不可在 UI 添加/删除（成员由小镇组分配管理）。
 
 ### 7.2 小镇组管理（新增，TownGroups UI）
@@ -241,6 +283,9 @@ Town
 - 添加成员从现有小镇成员选择，不再要求手输玩家名；若成员已在其他小镇组中，
   选择后会按单组约束移动到当前组，并在选择页显示其角色和当前组。
 - TUI + CUI 双界面（对齐现有 Town 系列 UI）。
+- TEMPLATE_V1 下 `@town` 和每个自定义组均提供镇级模板编辑页；模板变化只覆盖仍继承的 Outpost。
+- 镇模板和 Outpost override 不显示或接受旧 `ADMIN` flag；管理权只来自
+  `成员/副镇长/镇长` 与 Outpost 管理员角色，避免出现无效的“组管理员”开关。
 
 ### 7.3 翻译
 
@@ -249,9 +294,11 @@ Town
 
 ## 8. 数据迁移与兼容
 
-### 8.1 迁移策略：零数据迁移
+### 8.1 迁移策略：显式、破坏性、不可回退
 
-- 新表/新列全部有默认值或可空，现有数据不受影响；
+- 新表/新列创建本身不改变旧镇；旧镇保持 LEGACY；
+- 旧值没有来源信息，无法可靠推断继承/override，因此绝不猜测；
+- 镇长主动升级时清除旧的 Outpost 组权限差异并全部进入继承；
 - 现有 @town 组：`town_group_id=NULL`，完全不变；
 - 现有领地本地组：`town_group_id=NULL`，完全不变；
 - 现有成员：`group_id=-1`，只吃 @town；
@@ -259,7 +306,8 @@ Town
 
 ### 8.2 回滚
 
-- 回滚到 5.0.2 JAR：新列/新表被 5.0.2 代码忽略，数据无破坏；
+- 未升级的 LEGACY 镇可回滚；已升级镇不能通过 UI/命令降级；
+- 回滚旧 JAR 会忽略模板表，但 `dominion_group` 仍保留最后同步的最终值；
 - 若已创建组：回滚后镜像组变普通组（town_group_id 被忽略），
   成员 group_id 被忽略（回退 @town），无数据损坏。
 
@@ -272,17 +320,20 @@ Town
 | 3 | 玩家被踢出小镇 | 删 town_member + 清理各镜像分配 |
 | 4 | 小镇解散 | town_group FK 级联，镜像随 Outpost 消失 |
 | 5 | 挂靠前领地已有本地组 | 保留（town_group_id=NULL），与镜像共存 |
-| 6 | 镜像组改 flag | 允许（仅本 Outpost，不影响小镇定义） |
+| 6 | 镜像组改 flag | LEGACY 直接改；TEMPLATE_V1 创建本 Outpost override |
 | 7 | 镜像组重命名/删除 | 禁止（受保护，对齐 @town） |
 | 8 | 本地组与镜像组同名 | 允许（town_group_id 区分），UI 打标记 |
 | 9 | 组名非法/重复 | `assertGroupName` 校验（对齐领地组） |
-| 10 | Outpost 释放回个人 | 镜像组变普通组（town_group_id 失效无害），可手动清理 |
+| 10 | Outpost 释放回个人 | 仅 OP；事务前置清除 override、@town、镜像组、镜像成员及 Outpost Trust |
 
 ## 10. 必须测试的场景
 
 - 镇长创建组 -> 所有现有 Outpost 出现镜像组；
 - 分配成员 -> 该成员在所有 Outpost 镜像组中；
-- 在 Outpost A 改镜像组 flag -> 只影响 A，小镇定义和其他 Outpost 不变；
+- 在 Outpost A 改镜像组 flag -> A 生成 override；恢复继承后重新跟随模板；
+- 新镇直接 TEMPLATE_V1；旧镇默认 LEGACY 且仅镇长看到升级入口；
+- 升级清空所有局部差异、不可撤销、失败整事务回滚；
+- OP `/town release <outpost> confirm` 清理镇数据后归还贡献者；FOUNDING 拒绝；
 - 新 Outpost 挂靠 -> 自动获得所有小镇组镜像 + 成员分配；
 - 成员离开/被踢 -> 所有 Outpost 清理该成员；
 - 组删除 -> 成员回退 @town，所有镜像组消失；
@@ -332,19 +383,36 @@ Town
 - 镜像组显示“[来自小镇]”标记，Provider 层同时强制保护，避免绕过 UI；
 - zh_cn 主语言/TUI/CUI 文案完整，其余语言使用 Java 英文默认值回退。
 
+### Phase 5：TEMPLATE_V1 + 完整 Release（已完成）
+- `town.permission_mode` 将旧镇保持为 `LEGACY`，新镇显式使用不可关闭的
+  `TEMPLATE_V1`；旧镇仅镇长可二次确认一次性升级；
+- 新增镇级模板表和稀疏 Outpost override 表，`dominion_group` 保持最终值
+  兼容缓存；模板修改和继承恢复均事务同步；
+- TownInfo、TownGroups、TownTemplateFlags、GroupFlags 已接入升级入口、模板
+  编辑以及“继承/允许/拒绝”三态 UI；
+- `/town release <outpost> [confirm]` 仅 OP 可用；释放在单一
+  事务内删除成员、`@town`、镜像组、override、Outpost Trust 并清除镇关联；
+- 建国属地继续禁止释放；命令与 GUI/TUI 都要求二次确认。
+- 模板、建组、挂靠同步和释放统一先锁定数据库中的镇行，并在锁内读取
+  `permission_mode`；一次性升级也在锁内按数据库 `mayor_uuid` 复核操作者，
+  因而不依赖多服缓存刷新时机。
+- SQLite 连接逐条启用外键，并显式清理旧库可能遗留的模板/override；新增
+  唯一索引独立幂等检查，能够从“表已创建、索引未创建”的中断迁移恢复。
+
 ### 静态验证（已完成）
-- `./gradlew :core:compileJava --offline` 通过；
+- `./gradlew clean build --offline` 通过（测试任务为 `NO-SOURCE`）；
+- lite/full 两个 `5.1.1-release` 发布 JAR 均已成功打包；
 - 12 个 language YAML 均可解析；
 - `git diff --check` 通过；
 - §10 的真实 SQLite/MySQL/PostgreSQL、多人服和导入导出场景仍需在部署
   测试环境执行，仓库当前没有可复用的自动化集成测试。
 
-### 总计：Phase 0–4 代码完成；部署测试待执行
+### 总计：Phase 0–5 代码完成；部署测试待执行
 
 ## 12. 交付物
 
 - `TOWN_GROUP_SYSTEM_PLAN.md`（本文件）；
 - 代码：DatabaseTables / TownGroupDOO / TownGroupSyncHandler /
   TownCommand(group 子命令) / GroupManage 标记 / TownGroups UI / 翻译；
-- 构建产物：`Dominion-5.1.0-release-{lite,full}.jar`；
+- 构建产物：`Dominion-5.1.1-release-{lite,full}.jar`；
 - 手动测试清单（§10）。

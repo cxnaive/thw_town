@@ -61,6 +61,8 @@ public class TownCommand implements TabExecutor {
                 + "&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n"
                 + "&b/town outpost create <name> &7- create a remote outpost (selected points)\n"
                 + "&b/town admin <outpost> [player] &7- set/clear the outpost admin\n"
+                + "&b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)\n"
+                + "&b/town release <outpost> [confirm] &7- return an outpost to its contributor (OP only)\n"
                 + "&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n"
                 + "&b/town untrust <player> [town|outpost <name>]\n"
                 + "&b/town info [town] &7- town information\n"
@@ -90,6 +92,8 @@ public class TownCommand implements TabExecutor {
         public String attachAllSuccess = "Attached {0} dominion(s) to town {1}.";
         public String attachOneSuccess = "Attached dominion {0} to town {1}.";
         public String attachNotOwned = "You don't own a personal dominion named {0}.";
+        public String upgradeConfirm = "Upgrading {0} resets every town-managed outpost group permission and makes all outposts inherit new town templates. This cannot be undone. Run /town upgrade confirm to proceed.";
+        public String releaseConfirm = "Releasing {0} returns it to contributor {1}, removes outpost trust and all town group mirrors. Run /town release {0} confirm to proceed.";
         public String townGroupUsage = "&b/town group create <name> [display name]\n"
                 + "&b/town group rename <name> <display name>\n"
                 + "&b/town group delete <name>\n"
@@ -188,6 +192,8 @@ public class TownCommand implements TabExecutor {
                 case "withdraw" -> handleBank(sender, args, false);
                 case "outpost" -> handleOutpost(sender, args);
                 case "admin" -> handleAdmin(sender, args);
+                case "upgrade" -> handleUpgrade(sender, args);
+                case "release" -> handleRelease(sender, args);
                 case "info" -> handleInfo(sender, args);
                 case "list" -> handleList(sender);
                 default -> {
@@ -567,6 +573,38 @@ public class TownCommand implements TabExecutor {
         TownManager.setOutpostAdmin(player, outpost, target);
     }
 
+    private void handleUpgrade(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        Player player = requirePlayer(sender);
+        TownDOO town = resolveOwnTown(sender);
+        if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
+            Notification.warn(sender, Language.townCommandText.upgradeConfirm, town.getName());
+            return;
+        }
+        TownManager.upgradePermissionMode(player, town);
+    }
+
+    private void handleRelease(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        if (!sender.isOp()) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.releaseAdminOnly);
+        }
+        DominionDOO outpost = requireOutpost(args, 1);
+        if (!outpost.isTownOutpost()) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.releaseNotOutpost, outpost.getName());
+        }
+        if ("FOUNDING".equals(outpost.getClaimKind())) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.releaseFoundingDenied);
+        }
+        if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+            Notification.warn(sender, Language.townCommandText.releaseConfirm,
+                    outpost.getName(), CacheManager.instance.getPlayerName(outpost.getOwner()));
+            return;
+        }
+        TownManager.releaseOutpost(sender, outpost);
+    }
+
     private void handleInfo(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         TownDOO town = args.length >= 2
                 ? TownManager.requireTown(args[1])
@@ -703,7 +741,7 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
-            "admin", "group", "info", "list");
+            "admin", "upgrade", "release", "group", "info", "list");
     private static final List<String> GROUP_SUB_COMMANDS = List.of(
             "create", "rename", "delete", "list", "info", "add", "remove");
 
@@ -712,7 +750,11 @@ public class TownCommand implements TabExecutor {
                                                 @NotNull String label, @NotNull String[] args) {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1) {
-            filter(SUB_COMMANDS, args[0], suggestions);
+            List<String> visible = new ArrayList<>(SUB_COMMANDS);
+            if (sender instanceof Player player && !player.isOp()) {
+                visible.remove("release");
+            }
+            filter(visible, args[0], suggestions);
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
@@ -732,11 +774,18 @@ public class TownCommand implements TabExecutor {
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
                         filter(playerNames(), args[1], suggestions);
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
+                case "release" -> {
+                    if (!(sender instanceof Player player) || player.isOp()) {
+                        filter(releasableOutpostNames(), args[1], suggestions);
+                    }
+                }
+                case "upgrade" -> filter(List.of("confirm"), args[1], suggestions);
                 case "group" -> filter(GROUP_SUB_COMMANDS, args[1], suggestions);
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
                 case "create", "join", "disband" -> filter(List.of("confirm"), args[2], suggestions);
+                case "release" -> filter(List.of("confirm"), args[2], suggestions);
                 case "trust", "untrust" -> filter(List.of("town", "outpost"), args[2], suggestions);
                 case "admin" -> filter(playerNames(), args[2], suggestions);
                 case "group" -> {
@@ -789,6 +838,18 @@ public class TownCommand implements TabExecutor {
 
     private static @NotNull List<String> dominionNames() {
         return CacheManager.instance.getAllDominionNames();
+    }
+
+    private static @NotNull List<String> releasableOutpostNames() {
+        List<String> names = new ArrayList<>();
+        for (String name : CacheManager.instance.getAllDominionNames()) {
+            DominionDTO dominion = CacheManager.instance.getDominion(name);
+            if (dominion instanceof DominionDOO outpost && outpost.isTownOutpost()
+                    && !"FOUNDING".equals(outpost.getClaimKind())) {
+                names.add(name);
+            }
+        }
+        return names;
     }
 
     private static @NotNull List<String> townGroupNames(@NotNull CommandSender sender) {

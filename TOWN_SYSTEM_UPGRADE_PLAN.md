@@ -34,7 +34,7 @@ Phase 1 实现落点（对照 §9）：
   一律钳到 -1；
 - 命令：独立 `/town` TabExecutor（create/disband/invite/join/leave/
   kick/transfer/trust/untrust/deposit/withdraw/outpost/admin/info/
-  list）；`/dom town release <dominion>` 管理员仲裁；
+  list）；`/town release <dominion> [confirm]` 管理员仲裁；
   join 需要镇长/助理的邀请（内存邀请，5 分钟，对应 §7.1 威胁模型）；
 - 权限接管：`Others.checkPrivilegeFlagSilence` 单点注入镇级联
   （127 个版本事件处理器自动覆盖）；管理路径由
@@ -170,7 +170,7 @@ Trust 判定从 Phase 1 起即生效（镇属 Outpost 的级联中包含 Trust �
 | 解散 Town | **全部 Outpost 同步解散**（删除保护数据，不碰方块），写入归档供 admin 恢复；Founding 一并解散——任何镇属领地都不转化为个人领地 |
 | 无镇 Outpost 个人转让 | 受让人在镇 → 自动挂靠其镇并通知；受让人无镇 → 保持无镇 |
 | 镇属 Outpost | 个人不可转让（镇财产）；仅管理员 release |
-| `/dom town release <dominion>` | （管理员）Outpost → 无镇，返还 contributor，用于仲裁 |
+| `/town release <dominion> [confirm]` | （仅 OP）Outpost → 无镇，返还 contributor，用于仲裁 |
 
 ## 4. 数据迁移与成员并入
 
@@ -423,7 +423,8 @@ town_claim (
 - 入镇确认列出**将被转为镇所有的全部 Dominion 清单与数量**，二次确认；
 - attach / detach / kick / leave / release 全部写审计
   （`attached_by` / `attached_at` + 操作日志）；
-- 管理员 `/dom town release` 仲裁通道；
+- 管理员 `/town release <outpost> confirm` 仲裁通道；释放时清除 Outpost override、
+  `@town`、小镇镜像组/成员与 Outpost Trust；建国属地拒绝释放；
 - 配置 `town.allow-join-with-legacy-land: false` 可整体禁止带地入镇；
 - **解散同步删地是最高危操作**（含他人贡献的 legacy 地一并解散）：
   解散确认强制列出将解散的 Outpost 数量与贡献者名单、二次确认、
@@ -734,7 +735,7 @@ MainMenu
     ├── [所有小镇]    ← TownList 管理员模式:含解散仲裁、银行/成员查看
     └── [LIST ALL]   ← 现有 AllDominion(所有 Outpost/领地,本服);
                        行上加 [镇名] 标记,镇属 Outpost 的管理页给
-                       管理员 [release] 仲裁按钮(/dom town release)
+                       管理员 [release] 仲裁按钮（/town release，二次确认）
 ```
 
 OutpostManage = 现有 DominionManage 的镇属变体:

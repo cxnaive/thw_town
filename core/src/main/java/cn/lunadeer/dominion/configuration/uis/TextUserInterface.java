@@ -71,6 +71,7 @@ public class TextUserInterface extends ConfigurationFile {
     public static cn.lunadeer.dominion.uis.town.TownGroups.TownGroupsTuiText townGroupsTuiText = new cn.lunadeer.dominion.uis.town.TownGroups.TownGroupsTuiText();
     public static cn.lunadeer.dominion.uis.town.TownGroupManage.TownGroupManageTuiText townGroupManageTuiText = new cn.lunadeer.dominion.uis.town.TownGroupManage.TownGroupManageTuiText();
     public static cn.lunadeer.dominion.uis.town.TownGroupMemberSelector.TownGroupMemberSelectorTuiText townGroupMemberSelectorTuiText = new cn.lunadeer.dominion.uis.town.TownGroupMemberSelector.TownGroupMemberSelectorTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownTemplateFlags.TownTemplateFlagsTuiText townTemplateFlagsTuiText = new cn.lunadeer.dominion.uis.town.TownTemplateFlags.TownTemplateFlagsTuiText();
     public static cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsTuiText townTrustsTuiText = new cn.lunadeer.dominion.uis.town.TownTrusts.TownTrustsTuiText();
     public static cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsTuiText outpostTrustsTuiText = new cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsTuiText();
     public static cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText townBankTuiText = new cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText();

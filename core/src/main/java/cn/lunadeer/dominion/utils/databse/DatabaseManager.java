@@ -58,6 +58,13 @@ public class DatabaseManager {
                 config.setDriverClassName("com.mysql.cj.jdbc.Driver");
                 config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + name);
             }
+            // SQLite disables foreign-key enforcement per connection by
+            // default. Apply it to every pooled connection so the template
+            // and override cascade rules are real, not documentation only.
+            // HikariConfig is reused by set(), so explicitly clear the SQL
+            // when switching to another database type.
+            config.setConnectionInitSql(this.type.equals(DatabaseType.SQLITE)
+                    ? "PRAGMA foreign_keys=ON" : null);
             config.setUsername(user);
             config.setPassword(pass);
             config.setMaximumPoolSize(poolSize);

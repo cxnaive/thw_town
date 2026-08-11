@@ -34,6 +34,7 @@ dominion-list-tui-text:
 dominion-manage-tui-text:
   release-description: 仅管理员：把此前哨从镇里剥离，归还给贡献者。
   release-button: 剥离
+  release-confirm: §c5 秒内再次点击确认释放 {0}。小镇组、镜像成员和该属地 Trust 都会被删除。
   trusts-description: 管理此镇属前哨的单人 Trust 授权。
   title: 管理领地 {0}
   button: 管理领地
@@ -118,6 +119,10 @@ group-setting-tui-text:
   title: 权限组 {0} 设置
   description: 管理权限组 {0} 的权限配置
   button: 设置
+  inherit: 继承
+  allow: 允许
+  deny: 拒绝
+  reset: 恢复继承
 select-member-tui-text:
   title: 选择成员
   description: 选择成员加入权限组
@@ -166,6 +171,12 @@ town-info-tui-text:
   balance-line: '§7镇库余额: §b{0}'
   outpost-count-line: '§7前哨数: §b{0}'
   your-role-line: '§7你的角色: §b{0}'
+  permission-mode-legacy: §7权限模式：§6旧版属地独立权限
+  permission-mode-template: §7权限模式：§a小镇权限模板
+  upgrade-button: 升级权限模式
+  upgrade-description: 一次性重置：全部附属领地将继承小镇模板。
+  upgrade-waiting: §7只有镇长可以执行这项不可逆升级。
+  upgrade-confirm: §c5 秒内再次点击确认升级 {0}。全部镇属领地的小镇组权限将重置为继承，且不可撤销。
   members-button: 成员
   members-description: 查看并管理小镇成员。
   trusts-button: 授权
@@ -253,6 +264,7 @@ town-groups-tui-text:
   open-button: 管理
   open-description: 查看成员并管理此小镇组。
   no-groups: 本小镇尚未创建自定义组。
+  default-template-line: §e小镇成员 §7(@town) - 镇级默认权限模板
 town-group-manage-tui-text:
   title: '小镇组：{0}'
   button: 小镇组
@@ -260,6 +272,7 @@ town-group-manage-tui-text:
   member-line: §b{0}
   add-button: 添加成员
   rename-button: 修改显示名
+  template-button: 权限模板
   rename-hint: 请输入新的显示名（支持中文和空格）；输入 - 则恢复为内部名。
   remove-button: 移除
   delete-button: 删除小镇组
@@ -273,3 +286,8 @@ town-group-member-selector-tui-text:
   select-button: 选择
   select-description: 将此成员分配到该组；若其已在其他组，将移动到当前组。
   no-candidates: 所有小镇成员都已在当前组中。
+town-template-flags-tui-text:
+  title: '小镇权限模板：{0}'
+  button: 权限模板
+  description: 编辑所有附属领地默认继承的镇级权限。
+  mode-hint: §7修改只会同步到仍处于继承状态的附属领地。

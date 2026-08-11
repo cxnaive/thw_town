@@ -90,6 +90,12 @@ public class TownManager {
         public String townGroupMemberRemoved = "Removed {0} from their town group; they now use @town.";
         public String townGroupMirrorReserved = "Town-managed group mirrors cannot be deleted, renamed, or edited here; manage membership from the town.";
         public String townGroupMirrorTag = " §7[From town]";
+        public String templateModeRequired = "Town {0} has not upgraded to town template permission mode.";
+        public String templateModeAlreadyEnabled = "Town {0} already uses town template permission mode.";
+        public String templateModeMayorOnly = "Only the mayor of {0} can perform this irreversible upgrade.";
+        public String templateModeUpgradeSuccess = "Town {0} upgraded to template permission mode. {1} outpost(s) now inherit town templates. Please review the templates now.";
+        public String templateFlagUpdated = "Set town template {0} flag {1} to {2}.";
+        public String outpostOverrideCleared = "Flag {0} on group {1} now inherits the town template.";
         public String leaveSuccess = "You left town {0}. Your land stays with the town.";
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
         public String kickSuccess = "Kicked {0} from town {1}.";
@@ -121,6 +127,7 @@ public class TownManager {
         public String releaseSuccess = "Outpost {0} released from town {1}, returned to contributor {2}.";
         public String releaseNotOutpost = "Dominion {0} is not a town outpost.";
         public String releaseFoundingDenied = "A founding outpost can never be released; it dissolves with its town.";
+        public String releaseAdminOnly = "Only an OP may release a town outpost.";
         public String onlyMemberCanDeposit = "Only members of {0} can deposit into its bank.";
         public String outpostAdminSet = "Outpost admin of {0} set to {1}.";
         public String outpostAdminCleared = "Outpost admin of {0} cleared.";
@@ -410,6 +417,73 @@ public class TownManager {
     }
 
     /**
+     * One-way destructive migration requested explicitly by the mayor.
+     * Mirrors are healed first while the town is still LEGACY; the actual
+     * reset and mode flip then happen atomically in TownPermissionManager.
+     */
+    public static void upgradePermissionMode(@NotNull Player operator,
+                                             @NotNull TownDOO town) throws Exception {
+        boolean bypass = bypassLimit(operator);
+        TownPermissionManager.assertUpgradeAllowed(
+                town, operator.getUniqueId(), bypass);
+        for (DominionDOO outpost : outpostsOf(town.getId())) {
+            TownGroupSyncHandler.syncOutpost(town, outpost);
+        }
+        int outposts = TownPermissionManager.upgrade(
+                town, operator.getUniqueId(), bypass);
+        cache().reloadNow();
+        TownGroupSyncHandler.reloadCaches();
+        XLogger.info("Town {0} ({1}) upgraded to TEMPLATE_V1; reset {2} outpost(s) to inheritance.",
+                town.getName(), town.getId(), outposts);
+        Notification.info(operator, Language.townManagerText.templateModeUpgradeSuccess,
+                town.getName(), outposts);
+    }
+
+    public static int townTemplateGroupKey(@NotNull TownDOO town,
+                                           @NotNull String groupName) throws DominionException {
+        if (TOWN_MEMBER_GROUP_NAME.equalsIgnoreCase(groupName)) {
+            return TownPermissionManager.TOWN_DEFAULT_GROUP_ID;
+        }
+        return requireTownGroup(town, groupName).getId();
+    }
+
+    public static void setTownTemplateFlag(@NotNull Player operator, @NotNull TownDOO town,
+                                           @NotNull String groupName, @NotNull PriFlag flag,
+                                           boolean value) throws Exception {
+        assertManager(operator, town);
+        int groupKey = townTemplateGroupKey(town, groupName);
+        TownPermissionManager.setTemplateFlag(town, groupKey, flag, value);
+        Notification.info(operator, Language.townManagerText.templateFlagUpdated,
+                groupName, flag.getDisplayName(), value);
+    }
+
+    /** Route an existing Boolean group write to a sparse local override. */
+    public static @NotNull GroupDTO setTownOutpostOverride(@NotNull DominionDOO outpost,
+                                                           @NotNull GroupDTO group,
+                                                           @NotNull PriFlag flag,
+                                                           boolean value) throws Exception {
+        if (!isTownManagedGroup(group, outpost)) {
+            return group.setFlagValue(flag, value);
+        }
+        TownPermissionManager.setOutpostFlag(outpost, group, flag, value);
+        GroupDOO refreshed = GroupDOO.select(group.getId());
+        return refreshed == null ? group : refreshed;
+    }
+
+    public static void clearTownOutpostOverride(@NotNull Player operator,
+                                                @NotNull DominionDOO outpost,
+                                                @NotNull GroupDTO group,
+                                                @NotNull PriFlag flag) throws Exception {
+        cn.lunadeer.dominion.misc.Asserts.assertDominionAdmin(operator, outpost);
+        if (!isTownManagedGroup(group, outpost)) {
+            throw new DominionException(Language.townManagerText.templateModeRequired, "?");
+        }
+        TownPermissionManager.clearOutpostOverride(outpost, group, flag);
+        Notification.info(operator, Language.townManagerText.outpostOverrideCleared,
+                flag.getDisplayName(), groupDisplayName(group));
+    }
+
+    /**
      * Town-cascade management check for a town outpost: mayor/assistant,
      * the appointed outpost admin (plan §2.4), or the recorded owner. The
      * owner of a contributed dominion is the CONTRIBUTOR — contributing
@@ -477,13 +551,16 @@ public class TownManager {
 
         DominionDOO foundingCreated = null;
         try {
+            TownPermissionManager.initializeNewTown(town);
             TownMemberDOO.insert(town.getId(), founder.getUniqueId(),
                     TownMemberDOO.TownRole.MAYOR, TownMemberDOO.MemberSource.FOUNDER);
             if (foundingToCreate != null) {
                 foundingCreated = DominionDOO.insert(foundingToCreate);
-                foundingCreated.bornIntoTown(town.getId());
                 foundingCreated.setClaimKind("FOUNDING");
-                ensureTownMemberGroup(foundingCreated);
+                // Publish the town link only after the immutable founding
+                // marker is present, so a concurrent release can never see
+                // this row as a releasable NORMAL outpost.
+                foundingCreated.bornIntoTown(town.getId());
                 TownGroupSyncHandler.syncOutpost(town, foundingCreated);
                 // third-party visibility: town-driven creation bypasses the
                 // provider pipeline, so fire the lifecycle event explicitly
@@ -603,7 +680,7 @@ public class TownManager {
                 DominionDOO.deleteById(outpost.getId());
                 dissolved++;
             } else {
-                outpost.detachFromTown();
+                TownGroupSyncHandler.releaseOutpost(outpost.getId());
                 returned++;
                 Player contributor = operator.getServer().getPlayer(outpost.getOwner());
                 if (contributor != null) {
@@ -976,7 +1053,6 @@ public class TownManager {
                 }
             }
             created.bornIntoTown(town.getId());
-            ensureTownMemberGroup(created);
             TownGroupSyncHandler.syncOutpost(town, created);
             // third-party visibility (notification only, see createTown)
             cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
@@ -1068,6 +1144,9 @@ public class TownManager {
      * Founding outposts can never be released (invariant 5).
      */
     public static void releaseOutpost(@NotNull CommandSender admin, @NotNull DominionDOO dominion) throws Exception {
+        if (!admin.isOp()) {
+            throw new DominionException(Language.townManagerText.releaseAdminOnly);
+        }
         Integer townId = dominion.getTownId();
         if (townId == null) {
             throw new DominionException(Language.townManagerText.releaseNotOutpost, dominion.getName());
@@ -1077,9 +1156,16 @@ public class TownManager {
         }
         TownDOO town = cache().getTown(townId);
         String townName = town == null ? "#" + townId : town.getName();
-        dominion.detachFromTown();
+        TownGroupSyncHandler.releaseOutpost(dominion.getId());
+        XLogger.info("Administrator {0} released outpost {1} ({2}) from town {3} to contributor {4}.",
+                admin.getName(), dominion.getName(), dominion.getId(), townName, dominion.getOwner());
         Notification.info(admin, Language.townManagerText.releaseSuccess,
                 dominion.getName(), townName, CacheManager.instance.getPlayerName(dominion.getOwner()));
+        if (!(admin instanceof Player player && player.getUniqueId().equals(dominion.getOwner()))) {
+            notifyIfOnline(dominion.getOwner(), Language.townManagerText.releaseSuccess,
+                    dominion.getName(), townName,
+                    CacheManager.instance.getPlayerName(dominion.getOwner()));
+        }
     }
 
     /**
@@ -1170,7 +1256,6 @@ public class TownManager {
         if (dominion.isTownOutpost()) return;
         mergeMembers(town, dominion, operator);
         dominion.attachToTown(town.getId(), operator);
-        ensureTownMemberGroup(dominion);
         TownGroupSyncHandler.syncOutpost(town, dominion);
     }
 
@@ -1246,18 +1331,6 @@ public class TownManager {
             }
         }
         return new boolean[]{build, destroy, switchFlag, itemUse};
-    }
-
-    /**
-     * Ensure the built-in town-member flag group exists on the outpost
-     * (plan §5.1). Created with the standard group defaults (flags.yml).
-     */
-    public static void ensureTownMemberGroup(@NotNull DominionDOO dominion) throws SQLException {
-        List<GroupDTO> groups = CacheManager.instance.getCache().getGroupCache().getDominionGroups(dominion.getId());
-        for (GroupDTO group : groups) {
-            if (group.getNamePlain().equals(TOWN_MEMBER_GROUP_NAME)) return;
-        }
-        GroupDOO.create(TOWN_MEMBER_GROUP_NAME, dominion);
     }
 
     /**

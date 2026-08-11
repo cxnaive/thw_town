@@ -275,6 +275,12 @@ public class DominionDOO implements DominionDTO {
     }
 
     public static void deleteById(Integer dominion) throws SQLException {
+        // Keep the new sparse override table clean even on legacy SQLite
+        // databases that were created while foreign_keys was disabled.
+        Delete.delete()
+                .from("town_group_outpost_override")
+                .where("dominion_id = ?", dominion)
+                .execute();
         Delete.delete()
                 .from("dominion")
                 .where("id = ?", dominion)
