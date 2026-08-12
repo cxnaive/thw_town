@@ -35,7 +35,7 @@ public class TownDisbandConfirmInputter {
             try {
                 Player player = (Player) sender;
                 TownDOO town = TownManager.requireTown(townName);
-                TownManager.assertManager(player, town);
+                TownManager.assertCanDisband(player, town);
                 List<DominionDOO> outposts = TownManager.outpostsOf(town.getId());
                 cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
                         () -> prompt(sender, townName, outposts));
@@ -49,6 +49,7 @@ public class TownDisbandConfirmInputter {
         try {
             Player player = (Player) sender;
             TownDOO town = TownManager.requireTown(townName);
+            TownManager.assertCanDisband(player, town);
             List<String> contributors = new ArrayList<>();
             for (DominionDOO outpost : outposts) {
                 if (outpost.getAttachedBy() == null) continue;
@@ -91,7 +92,7 @@ public class TownDisbandConfirmInputter {
                         try {
                             // roles may have changed since the prompt
                             // opened — re-assert before the destructive op
-                            TownManager.assertManager(sender, TownManager.requireTown(townName));
+                            TownManager.assertCanDisband(sender, TownManager.requireTown(townName));
                             TownManager.disbandTown(sender, TownManager.requireTown(townName));
                         } catch (Exception e) {
                             Notification.error(sender, e);

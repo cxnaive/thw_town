@@ -119,6 +119,7 @@ public class TownInfo extends AbstractUI {
             boolean bypass = bypassLimit(player);
             boolean memberOrAdmin = role != null || bypass;
             boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
+            boolean canDisband = role == TownMemberDOO.TownRole.MAYOR || bypass;
 
             ListView view = ListView.create(10, button(player, town.getName()));
             view.title(formatString(TextUserInterface.townInfoTuiText.title, town.getName()));
@@ -182,6 +183,8 @@ public class TownInfo extends AbstractUI {
                 view.add(Line.create()
                         .append(TownMembers.inviteButton(player, town.getName()).build())
                         .append(TextUserInterface.townInfoTuiText.inviteDescription));
+            }
+            if (canDisband) {
                 view.add(Line.create()
                         .append(TownDisbandConfirmInputter.createTuiButtonOn(player, town.getName())
                                 .needPermission(defaultPermission).build())
@@ -264,6 +267,7 @@ public class TownInfo extends AbstractUI {
             boolean bypass = bypassLimit(player);
             boolean memberOrAdmin = role != null || bypass;
             boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
+            boolean canDisband = role == TownMemberDOO.TownRole.MAYOR || bypass;
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townInfoCui.title, town.getName()));
@@ -291,6 +295,8 @@ public class TownInfo extends AbstractUI {
             if (manager) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.inviteButton,
                         () -> TownMembers.createInviteOn(player, town.getName()), true));
+            }
+            if (canDisband) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.disbandButton,
                         () -> TownDisbandConfirmInputter.createOn(player, town.getName()), true));
             }

@@ -276,7 +276,7 @@ public class TownCommand implements TabExecutor {
 
     private void handleDisband(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         TownDOO town = resolveManagedTown(sender);
-        TownManager.assertManager(sender, town);
+        TownManager.assertCanDisband(sender, town);
         List<DominionDOO> outposts = TownManager.outpostsOf(town.getId());
         if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
             // §7.1: disband destroys other players' contributed land too —

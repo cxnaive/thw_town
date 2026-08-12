@@ -138,6 +138,7 @@ public class TownManager {
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
         public String kickSuccess = "Kicked {0} from town {1}.";
         public String cannotKickManager = "You cannot kick the mayor or an assistant.";
+        public String onlyMayorCanDisband = "Only the mayor of {0} can disband the town.";
         public String onlyMayorCanTransfer = "Only the current mayor of {0} can transfer the mayor role.";
         public String transferSuccess = "Mayor of {0} transferred to {1}.";
         public String setRoleSuccess = "Set {0}'s role to {1} in town {2}.";
@@ -454,6 +455,16 @@ public class TownManager {
         }
     }
 
+    /** Disbanding is restricted to the mayor; admins and console may arbitrate. */
+    public static void assertCanDisband(@NotNull CommandSender sender,
+                                        @NotNull TownDOO town) throws DominionException {
+        if (!(sender instanceof Player player)) return;
+        if (bypassLimit(player)) return;
+        if (!town.getMayorUuid().equals(player.getUniqueId())) {
+            throw new DominionException(Language.townManagerText.onlyMayorCanDisband, town.getName());
+        }
+    }
+
     /**
      * One-way destructive migration requested explicitly by the mayor.
      * Mirrors are healed first while the town is still LEGACY; the actual
@@ -666,6 +677,7 @@ public class TownManager {
      * dissolve. Members and trusts cascade-delete with the town row.
      */
     public static void disbandTown(@NotNull CommandSender operator, @NotNull TownDOO town) throws Exception {
+        assertCanDisband(operator, town);
         boolean dissolveAll = !"return-contributed".equals(Configuration.town.disbandPolicy);
         List<DominionDOO> outposts = outpostsOf(town.getId());
         int dissolved = 0;

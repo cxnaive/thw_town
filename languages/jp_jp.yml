@@ -624,6 +624,7 @@ town-manager-text:
   mayor-cannot-leave: The mayor cannot leave; transfer the mayor role or disband the town first.
   kick-success: Kicked {0} from town {1}.
   cannot-kick-manager: You cannot kick the mayor or an assistant.
+  only-mayor-can-disband: Only the mayor of {0} can disband the town.
   transfer-success: Mayor of {0} transferred to {1}.
   target-not-member: '{0} is not a member of town {1}.'
   trust-success: Trusted {0} on {1} (scope {2}).

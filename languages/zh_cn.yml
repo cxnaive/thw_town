@@ -653,6 +653,7 @@ town-manager-text:
   mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散城镇。
   kick-success: 已将 {0} 踢出城镇 {1}。
   cannot-kick-manager: 你不能踢出镇长或助理。
+  only-mayor-can-disband: 只有城镇 {0} 的镇长可以解散城镇。
   transfer-success: 城镇 {0} 的镇长已转让给 {1}。
   target-not-member: '{0} 不是城镇 {1} 的成员。'
   trust-success: 已在 {1}（范围 {2}）上信任 {0}。
