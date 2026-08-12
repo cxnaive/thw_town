@@ -11,7 +11,6 @@ import cn.lunadeer.dominion.cache.server.TownCache;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.configuration.Language;
-import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.GroupDOO;
 import cn.lunadeer.dominion.doos.MemberDOO;
@@ -49,7 +48,7 @@ import java.util.concurrent.ExecutionException;
 
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionIntersect;
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionName;
-import static cn.lunadeer.dominion.misc.Asserts.assertDominionSize;
+import static cn.lunadeer.dominion.misc.Asserts.assertTownOutpostSize;
 import static cn.lunadeer.dominion.misc.Others.bypassLimit;
 
 /**
@@ -166,7 +165,8 @@ public class TownManager {
         public String releaseSuccess = "Outpost {0} released from town {1}, returned to contributor {2}.";
         public String releaseNotOutpost = "Dominion {0} is not a town outpost.";
         public String releaseFoundingDenied = "A founding outpost can never be released; it dissolves with its town.";
-        public String releaseAdminOnly = "Only an OP may release a town outpost.";
+        public String releaseAdminOnly = "Only an OP may use administrator town arbitration.";
+        public String releaseMayorContributedOnly = "Only the mayor may return contributed outposts of their own town; town-created outposts cannot be returned.";
         public String onlyMemberCanDeposit = "Only members of {0} can deposit into its bank.";
         public String outpostAdminSet = "Outpost admin of {0} set to {1}.";
         public String outpostAdminCleared = "Outpost admin of {0} cleared.";
@@ -1001,12 +1001,6 @@ public class TownManager {
         return cents;
     }
 
-    /** Cents for a computed price; any positive price costs at least 1 cent. */
-    private static long priceToCents(double price) {
-        if (price <= 0) return 0;
-        return Math.max(1, Math.round(price * 100.0));
-    }
-
     public static void deposit(@NotNull Player player, @NotNull TownDOO town, double amount) throws Exception {
         long cents = toCents(amount);
         double quantized = cents / 100.0;
@@ -1069,9 +1063,9 @@ public class TownManager {
     // ------------------------------------------------------------------
 
     /**
-     * Create a remote town outpost. Reuses the personal limitation pipeline
-     * (size/Y, overlap, spawn protection) with the counting and charging
-     * subjects switched to the town (plan §4.6/§12.1).
+     * Create a remote town outpost. Horizontal size and economy are town-level
+     * policy; vertical/world bounds and minimum dimensions remain compatible
+     * with the operator's limitation file.
      */
     public static @NotNull DominionDOO createRemoteOutpost(@NotNull Player operator, @NotNull TownDOO town,
                                                            @NotNull String dominionName, @NotNull World world,
@@ -1081,122 +1075,229 @@ public class TownManager {
             throw new DominionException(Language.townManagerText.outpostRemoteDisabled);
         }
         assertDominionName(dominionName);
-        assertDominionSize(operator, world.getUID(), cuboid);
-        assertTownOutpostAmount(operator, town, world.getUID());
+        assertTownOutpostSize(world.getUID(), cuboid);
+        assertTownOutpostAmount(town, world.getUID());
 
         DominionDOO toCreate = new DominionDOO(operator.getUniqueId(), dominionName, world.getUID(), cuboid, -1);
         assertDominionIntersect(operator, toCreate, cuboid);
 
-        double price = priceOf(operator, CuboidDTO.ZERO, cuboid);
-        long cents = bypassLimit(operator) ? 0 : priceToCents(price);
-        // insert first, charge after: a failed insert must never eat money
-        DominionDOO created = DominionDOO.insert(toCreate);
-        boolean charged = false;
+        long quotedCents = townOutpostPriceCents(CuboidDTO.ZERO, cuboid);
+        long cents = bypassLimit(operator) ? 0 : quotedCents;
+        double price = cents / 100.0;
+        DominionDOO created = TownGroupSyncHandler.createRemoteOutpost(
+                town, operator.getUniqueId(), dominionName, world.getUID(), cuboid, cents);
+
+        // The database transaction is already committed. This event exposes
+        // the completed result to integrations, but cannot veto or roll back
+        // town land after it has become durable.
+        cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
+                new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
+                        operator, dominionName, operator.getUniqueId(), world, cuboid, null);
+        createEvent.setSkipEconomy(true);
         try {
-            if (cents > 0) {
-                charged = town.tryChargeCents(cents);
-                if (!charged) {
-                    // concurrent drain between the amount check and the
-                    // charge: the loser lands here
-                    throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                            town.getName(), cents / 100.0, town.getBalance());
-                }
-            }
-            created.bornIntoTown(town.getId());
-            TownGroupSyncHandler.syncOutpost(town, created);
-            // third-party visibility (notification only, see createTown)
-            cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
-                    new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
-                            operator, dominionName, operator.getUniqueId(), world, cuboid, null);
-            createEvent.setSkipEconomy(true);
             callLifecycleEvent(createEvent);
-            createEvent.getFutureToComplete().complete(created);
         } catch (Exception e) {
-            // any failure after the insert must undo both legs: free the
-            // land and — only if the charge actually happened — put the
-            // money back into the town bank
-            XLogger.error("createRemoteOutpost failed after insert (town={0}, dominion={1}); rolling back. {2}",
+            XLogger.error("DominionCreateEvent failed after remote outpost commit "
+                            + "(town={0}, dominion={1}): {2}",
                     town.getId(), created.getId(), e.getMessage());
-            try {
-                DominionDOO.deleteById(created.getId());
-                if (charged) {
-                    town.adjustBalance(cents / 100.0);
-                }
-                cache().reloadNow();
-            } catch (Exception rollbackError) {
-                XLogger.error("Rollback of failed createRemoteOutpost ALSO failed (dominion={0}): {1}",
-                        created.getId(), rollbackError.getMessage());
-            }
-            throw e;
         }
-        cache().reloadNow();
+        createEvent.getFutureToComplete().complete(created);
         Notification.info(operator, Language.townManagerText.outpostCreateSuccess,
                 dominionName, town.getName(), Math.max(price, 0));
         return created;
     }
 
     /**
-     * Resize economy for town outposts: same price computation as
-     * Asserts.assertEconomy, but the town bank is charged/refunded.
+     * Atomically resize a town outpost and update its bank/paid-value ledger.
+     * The guarded SQL writes share one transaction, so a concurrent resize or
+     * insufficient balance cannot leave either land or money half-updated.
      */
-    public static void chargeTownResize(@NotNull Player operator, @NotNull TownDOO town,
-                                        @NotNull CuboidDTO before, @NotNull CuboidDTO after) throws Exception {
-        double price = priceOf(operator, before, after);
-        if (price > 0) {
-            if (!town.tryChargeCents(priceToCents(price))) {
-                throw new DominionException(Language.townManagerText.insufficientTownFunds,
-                        town.getName(), price, town.getBalance());
+    public static @NotNull DominionDOO resizeTownOutpost(@Nullable Player operator,
+                                                         @NotNull TownDOO town,
+                                                         @NotNull DominionDOO outpost,
+                                                         @NotNull CuboidDTO before,
+                                                         @NotNull CuboidDTO after,
+                                                         boolean skipEconomy) throws Exception {
+        long paidBefore = outpost.getTownPaidValueCents();
+        boolean footprintChanged = before.getSquare() != after.getSquare();
+        long paidAfter = paidBefore;
+        long bankDeltaCents = 0;
+        if (footprintChanged && (skipEconomy || operator == null || bypassLimit(operator)
+                || !Configuration.town.outpostPricing.enable)) {
+            // Once land is changed for free, the scalar ledger can no longer
+            // prove which part was paid. Drop it instead of allowing a later
+            // contraction to refund value that may have been free.
+            paidAfter = 0;
+        } else {
+            long grossDeltaCents = townOutpostPriceCents(before, after);
+            if (grossDeltaCents > 0) {
+                paidAfter = Math.min(Math.addExact(paidBefore, grossDeltaCents),
+                        townOutpostValueCents(after.getSquare()));
+                bankDeltaCents = -grossDeltaCents;
+            } else if (grossDeltaCents < 0) {
+                long removedGrossCents = -grossDeltaCents;
+                long refundableGrossCents = Math.min(paidBefore, removedGrossCents);
+                paidAfter = Math.min(paidBefore - refundableGrossCents,
+                        townOutpostValueCents(after.getSquare()));
+                bankDeltaCents = Math.round(
+                        refundableGrossCents * Configuration.town.outpostPricing.refundRate);
+            } else if (footprintChanged && paidBefore > 0) {
+                paidAfter = 0;
             }
-        } else if (price < 0) {
-            Limitation.Economy ecoConf = Configuration.getPlayerLimitation(operator).economy;
-            town.adjustBalance(-price * ecoConf.refundRate);
+        }
+
+        try (Connection conn = DatabaseManager.instance.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (bankDeltaCents < 0) {
+                    long chargeCents = -bankDeltaCents;
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE town SET balance = balance - ? WHERE id = ? AND balance >= ?")) {
+                        ps.setLong(1, chargeCents);
+                        ps.setInt(2, town.getId());
+                        ps.setLong(3, chargeCents);
+                        if (ps.executeUpdate() != 1) {
+                            throw new DominionException(Language.townManagerText.insufficientTownFunds,
+                                    town.getName(), chargeCents / 100.0, town.getBalance());
+                        }
+                    }
+                } else if (bankDeltaCents > 0) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE town SET balance = balance + ? WHERE id = ?")) {
+                        ps.setLong(1, bankDeltaCents);
+                        ps.setInt(2, town.getId());
+                        if (ps.executeUpdate() != 1) {
+                            throw new SQLException("Town " + town.getId() + " no longer exists.");
+                        }
+                    }
+                }
+
+                String resizeSql = "UPDATE dominion SET x1 = ?, y1 = ?, z1 = ?, x2 = ?, y2 = ?, z2 = ?, "
+                        + "town_paid_value = ? WHERE id = ? AND x1 = ? AND y1 = ? AND z1 = ? "
+                        + "AND x2 = ? AND y2 = ? AND z2 = ? AND town_paid_value = ?";
+                try (PreparedStatement ps = conn.prepareStatement(resizeSql)) {
+                    ps.setInt(1, after.x1());
+                    ps.setInt(2, after.y1());
+                    ps.setInt(3, after.z1());
+                    ps.setInt(4, after.x2());
+                    ps.setInt(5, after.y2());
+                    ps.setInt(6, after.z2());
+                    ps.setLong(7, paidAfter);
+                    ps.setInt(8, outpost.getId());
+                    ps.setInt(9, before.x1());
+                    ps.setInt(10, before.y1());
+                    ps.setInt(11, before.z1());
+                    ps.setInt(12, before.x2());
+                    ps.setInt(13, before.y2());
+                    ps.setInt(14, before.z2());
+                    ps.setLong(15, paidBefore);
+                    if (ps.executeUpdate() != 1) {
+                        throw new SQLException("Dominion " + outpost.getId()
+                                + " changed concurrently; retry the resize.");
+                    }
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
         cache().reloadNow();
+        CacheManager.instance.getCache().getDominionCache().load(outpost.getId());
+        DominionDOO updated = DominionDOO.select(outpost.getId());
+        if (updated == null) {
+            throw new SQLException("Dominion " + outpost.getId() + " disappeared after resize.");
+        }
+        return updated;
     }
 
-    private static double priceOf(@NotNull Player operator, @NotNull CuboidDTO before, @NotNull CuboidDTO after) {
-        Limitation.Economy ecoConf = Configuration.getPlayerLimitation(operator).economy;
-        if (!ecoConf.enable || bypassLimit(operator)) {
+    /**
+     * Difference between the cumulative values of two outpost footprints.
+     * A negative result represents value removed by contraction;
+     * the refund rate is applied only when that value reaches the bank.
+     */
+    public static double townOutpostPrice(@NotNull CuboidDTO before, @NotNull CuboidDTO after) {
+        return townOutpostPriceCents(before, after) / 100.0;
+    }
+
+    private static long townOutpostPriceCents(@NotNull CuboidDTO before, @NotNull CuboidDTO after) {
+        if (!Configuration.town.outpostPricing.enable) {
             return 0;
         }
-        long amount = ecoConf.squareOnly ? after.minusSquareWith(before) : after.minusVolumeWith(before);
-        return amount * ecoConf.pricePerBlock;
+        return townOutpostValueCents(after.getSquare()) - townOutpostValueCents(before.getSquare());
+    }
+
+    private static long townOutpostValueCents(long area) {
+        final long freeLimit = 500L * 500L;
+        final long tier1000Limit = 1000L * 1000L;
+        final long tier1500Limit = 1500L * 1500L;
+        final long tier2000Limit = 2000L * 2000L;
+        Configuration.Town.OutpostPricing pricing = Configuration.town.outpostPricing;
+
+        long remaining = Math.max(0, area - freeLimit);
+        double value = Math.min(remaining, tier1000Limit - freeLimit)
+                * pricing.pricePerBlock500To1000;
+        remaining = Math.max(0, remaining - (tier1000Limit - freeLimit));
+        value += Math.min(remaining, tier1500Limit - tier1000Limit)
+                * pricing.pricePerBlock1000To1500;
+        remaining = Math.max(0, remaining - (tier1500Limit - tier1000Limit));
+        value += Math.min(remaining, tier2000Limit - tier1500Limit)
+                * pricing.pricePerBlock1500To2000;
+        return Math.max(0L, Math.round(value * 100.0));
     }
 
     /**
-     * Town-subject amount check: outposts of the town count against the
-     * OPERATOR's limitation file (VIP ladder preserved, plan §4.6).
-     * TODO(town-era): decouple from the operator — a town's outpost
-     * capacity is server/economy policy, not a property of whoever
-     * happens to run the command. Revisit when outpost economics get
-     * their own config section (global cap + per-world amounts).
+     * Town-global amount check. Founding and contributed land count too, so
+     * changing the command operator can never change a town's capacity.
      */
-    private static void assertTownOutpostAmount(@NotNull Player operator, @NotNull TownDOO town,
+    private static void assertTownOutpostAmount(@NotNull TownDOO town,
                                                 @NotNull UUID worldUid) throws Exception {
-        if (bypassLimit(operator)) return;
-        Limitation limitation = Configuration.getPlayerLimitation(operator);
-        if (limitation.amountAllOverTheWorld != -1
-                && outpostsOf(town.getId()).size() >= limitation.amountAllOverTheWorld) {
+        if (Configuration.town.outpostMaxCount != -1
+                && outpostsOf(town.getId()).size() >= Configuration.town.outpostMaxCount) {
             throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
         }
-        int worldAmount = limitation.getWorldSettings(worldUid).amount;
-        if (worldAmount != -1 && countOutpostsInWorld(town.getId(), worldUid) >= worldAmount) {
+        if (Configuration.town.outpostMaxCountPerWorld != -1
+                && countOutpostsInWorld(town.getId(), worldUid)
+                >= Configuration.town.outpostMaxCountPerWorld) {
             throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
         }
     }
 
+    /** Apply the town-global full-height selection rule to a raw cuboid. */
+    public static @NotNull CuboidDTO normalizeTownOutpostCuboid(@NotNull CuboidDTO cuboid) {
+        if (!Configuration.town.outpostAutoIncludeVertical) return cuboid;
+        return new CuboidDTO(cuboid.x1(), Configuration.town.outpostNoLowerThan, cuboid.z1(),
+                cuboid.x2(), Configuration.town.outpostNoHigherThan - 1, cuboid.z2());
+    }
+
     // ------------------------------------------------------------------
-    // Admin arbitration
+    // Return contributed outposts / admin arbitration
     // ------------------------------------------------------------------
 
     /**
-     * Release an outpost back to its contributor (plan §3: admin only).
-     * Founding outposts can never be released (invariant 5).
+     * Whether the sender may return this outpost to its contributor.
+     * OPs retain arbitration access to every non-founding outpost. Ordinary
+     * players must be the current mayor of the owning town, and may return
+     * only contributed outposts (attached_by is the durable provenance flag).
      */
-    public static void releaseOutpost(@NotNull CommandSender admin, @NotNull DominionDOO dominion) throws Exception {
-        if (!admin.isOp()) {
-            throw new DominionException(Language.townManagerText.releaseAdminOnly);
-        }
+    public static boolean canReleaseOutpost(@NotNull CommandSender sender,
+                                            @NotNull DominionDOO dominion) {
+        Integer townId = dominion.getTownId();
+        if (townId == null || "FOUNDING".equals(dominion.getClaimKind())) return false;
+        if (sender.isOp()) return true;
+        if (!(sender instanceof Player player) || dominion.getAttachedBy() == null) return false;
+        TownDOO town = cache().getTown(townId);
+        return town != null && town.getMayorUuid().equals(player.getUniqueId());
+    }
+
+    /**
+     * Release an outpost back to its contributor. Authorization is enforced
+     * here and re-checked under the town's database lock by the sync handler.
+     */
+    public static void releaseOutpost(@NotNull CommandSender operator,
+                                      @NotNull DominionDOO dominion) throws Exception {
         Integer townId = dominion.getTownId();
         if (townId == null) {
             throw new DominionException(Language.townManagerText.releaseNotOutpost, dominion.getName());
@@ -1204,14 +1305,18 @@ public class TownManager {
         if ("FOUNDING".equals(dominion.getClaimKind())) {
             throw new DominionException(Language.townManagerText.releaseFoundingDenied);
         }
+        if (!canReleaseOutpost(operator, dominion)) {
+            throw new DominionException(Language.townManagerText.releaseMayorContributedOnly);
+        }
         TownDOO town = cache().getTown(townId);
         String townName = town == null ? "#" + townId : town.getName();
-        TownGroupSyncHandler.releaseOutpost(dominion.getId());
-        XLogger.info("Administrator {0} released outpost {1} ({2}) from town {3} to contributor {4}.",
-                admin.getName(), dominion.getName(), dominion.getId(), townName, dominion.getOwner());
-        Notification.info(admin, Language.townManagerText.releaseSuccess,
+        UUID requiredMayor = operator.isOp() ? null : ((Player) operator).getUniqueId();
+        TownGroupSyncHandler.releaseOutpost(dominion.getId(), requiredMayor);
+        XLogger.info("Operator {0} released outpost {1} ({2}) from town {3} to contributor {4}.",
+                operator.getName(), dominion.getName(), dominion.getId(), townName, dominion.getOwner());
+        Notification.info(operator, Language.townManagerText.releaseSuccess,
                 dominion.getName(), townName, CacheManager.instance.getPlayerName(dominion.getOwner()));
-        if (!(admin instanceof Player player && player.getUniqueId().equals(dominion.getOwner()))) {
+        if (!(operator instanceof Player player && player.getUniqueId().equals(dominion.getOwner()))) {
             notifyIfOnline(dominion.getOwner(), Language.townManagerText.releaseSuccess,
                     dominion.getName(), townName,
                     CacheManager.instance.getPlayerName(dominion.getOwner()));
@@ -1304,6 +1409,7 @@ public class TownManager {
     public static void attachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
                                      @NotNull UUID operator) throws Exception {
         if (dominion.isTownOutpost()) return;
+        assertTownOutpostAmount(town, dominion.getWorldUid());
         mergeMembers(town, dominion, operator);
         dominion.attachToTown(town.getId(), operator);
         TownGroupSyncHandler.syncOutpost(town, dominion);
@@ -1316,13 +1422,36 @@ public class TownManager {
      */
     public static int attachPlayerDominions(@NotNull TownDOO town, @NotNull UUID player,
                                             @NotNull UUID operator) throws Exception {
+        List<DominionDOO> candidates = ownedDominions(player).stream()
+                .filter(dominion -> !dominion.isTownOutpost())
+                .toList();
+        assertTownOutpostCapacity(town, candidates);
         int attached = 0;
-        for (DominionDOO dominion : ownedDominions(player)) {
-            if (dominion.isTownOutpost()) continue;
+        for (DominionDOO dominion : candidates) {
             attachOutpost(town, dominion, operator);
             attached++;
         }
         return attached;
+    }
+
+    private static void assertTownOutpostCapacity(@NotNull TownDOO town,
+                                                  @NotNull List<DominionDOO> candidates) throws Exception {
+        if (candidates.isEmpty()) return;
+        List<DominionDOO> existing = outpostsOf(town.getId());
+        if (Configuration.town.outpostMaxCount != -1
+                && existing.size() + candidates.size() > Configuration.town.outpostMaxCount) {
+            throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
+        }
+        if (Configuration.town.outpostMaxCountPerWorld == -1) return;
+        Map<UUID, Long> additionsByWorld = candidates.stream().collect(
+                java.util.stream.Collectors.groupingBy(
+                        DominionDOO::getWorldUid, java.util.stream.Collectors.counting()));
+        for (Map.Entry<UUID, Long> entry : additionsByWorld.entrySet()) {
+            if (countOutpostsInWorld(town.getId(), entry.getKey()) + entry.getValue()
+                    > Configuration.town.outpostMaxCountPerWorld) {
+                throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
+            }
+        }
     }
 
     /**

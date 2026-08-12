@@ -72,7 +72,7 @@ public class DominionManage extends AbstractUI {
         public String setTpDescription = "Set your current location as tp location.";
         public String trustsDescription = "Manage per-player trust grants of this town outpost.";
         public String releaseButton = "RELEASE";
-        public String releaseDescription = "Admin only: detach this outpost from its town back to the contributor.";
+        public String releaseDescription = "Return contributed land to its contributor (mayor; OP arbitration).";
         public String releaseConfirm = "§cClick again within 5 seconds to release {0}. Town groups, mirror members and outpost trust will be removed.";
     }
 
@@ -187,9 +187,9 @@ public class DominionManage extends AbstractUI {
                     .append(Language.townOutpostAdminInputterText.description);
             view.add(outpostAdmin);
         }
-        if (town != null && player.isOp()
-                && !"FOUNDING".equals(((cn.lunadeer.dominion.doos.DominionDOO) dominion).getClaimKind())) {
-            // admin arbitration: release the outpost back to its contributor
+        if (outpostDoo != null
+                && cn.lunadeer.dominion.managers.TownManager.canReleaseOutpost(player, outpostDoo)) {
+            // mayor return of contributed land (or OP arbitration)
             Line release = Line.create()
                     .append(new FunctionalButton(TextUserInterface.dominionManageTuiText.releaseButton) {
                         @Override
@@ -419,8 +419,8 @@ public class DominionManage extends AbstractUI {
                 'i', Material.SHEARS,
                 "§c✂ §cRelease Outpost",
                 List.of(
-                        "§7Admin only: detach this outpost",
-                        "§7from its town back to the contributor.",
+                        "§7Return contributed land to its contributor.",
+                        "§7Mayor operation; OPs may arbitrate.",
                         "",
                         "§c▶ Click to release"
                 )
@@ -578,8 +578,8 @@ public class DominionManage extends AbstractUI {
             });
         } else {
             // town outposts cannot be deleted/transferred (§3); managers
-            // get the outpost-admin appointment, admins the release
-            // arbitration (hidden for FOUNDING outposts)
+            // get the outpost-admin appointment; mayors may return contributed
+            // land, while OPs retain release arbitration
             if (townManagerFinal) {
                 view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.outpostAdminButton) {
                     @Override
@@ -589,8 +589,8 @@ public class DominionManage extends AbstractUI {
                     }
                 });
             }
-            if (player.isOp()
-                    && !"FOUNDING".equals(((cn.lunadeer.dominion.doos.DominionDOO) dominion).getClaimKind())) {
+            if (cn.lunadeer.dominion.managers.TownManager.canReleaseOutpost(player,
+                    (cn.lunadeer.dominion.doos.DominionDOO) dominion)) {
                 view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.releaseButton) {
                         @Override
                         public void onClick(ClickType type) {

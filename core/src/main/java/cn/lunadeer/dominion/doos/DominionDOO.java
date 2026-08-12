@@ -11,6 +11,7 @@ import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.utils.databse.FIelds.Field;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldBoolean;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldInteger;
+import cn.lunadeer.dominion.utils.databse.FIelds.FieldLong;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldString;
 import cn.lunadeer.dominion.utils.databse.FIelds.FieldTimestamp;
 import cn.lunadeer.dominion.utils.databse.syntax.Delete;
@@ -52,12 +53,16 @@ public class DominionDOO implements DominionDTO {
     private final FieldString outpostAdminUuid = new FieldString("outpost_admin_uuid");
     private final FieldString attachedBy = new FieldString("attached_by");
     private final FieldTimestamp attachedAt = new FieldTimestamp("attached_at");
+    // Gross tier value (in cents) actually paid by the town bank for this
+    // outpost. Historical/attached land starts at zero, preventing refunds
+    // for value the town never bought.
+    private final FieldLong townPaidValue = new FieldLong("town_paid_value", 0L);
 
     // Cache for the parsed UUID to avoid repeated string parsing
     private UUID cachedWorldUid = null;
 
     private static Field<?>[] fields() {
-        Field<?>[] fields = new Field<?>[6 + 6 + Flags.getAllEnvFlagsEnable().size() + Flags.getAllPriFlagsEnable().size() + 4 + 5];
+        Field<?>[] fields = new Field<?>[6 + 6 + Flags.getAllEnvFlagsEnable().size() + Flags.getAllPriFlagsEnable().size() + 4 + 6];
         fields[0] = rootDominion().cuboid.x1Field();
         fields[1] = rootDominion().cuboid.y1Field();
         fields[2] = rootDominion().cuboid.z1Field();
@@ -86,6 +91,7 @@ public class DominionDOO implements DominionDTO {
         fields[i++] = rootDominion().outpostAdminUuid;
         fields[i++] = rootDominion().attachedBy;
         fields[i++] = rootDominion().attachedAt;
+        fields[i++] = rootDominion().townPaidValue;
         return fields;
     }
 
@@ -124,7 +130,8 @@ public class DominionDOO implements DominionDTO {
                 (String) map.get("claim_kind").getValue(),
                 (String) map.get("outpost_admin_uuid").getValue(),
                 (String) map.get("attached_by").getValue(),
-                (java.sql.Timestamp) map.get("attached_at").getValue()
+                (java.sql.Timestamp) map.get("attached_at").getValue(),
+                (Long) map.get("town_paid_value").getValue()
         );
     }
 
@@ -145,7 +152,7 @@ public class DominionDOO implements DominionDTO {
                 "null", "null",
                 new HashMap<>(), new HashMap<>(),
                 "default", "#00BFFF", -1,
-                null, "NORMAL", null, null, null);
+                null, "NORMAL", null, null, null, 0L);
     }
 
     public static @Nullable DominionDOO select(Integer id) throws SQLException {
@@ -302,7 +309,8 @@ public class DominionDOO implements DominionDTO {
                         String claimKind,
                         String outpostAdminUuid,
                         String attachedBy,
-                        java.sql.Timestamp attachedAt) {
+                        java.sql.Timestamp attachedAt,
+                        Long townPaidValue) {
         this.id.setValue(id);
         this.owner.setValue(owner.toString());
         this.name.setValue(name);
@@ -321,6 +329,7 @@ public class DominionDOO implements DominionDTO {
         this.outpostAdminUuid.setValue(outpostAdminUuid);
         this.attachedBy.setValue(attachedBy);
         this.attachedAt.setValue(attachedAt);
+        this.townPaidValue.setValue(townPaidValue == null ? 0L : townPaidValue);
     }
 
     // constructor for new dominion
@@ -472,6 +481,11 @@ public class DominionDOO implements DominionDTO {
         return attachedAt.getValue();
     }
 
+    public long getTownPaidValueCents() {
+        Long value = townPaidValue.getValue();
+        return value == null ? 0L : Math.max(0L, value);
+    }
+
     /**
      * Attach this dominion to a town (outpost conversion). owner_uuid keeps
      * its value as the contributor record; permission resolution switches to
@@ -481,8 +495,9 @@ public class DominionDOO implements DominionDTO {
         this.townId.setValue(town);
         this.attachedBy.setValue(operator.toString());
         this.attachedAt.setValue(new java.sql.Timestamp(System.currentTimeMillis()));
+        this.townPaidValue.setValue(0L);
         Update.update("dominion")
-                .set(this.townId, this.attachedBy, this.attachedAt)
+                .set(this.townId, this.attachedBy, this.attachedAt, this.townPaidValue)
                 .where("id = ?", id.getValue())
                 .execute();
         CacheManager.instance.getCache().getDominionCache().load(id.getValue());
@@ -500,8 +515,9 @@ public class DominionDOO implements DominionDTO {
         this.attachedBy.setValue(null);
         this.attachedAt.setValue(null);
         this.outpostAdminUuid.setValue(null);
+        this.townPaidValue.setValue(0L);
         Update.update("dominion")
-                .set(this.townId, this.attachedBy, this.attachedAt, this.outpostAdminUuid)
+                .set(this.townId, this.attachedBy, this.attachedAt, this.outpostAdminUuid, this.townPaidValue)
                 .where("id = ?", id.getValue())
                 .execute();
         TownTrustDOO.deleteByOutpost(id.getValue());
@@ -560,6 +576,23 @@ public class DominionDOO implements DominionDTO {
         return this;
     }
 
+    public @NotNull DominionDOO setTownPaidValueCents(long cents) throws SQLException {
+        if (cents < 0) {
+            throw new IllegalArgumentException("town paid value must be non-negative");
+        }
+        FieldLong nextValue = new FieldLong("town_paid_value", cents);
+        int updated = Update.update("dominion")
+                .set(nextValue)
+                .where("id = ?", id.getValue())
+                .execute();
+        if (updated != 1) {
+            throw new SQLException("Dominion " + id.getValue() + " no longer exists.");
+        }
+        this.townPaidValue.setValue(cents);
+        CacheManager.instance.getCache().getDominionCache().load(id.getValue());
+        return this;
+    }
+
     @Override
     public @NotNull DominionDOO setName(String name) throws SQLException {
         String oldName = this.name.getValue();
@@ -593,6 +626,11 @@ public class DominionDOO implements DominionDTO {
 
     @Override
     public @NotNull DominionDOO setCuboid(@NotNull CuboidDTO cuboid) throws SQLException {
+        if (isTownOutpost()) {
+            // Direct DTO mutation bypasses town economy. Fail closed on the
+            // refund ledger so free land cannot later become a bank refund.
+            return setCuboidAndTownPaidValue(this.cuboid, cuboid, getTownPaidValueCents(), 0);
+        }
         this.cuboid = new DominionCuboid(cuboid);
         Update.update("dominion")
                 .set(this.cuboid.x1Field(),
@@ -603,6 +641,37 @@ public class DominionDOO implements DominionDTO {
                         this.cuboid.z2Field())
                 .where("id = ?", id.getValue())
                 .execute();
+        CacheManager.instance.getCache().getDominionCache().load(getId());
+        return this;
+    }
+
+    /** Persist the land shape and its refundable town-paid value together. */
+    public @NotNull DominionDOO setCuboidAndTownPaidValue(@NotNull CuboidDTO expectedCuboid,
+                                                          @NotNull CuboidDTO cuboid,
+                                                          long expectedPaidValueCents,
+                                                          long paidValueCents) throws SQLException {
+        if (expectedPaidValueCents < 0 || paidValueCents < 0) {
+            throw new IllegalArgumentException("town paid value must be non-negative");
+        }
+        DominionCuboid nextCuboid = new DominionCuboid(cuboid);
+        FieldLong nextPaidValue = new FieldLong("town_paid_value", paidValueCents);
+        int updated = Update.update("dominion")
+                .set(nextCuboid.x1Field(), nextCuboid.y1Field(), nextCuboid.z1Field(),
+                        nextCuboid.x2Field(), nextCuboid.y2Field(), nextCuboid.z2Field(),
+                        nextPaidValue)
+                .where("id = ? AND x1 = ? AND y1 = ? AND z1 = ? AND x2 = ? AND y2 = ? AND z2 = ? "
+                                + "AND town_paid_value = ?",
+                        id.getValue(),
+                        expectedCuboid.x1(), expectedCuboid.y1(), expectedCuboid.z1(),
+                        expectedCuboid.x2(), expectedCuboid.y2(), expectedCuboid.z2(),
+                        expectedPaidValueCents)
+                .execute();
+        if (updated != 1) {
+            throw new SQLException("Dominion " + id.getValue()
+                    + " changed concurrently; retry the resize.");
+        }
+        this.cuboid = nextCuboid;
+        this.townPaidValue.setValue(paidValueCents);
         CacheManager.instance.getCache().getDominionCache().load(getId());
         return this;
     }

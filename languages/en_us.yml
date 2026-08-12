@@ -132,6 +132,7 @@ select-point-events-handler-text:
   second-point: Second point selected at {0}, {1}, {2}.
   not-same-world: The two points are not in the same world.
   price: The price of the dominion is {0} {1}.
+  town-outpost-price: 'Estimated town outpost price: {0}.'
   owner: 'Owner: {0}'
   size: 'Size: {0}x{1}x{2}'
   square: 'Square: {0}'
@@ -656,7 +657,8 @@ town-manager-text:
   template-mode-upgrade-success: Town {0} upgraded to template permission mode. {1} outpost(s) now inherit town templates. Please review the templates now.
   template-flag-updated: Set town template {0} flag {1} to {2}.
   outpost-override-cleared: Flag {0} on group {1} now inherits the town template.
-  release-admin-only: Only an OP may release a town outpost.
+  release-admin-only: Only an OP may use administrator town arbitration.
+  release-mayor-contributed-only: Only the mayor may return contributed outposts of their own town; town-created outposts cannot be returned.
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
@@ -689,7 +691,7 @@ town-command-text:
 
     &b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)
 
-    &b/town release <outpost> [confirm] &7- return an outpost to its contributor (OP only)
+    &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
 
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
 
@@ -714,7 +716,7 @@ town-command-text:
   attach-member-note: Member lists of attached dominions are archived; affected members receive a per-outpost trust grant mapped from their flags and are notified.
   create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
   upgrade-confirm: Upgrading {0} resets every town-managed outpost group permission and makes all outposts inherit new town templates. This cannot be undone. Run /town upgrade confirm to proceed.
-  release-confirm: Releasing {0} returns it to contributor {1}, removes outpost trust and all town group mirrors. Run /town release {0} confirm to proceed.
+  release-confirm: Returning contributed outpost {0} gives it back to {1}, and removes its outpost trust and town group mirrors. Run /town release {0} confirm to proceed.
 migration-text:
   town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:

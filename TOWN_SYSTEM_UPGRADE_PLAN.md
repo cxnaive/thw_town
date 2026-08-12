@@ -245,22 +245,18 @@ Cuboid 创建管线生成 Founding Outpost：
 "相邻"是区块网格概念，不属于 Cuboid 阶段——Cuboid 下连续生长 = resize，
 "新建 Outpost"天然是远程的（前哨）。镇扩张因此有两个操作：
 
-两者共用同一套约束——**直接复用现有领地配置（limitations）管线**，
-不设独立的 town 尺寸/数量配置：
+两者共用 `town` 下的全局约束，与执行操作的 MAYOR/ASSISTANT、
+default/VIP limitation 完全解耦：
 
-- 尺寸与 Y 范围：过所在世界 `world-limitations` 的 `sizeMax/MinXYZ`、
-  `noHigherThan/noLowerThan`、`autoIncludeVertical` 校验
-  （与个人创建同一校验函数）；
-- 数量：复用 `amountAllOverTheWorld` 与 per-world `amount`，
-  计数主体从"玩家的 Dominion"变为"镇的 Outpost"
-  （Founding/贡献/新建全部计入；只闸新建与扩建，不闸挂靠——
-  挂靠是存量转移，不是创建）；
-- 取哪份 limitation 文件：执行操作者（MAYOR/ASSISTANT）的
-  `getPlayerLimitation()`——VIP 阶梯机制自然延续；
+- 尺寸与 Y 范围：`outpost-max-horizontal-size`、`outpost-min-size-*`、
+  `outpost-max-size-y`、`outpost-no-higher/lower-than` 和
+  `outpost-auto-include-vertical`；
+- 数量：`outpost-max-count` 与 `outpost-max-count-per-world`，
+  Founding/贡献/新建全部计入，远程新建和挂靠都会校验；已有老镇若超过新上限，
+  不删除现有领地，只阻止继续增加；
 - 不与任何 Dominion 重叠（常规重叠检查）；
-- 计费：复用现有 `Limitation.Economy` 按方块定价（`pricePerBlock`、
-  `squareOnly`），但**计费主体为 TownBank** 而非玩家钱包；
-  缩小/删除按 `refundRate` 退 TownBank；解散不退款；
+- 计费：使用 `town.outpost-pricing` 的 X*Z 面积阶梯价格，
+  **计费主体为 TownBank**；缩小按已付款账本与 `refund-rate` 退款，解散不退款；
 - `town.outpost-allow-remote: false` 可整体关闭远程新建，镇只剩扩建一条路。
 
 防插旗论证：原禁令防的是**个人**到处圈地。远程 Outpost 只能由镇创建，
@@ -478,10 +474,22 @@ town:
   founding-max-size: 32                  # Founding Outpost 单边上限
 
   outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
-  # 数量/尺寸/定价不设 town 专属配置，复用现有 limitations 管线：
-  #   数量 = amountAllOverTheWorld + per-world amount（计数主体改为镇）
-  #   尺寸 = world-limitations 的 sizeMax/MinXYZ、noHigherThan/noLowerThan
-  #   定价 = economy（per-block，计费主体改为 TownBank）
+  outpost-max-count: 3                   # 全服每镇附属领地上限，-1 无限
+  outpost-max-count-per-world: 3         # 单世界每镇附属领地上限，-1 无限
+  outpost-max-horizontal-size: 2000
+  outpost-min-size-x: 4
+  outpost-min-size-y: 4
+  outpost-min-size-z: 4
+  outpost-max-size-y: -1
+  outpost-no-higher-than: 400
+  outpost-no-lower-than: -100
+  outpost-auto-include-vertical: false
+  outpost-pricing:
+    enable: true
+    price-per-block-500-to-1000: 0.0
+    price-per-block-1000-to-1500: 0.0
+    price-per-block-1500-to-2000: 0.0
+    refund-rate: 0.85
 
   disband-policy: dissolve-all           # dissolve-all: 全部 Outpost 随镇解散（默认）
                                          # return-contributed: 仅无 contributor 的解散，
@@ -642,19 +650,19 @@ tp_cache 与全部 town 新表），多服同时写入也是一致性快照。
 
 ## 12. 传统配置融入分析
 
-现有配置逐项对照新模型。总原则：**几何约束与计费管线原样复用，
-只换计数/计费主体；个人创建类配额作废；少数设置必须改默认值。**
+现有配置逐项对照新模型。总原则：**小镇土地规则集中到主配置的 `town`；
+limitations 仅保留旧个人领地与玩家传送兼容。**
 
 ### 12.1 Limitation（world-limitations）
 
 | 字段 | 传统作用 | 新模型 |
 |---|---|---|
-| `noHigherThan` / `noLowerThan` | Y 范围约束 | 保留，直接套用 Founding/新建/resize（与个人创建同一校验函数） |
-| `sizeMax/MinXYZ`、`autoIncludeVertical` | 尺寸约束 | 保留复用；不设 town 专属尺寸上限 |
-| `amount`（per-world）、`amountAllOverTheWorld` | 每玩家创建配额 | 字段保留，**计数主体玩家→镇**（§4.6）；个人侧因禁建自然失效 |
-| `maxSubDominionDepth`、`doNotCountSubs` | 子区深度/计数 | 作废（子区冻结新建） |
-| `priority`（多 limitation 文件优先级） | VIP 阶梯选择 | 保留；镇土地操作取**操作者**的 limitation 文件，阶梯机制延续 |
-| `economy`（pricePerBlock/squareOnly/refundRate） | 个人创建计费 | 管线复用，**计费主体玩家钱包→TownBank**；Founding 走已有 skipEconomy 路径免费；`freeForSubs` 作废 |
+| `noHigherThan` / `noLowerThan` | Y 范围约束 | 仅用于旧个人领地兼容；镇属规则迁到 `town.outpost-no-*` |
+| `sizeMax/MinXYZ`、`autoIncludeVertical` | 尺寸约束 | 仅用于旧个人领地兼容；镇属规则迁到 `town.outpost-*` |
+| `amount`（per-world）、`amountAllOverTheWorld` | 每玩家创建配额 | 仅用于旧个人领地兼容；镇属数量由 `town.outpost-max-count*` 控制 |
+| `maxSubDominionDepth`、`doNotCountSubs` | 子区深度/计数 | 仅为重新开放旧子区创建保留 |
+| `priority`（多 limitation 文件优先级） | VIP 阶梯选择 | 仅选择旧个人领地/传送配置，不再影响镇土地 |
+| `economy`（pricePerBlock/squareOnly/refundRate） | 个人创建计费 | 仅用于旧个人领地兼容；镇属计费迁到 `town.outpost-pricing` |
 | `teleportation` | /dom tp 冷却 | 正交不动；`/town spawn` 类为后续特性 |
 
 Vault 集成已存在（`utils/VaultConnect/`，支持 Vault 与 VaultUnlocked），

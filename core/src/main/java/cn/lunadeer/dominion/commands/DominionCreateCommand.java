@@ -36,8 +36,7 @@ public class DominionCreateCommand {
             try {
                 Player player = toPlayer(sender);
                 World world = player.getWorld();
-                Location[] points = getSelectedPoints(player);
-                CuboidDTO cuboidDTO = new CuboidDTO(points[0], points[1]);
+                CuboidDTO cuboidDTO = getSelectedCuboid(player);
                 DominionProvider.getInstance().createDominion(
                         sender,
                         getArgumentValue(0),
@@ -60,8 +59,7 @@ public class DominionCreateCommand {
             try {
                 Player player = toPlayer(sender);
                 World world = player.getWorld();
-                Location[] points = getSelectedPoints(player);
-                CuboidDTO cuboidDTO = new CuboidDTO(points[0], points[1]);
+                CuboidDTO cuboidDTO = getSelectedCuboid(player);
                 DominionProvider.getInstance().createDominion(
                         sender,
                         getArgumentValue(0),

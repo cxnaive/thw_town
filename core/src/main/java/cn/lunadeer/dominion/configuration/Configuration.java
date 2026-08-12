@@ -89,7 +89,10 @@ public class Configuration extends ConfigurationFile {
     }
 
     @Comments("Do not modify this value.")
-    public static int version = 3;  // <<<<<< When you change the configuration, you should increment this value.
+    // Keep version 3 for additive town settings: a version bump replaces an
+    // existing config.yml with defaults, while the loader can safely append
+    // these missing keys in place.
+    public static int version = 3;
 
     @Comments("The settings of the database.")
     public static Database database = new Database();
@@ -198,6 +201,61 @@ public class Configuration extends ConfigurationFile {
                 "false: towns can only expand existing outposts (resize)."
         })
         public boolean outpostAllowRemote = true;
+        @Comments({
+                "Maximum number of outposts owned by one town across all worlds.",
+                "Founding and contributed outposts are included. -1 for unlimited."
+        })
+        public int outpostMaxCount = 3;
+        @Comments({
+                "Maximum number of outposts owned by one town in one world.",
+                "The all-world limit still applies. -1 for unlimited."
+        })
+        public int outpostMaxCountPerWorld = 3;
+        @Comments({
+                "Maximum horizontal edge length of a town outpost.",
+                "X and Z are checked independently. Values above the hard",
+                "server limit of 2000 are clamped to 2000. This limit also",
+                "applies to operators and players with dominion.admin."
+        })
+        public int outpostMaxHorizontalSize = 2000;
+        @Comments("Minimum X edge length of a town outpost.")
+        public int outpostMinSizeX = 4;
+        @Comments("Minimum Y edge length of a town outpost.")
+        public int outpostMinSizeY = 4;
+        @Comments("Minimum Z edge length of a town outpost.")
+        public int outpostMinSizeZ = 4;
+        @Comments("Maximum Y edge length of a town outpost. -1 for unlimited.")
+        public int outpostMaxSizeY = -1;
+        @Comments("The highest Y coordinate allowed for town outposts.")
+        public int outpostNoHigherThan = 400;
+        @Comments("The lowest Y coordinate allowed for town outposts.")
+        public int outpostNoLowerThan = -100;
+        @Comments({
+                "Whether selected town outposts automatically include the full configured Y range.",
+                "This affects /town outpost create; legacy personal selection keeps using limitations."
+        })
+        public boolean outpostAutoIncludeVertical = false;
+        @Comments({
+                "Town-outpost economy based on the actual X*Z area.",
+                "The first 500*500 blocks are always free. Paid area is",
+                "charged cumulatively, so crossing a tier never reprices",
+                "the cheaper area below it. Prices are currency per block.",
+                "The founding outpost keeps using founding-cost."
+        })
+        public OutpostPricing outpostPricing = new OutpostPricing();
+
+        public static class OutpostPricing extends ConfigurationPart {
+            @Comments("Enable area-tier pricing for remote town outposts and later resizing.")
+            public boolean enable = true;
+            @Comments("Price per block for area from 500*500 through 1000*1000.")
+            public double pricePerBlock500To1000 = 0.0;
+            @Comments("Price per block for area from 1000*1000 through 1500*1500.")
+            public double pricePerBlock1000To1500 = 0.0;
+            @Comments("Price per block for area from 1500*1500 through 2000*2000.")
+            public double pricePerBlock1500To2000 = 0.0;
+            @Comments("Refund rate when a town outpost is contracted.")
+            public double refundRate = 0.85;
+        }
         @Comments({
                 "What happens to outposts when a town disbands:",
                 "dissolve-all: every outpost is dissolved with the town;",
@@ -327,6 +385,77 @@ public class Configuration extends ConfigurationFile {
         if (town.foundingCost < 0) {
             XLogger.warn("Invalid town founding-cost: {0}", town.foundingCost);
             town.foundingCost = 0;
+        }
+        if (town.outpostMaxCount == 0 || town.outpostMaxCount < -1) {
+            XLogger.warn("Invalid town outpost-max-count: {0}; resetting to 3.",
+                    town.outpostMaxCount);
+            town.outpostMaxCount = 3;
+        }
+        if (town.outpostMaxCountPerWorld == 0 || town.outpostMaxCountPerWorld < -1) {
+            XLogger.warn("Invalid town outpost-max-count-per-world: {0}; resetting to 3.",
+                    town.outpostMaxCountPerWorld);
+            town.outpostMaxCountPerWorld = 3;
+        }
+        if (town.outpostMaxCount != -1
+                && (town.outpostMaxCountPerWorld == -1
+                || town.outpostMaxCountPerWorld > town.outpostMaxCount)) {
+            town.outpostMaxCountPerWorld = town.outpostMaxCount;
+        }
+        if (town.outpostMaxHorizontalSize <= 0 || town.outpostMaxHorizontalSize > 2000) {
+            XLogger.warn("Invalid town outpost-max-horizontal-size: {0}; clamping to 2000.",
+                    town.outpostMaxHorizontalSize);
+            town.outpostMaxHorizontalSize = 2000;
+        }
+        if (town.outpostMinSizeX <= 0) town.outpostMinSizeX = 4;
+        if (town.outpostMinSizeY <= 0) town.outpostMinSizeY = 4;
+        if (town.outpostMinSizeZ <= 0) town.outpostMinSizeZ = 4;
+        if (town.outpostMinSizeX > town.outpostMaxHorizontalSize) {
+            town.outpostMinSizeX = town.outpostMaxHorizontalSize;
+        }
+        if (town.outpostMinSizeZ > town.outpostMaxHorizontalSize) {
+            town.outpostMinSizeZ = town.outpostMaxHorizontalSize;
+        }
+        if (town.outpostMaxSizeY == 0 || town.outpostMaxSizeY < -1) {
+            town.outpostMaxSizeY = -1;
+        }
+        if (town.outpostMaxSizeY != -1
+                && town.outpostMaxSizeY < town.outpostMinSizeY) {
+            town.outpostMaxSizeY = town.outpostMinSizeY;
+        }
+        if (town.outpostNoHigherThan <= town.outpostNoLowerThan) {
+            XLogger.warn("Invalid town outpost Y range: {0}..{1}; resetting to -100..400.",
+                    town.outpostNoLowerThan, town.outpostNoHigherThan);
+            town.outpostNoLowerThan = -100;
+            town.outpostNoHigherThan = 400;
+        }
+        if (town.foundingSize > town.outpostMaxHorizontalSize) {
+            XLogger.warn("Town founding-size {0} exceeds the town outpost horizontal limit {1}; clamping it.",
+                    town.foundingSize, town.outpostMaxHorizontalSize);
+            town.foundingSize = town.outpostMaxHorizontalSize;
+        }
+        if (!Double.isFinite(town.outpostPricing.pricePerBlock500To1000)
+                || town.outpostPricing.pricePerBlock500To1000 < 0) {
+            XLogger.warn("Invalid town outpost price-per-block-500-to-1000: {0}; resetting to 0.",
+                    town.outpostPricing.pricePerBlock500To1000);
+            town.outpostPricing.pricePerBlock500To1000 = 0;
+        }
+        if (!Double.isFinite(town.outpostPricing.pricePerBlock1000To1500)
+                || town.outpostPricing.pricePerBlock1000To1500 < 0) {
+            XLogger.warn("Invalid town outpost price-per-block-1000-to-1500: {0}; resetting to 0.",
+                    town.outpostPricing.pricePerBlock1000To1500);
+            town.outpostPricing.pricePerBlock1000To1500 = 0;
+        }
+        if (!Double.isFinite(town.outpostPricing.pricePerBlock1500To2000)
+                || town.outpostPricing.pricePerBlock1500To2000 < 0) {
+            XLogger.warn("Invalid town outpost price-per-block-1500-to-2000: {0}; resetting to 0.",
+                    town.outpostPricing.pricePerBlock1500To2000);
+            town.outpostPricing.pricePerBlock1500To2000 = 0;
+        }
+        if (!Double.isFinite(town.outpostPricing.refundRate)
+                || town.outpostPricing.refundRate < 0 || town.outpostPricing.refundRate > 1) {
+            XLogger.warn("Invalid town outpost refund-rate: {0}; resetting to 0.85.",
+                    town.outpostPricing.refundRate);
+            town.outpostPricing.refundRate = 0.85;
         }
         if (!town.disbandPolicy.equals("dissolve-all") && !town.disbandPolicy.equals("return-contributed")) {
             XLogger.warn("Invalid town disband-policy: {0}", town.disbandPolicy);

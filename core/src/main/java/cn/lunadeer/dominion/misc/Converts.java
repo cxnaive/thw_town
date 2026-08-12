@@ -1,6 +1,7 @@
 package cn.lunadeer.dominion.misc;
 
 import cn.lunadeer.dominion.Dominion;
+import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.api.dtos.GroupDTO;
 import cn.lunadeer.dominion.api.dtos.MemberDTO;
@@ -9,7 +10,9 @@ import cn.lunadeer.dominion.api.dtos.flag.EnvFlag;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.events.dominion.modify.DominionReSizeEvent;
 import cn.lunadeer.dominion.events.dominion.modify.DominionSetMessageEvent;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -252,6 +255,24 @@ public class Converts {
             throw new DominionException(Language.convertsText.invalidPoints);
         }
         return sortLocations(points.get(0), points.get(1));
+    }
+
+    /**
+     * Legacy personal-claim interpretation of the shared raw point selection.
+     * Town commands deliberately use their own global vertical policy.
+     */
+    public static CuboidDTO getSelectedCuboid(@NotNull Player player) throws DominionException {
+        Location[] points = getSelectedPoints(player);
+        return normalizePersonalSelection(player, new CuboidDTO(points[0], points[1]));
+    }
+
+    public static CuboidDTO normalizePersonalSelection(@NotNull Player player,
+                                                        @NotNull CuboidDTO cuboid) {
+        Limitation.WorldLimitationSetting settings = Configuration.getPlayerLimitation(player)
+                .getWorldSettings(player.getWorld());
+        if (!settings.autoIncludeVertical) return cuboid;
+        return new CuboidDTO(cuboid.x1(), settings.noLowerThan, cuboid.z1(),
+                cuboid.x2(), settings.noHigherThan - 1, cuboid.z2());
     }
 
     /**

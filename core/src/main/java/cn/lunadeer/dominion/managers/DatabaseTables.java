@@ -570,6 +570,12 @@ public class DatabaseTables {
         if (!Show.show().columns().from("dominion").execute().containsKey("attached_at")) {
             Alter.alter().table("dominion").add().column(Column.of(new FieldTimestamp("attached_at"))).execute();
         }
+        // Gross tier value in cents actually paid by the town bank. Existing
+        // and contributed land starts at zero so it cannot mint refunds.
+        if (!Show.show().columns().from("dominion").execute().containsKey("town_paid_value")) {
+            Alter.alter().table("dominion").add()
+                    .column(Column.of(new FieldLong("town_paid_value")).notNull().defaultSqlVal("0")).execute();
+        }
 
         // 5.0.0 town era: dominion_archive
         // Full mirror of dominion rows dissolved by a town disband, for
@@ -598,6 +604,7 @@ public class DatabaseTables {
             Column da_outpost_admin = Column.of(new FieldString("outpost_admin_uuid"));
             Column da_attached_by = Column.of(new FieldString("attached_by"));
             Column da_attached_at = Column.of(new FieldTimestamp("attached_at"));
+            Column da_town_paid_value = Column.of(new FieldLong("town_paid_value")).notNull().defaultSqlVal("0");
             Column da_archived_town_id = Column.of(new FieldInteger("archived_town_id")).notNull();
             Column da_archived_at = Column.of(new FieldTimestamp("archived_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
             Column da_archive_reason = Column.of(new FieldString("archive_reason")).notNull().defaultSqlVal("'DISBANDED_TOWN'");
@@ -623,6 +630,7 @@ public class DatabaseTables {
                     .column(da_outpost_admin)
                     .column(da_attached_by)
                     .column(da_attached_at)
+                    .column(da_town_paid_value)
                     .column(da_archived_town_id)
                     .column(da_archived_at)
                     .column(da_archive_reason)
@@ -636,6 +644,12 @@ public class DatabaseTables {
         for (Flag flag : Flags.getAllPriFlags()) {
             Column column = Column.of(new FieldBoolean(flag.getFlagName())).notNull().defaultSqlVal(flag.getDefaultValue().toString());
             Alter.alter().table("dominion_archive").add().column(column).execute();
+        }
+        // Keep the archive a full mirror when upgrading an existing database;
+        // archiveDominion copies the live column list dynamically.
+        if (!Show.show().columns().from("dominion_archive").execute().containsKey("town_paid_value")) {
+            Alter.alter().table("dominion_archive").add()
+                    .column(Column.of(new FieldLong("town_paid_value")).notNull().defaultSqlVal("0")).execute();
         }
 
         // Remove orphaned member rows whose player record no longer exists

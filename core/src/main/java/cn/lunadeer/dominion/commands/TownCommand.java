@@ -6,7 +6,6 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.api.dtos.PlayerDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
-import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
@@ -62,7 +61,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town outpost create <name> &7- create a remote outpost (selected points)\n"
                 + "&b/town admin <outpost> [player] &7- set/clear the outpost admin\n"
                 + "&b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)\n"
-                + "&b/town release <outpost> [confirm] &7- return an outpost to its contributor (OP only)\n"
+                + "&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n"
                 + "&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n"
                 + "&b/town untrust <player> [town|outpost <name>]\n"
                 + "&b/town info [town] &7- town information\n"
@@ -560,7 +559,13 @@ public class TownCommand implements TabExecutor {
             if (points == null || points[0] == null || points[1] == null) {
                 throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.needPoints);
             }
-            TownManager.createRemoteOutpost(player, town, name, player.getWorld(), new CuboidDTO(points[0], points[1]));
+            org.bukkit.World selectedWorld = points[0].getWorld();
+            if (selectedWorld == null) {
+                throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.needPoints);
+            }
+            CuboidDTO cuboid = TownManager.normalizeTownOutpostCuboid(
+                    new CuboidDTO(points[0], points[1]));
+            TownManager.createRemoteOutpost(player, town, name, selectedWorld, cuboid);
         } else {
             Notification.info(sender, Language.townCommandText.usage);
         }
@@ -584,10 +589,6 @@ public class TownCommand implements TabExecutor {
     }
 
     private void handleRelease(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
-        if (!sender.isOp()) {
-            throw new cn.lunadeer.dominion.misc.DominionException(
-                    Language.townManagerText.releaseAdminOnly);
-        }
         DominionDOO outpost = requireOutpost(args, 1);
         if (!outpost.isTownOutpost()) {
             throw new cn.lunadeer.dominion.misc.DominionException(
@@ -596,6 +597,10 @@ public class TownCommand implements TabExecutor {
         if ("FOUNDING".equals(outpost.getClaimKind())) {
             throw new cn.lunadeer.dominion.misc.DominionException(
                     Language.townManagerText.releaseFoundingDenied);
+        }
+        if (!TownManager.canReleaseOutpost(sender, outpost)) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.releaseMayorContributedOnly);
         }
         if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
             Notification.warn(sender, Language.townCommandText.releaseConfirm,
@@ -720,10 +725,9 @@ public class TownCommand implements TabExecutor {
     }
 
     /**
-     * Founding cuboid around the player: a square of founding-max-size
-     * edge length centered on the player; Y follows the limitation's
-     * autoIncludeVertical rule (plan §4.4). Deliberately independent of
-     * autoCreateRadius, which is -1 in the town era.
+     * Founding cuboid around the player. This starter cube deliberately uses
+     * founding-size instead of either legacy limitation or remote-outpost
+     * selection rules.
      */
     private static @NotNull CuboidDTO foundingCuboidAt(@NotNull Player player) {
         // a literal foundingSize^3 cube centered on the player (e.g.
@@ -751,7 +755,7 @@ public class TownCommand implements TabExecutor {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1) {
             List<String> visible = new ArrayList<>(SUB_COMMANDS);
-            if (sender instanceof Player player && !player.isOp()) {
+            if (!canUseReleaseCommand(sender)) {
                 visible.remove("release");
             }
             filter(visible, args[0], suggestions);
@@ -774,18 +778,20 @@ public class TownCommand implements TabExecutor {
                 case "invite", "kick", "transfer", "trust", "untrust", "promote", "demote" ->
                         filter(playerNames(), args[1], suggestions);
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
-                case "release" -> {
-                    if (!(sender instanceof Player player) || player.isOp()) {
-                        filter(releasableOutpostNames(), args[1], suggestions);
-                    }
-                }
+                case "release" -> filter(releasableOutpostNames(sender), args[1], suggestions);
                 case "upgrade" -> filter(List.of("confirm"), args[1], suggestions);
                 case "group" -> filter(GROUP_SUB_COMMANDS, args[1], suggestions);
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
                 case "create", "join", "disband" -> filter(List.of("confirm"), args[2], suggestions);
-                case "release" -> filter(List.of("confirm"), args[2], suggestions);
+                case "release" -> {
+                    DominionDTO dominion = CacheManager.instance.getDominion(args[1]);
+                    if (dominion instanceof DominionDOO outpost
+                            && TownManager.canReleaseOutpost(sender, outpost)) {
+                        filter(List.of("confirm"), args[2], suggestions);
+                    }
+                }
                 case "trust", "untrust" -> filter(List.of("town", "outpost"), args[2], suggestions);
                 case "admin" -> filter(playerNames(), args[2], suggestions);
                 case "group" -> {
@@ -840,12 +846,23 @@ public class TownCommand implements TabExecutor {
         return CacheManager.instance.getAllDominionNames();
     }
 
-    private static @NotNull List<String> releasableOutpostNames() {
+    private static boolean canUseReleaseCommand(@NotNull CommandSender sender) {
+        if (sender.isOp()) return true;
+        if (!(sender instanceof Player player)) return false;
+        for (TownMemberDOO membership : CacheManager.instance.getTownCache()
+                .getMembershipsOf(player.getUniqueId())) {
+            TownDOO town = CacheManager.instance.getTownCache().getTown(membership.getTownId());
+            if (town != null && town.getMayorUuid().equals(player.getUniqueId())) return true;
+        }
+        return false;
+    }
+
+    private static @NotNull List<String> releasableOutpostNames(@NotNull CommandSender sender) {
         List<String> names = new ArrayList<>();
         for (String name : CacheManager.instance.getAllDominionNames()) {
             DominionDTO dominion = CacheManager.instance.getDominion(name);
-            if (dominion instanceof DominionDOO outpost && outpost.isTownOutpost()
-                    && !"FOUNDING".equals(outpost.getClaimKind())) {
+            if (dominion instanceof DominionDOO outpost
+                    && TownManager.canReleaseOutpost(sender, outpost)) {
                 names.add(name);
             }
         }

@@ -201,6 +201,86 @@ public class Asserts {
     }
 
     /**
+     * Size policy for town outposts. Horizontal capacity is a property of the
+     * town system, not of the manager who happens to run the command. The
+     * complete policy is town-global, so changing the mayor/assistant/operator
+     * never changes what land the town may own.
+     */
+    public static void assertTownOutpostSize(@NotNull UUID associatedWorldUid,
+                                             @NotNull CuboidDTO cuboid) throws DominionException {
+        // Resolve the world up front so a stale/foreign UID still fails with
+        // the same user-facing error as the legacy size pipeline.
+        toWorld(associatedWorldUid);
+        int horizontalMax = Configuration.town.outpostMaxHorizontalSize;
+        if (cuboid.xLength() > horizontalMax) {
+            throw new DominionException(Language.assertsText.xLengthTooLong, cuboid.xLength(), horizontalMax);
+        }
+        if (cuboid.zLength() > horizontalMax) {
+            throw new DominionException(Language.assertsText.zLengthTooLong, cuboid.zLength(), horizontalMax);
+        }
+        if (cuboid.xLength() < Configuration.town.outpostMinSizeX) {
+            throw new DominionException(Language.assertsText.xLengthTooShort,
+                    cuboid.xLength(), Configuration.town.outpostMinSizeX);
+        }
+        if (cuboid.yLength() < Configuration.town.outpostMinSizeY) {
+            throw new DominionException(Language.assertsText.yLengthTooShort,
+                    cuboid.yLength(), Configuration.town.outpostMinSizeY);
+        }
+        if (cuboid.zLength() < Configuration.town.outpostMinSizeZ) {
+            throw new DominionException(Language.assertsText.zLengthTooShort,
+                    cuboid.zLength(), Configuration.town.outpostMinSizeZ);
+        }
+        if (Configuration.town.outpostMaxSizeY > 0
+                && cuboid.yLength() > Configuration.town.outpostMaxSizeY) {
+            throw new DominionException(Language.assertsText.yLengthTooLong,
+                    cuboid.yLength(), Configuration.town.outpostMaxSizeY);
+        }
+        if (cuboid.y2() > Configuration.town.outpostNoHigherThan) {
+            throw new DominionException(Language.assertsText.yTooHigh,
+                    cuboid.y2(), Configuration.town.outpostNoHigherThan);
+        }
+        if (cuboid.y1() < Configuration.town.outpostNoLowerThan) {
+            throw new DominionException(Language.assertsText.yTooLow,
+                    cuboid.y1(), Configuration.town.outpostNoLowerThan);
+        }
+    }
+
+    /**
+     * Resize variant that lets legacy outposts larger than the new hard cap
+     * stay in place and shrink toward compliance. No horizontal dimension may
+     * grow while either the old or new footprint is over the cap.
+     */
+    public static void assertTownOutpostResizeSize(@NotNull UUID associatedWorldUid,
+                                                   @NotNull CuboidDTO before,
+                                                   @NotNull CuboidDTO after) throws DominionException {
+        int horizontalMax = Configuration.town.outpostMaxHorizontalSize;
+        boolean legacyOversize = before.xLength() > horizontalMax || before.zLength() > horizontalMax;
+        boolean horizontalGrowth = after.xLength() > before.xLength() || after.zLength() > before.zLength();
+        if (legacyOversize && horizontalGrowth) {
+            if (before.xLength() > horizontalMax) {
+                throw new DominionException(Language.assertsText.xLengthTooLong,
+                        before.xLength(), horizontalMax);
+            }
+            throw new DominionException(Language.assertsText.zLengthTooLong,
+                    before.zLength(), horizontalMax);
+        }
+        if (after.xLength() > horizontalMax && after.xLength() > before.xLength()) {
+            throw new DominionException(Language.assertsText.xLengthTooLong, after.xLength(), horizontalMax);
+        }
+        if (after.zLength() > horizontalMax && after.zLength() > before.zLength()) {
+            throw new DominionException(Language.assertsText.zLengthTooLong, after.zLength(), horizontalMax);
+        }
+
+        // For an already-oversized horizontal footprint, validate all of the
+        // still-applicable minimum/vertical policy via a cap-only surrogate.
+        CuboidDTO capped = new CuboidDTO(
+                after.x1(), after.y1(), after.z1(),
+                after.x1() + (int) Math.min(after.xLength(), horizontalMax), after.y2(),
+                after.z1() + (int) Math.min(after.zLength(), horizontalMax));
+        assertTownOutpostSize(associatedWorldUid, capped);
+    }
+
+    /**
      * Asserts that the given player is the owner of the specified dominion.
      * Server operators are allowed to bypass this check.
      *
@@ -319,8 +399,11 @@ public class Asserts {
             if (parent == null) {
                 throw new DominionException(Language.assertsText.missingParentDom, dominion.getName());
             }
-            if (!parent.getCuboid().contain(cuboid,
-                    Configuration.getPlayerLimitation(associatedPlayer).getWorldSettings(dominion.getWorldUid()).autoIncludeVertical)) {
+            boolean autoIncludeVertical = dominion instanceof DominionDOO doo && doo.isTownOutpost()
+                    ? Configuration.town.outpostAutoIncludeVertical
+                    : Configuration.getPlayerLimitation(associatedPlayer)
+                    .getWorldSettings(dominion.getWorldUid()).autoIncludeVertical;
+            if (!parent.getCuboid().contain(cuboid, autoIncludeVertical)) {
                 throw new DominionException(Language.assertsText.outsideOfParentDom, dominion.getName(), parent.getName());
             }
         }
@@ -378,8 +461,11 @@ public class Asserts {
         // check if dominion can contain children
         List<DominionDTO> children = CacheManager.instance.getCache().getDominionCache().getChildrenOf(dominion.getId());
         for (DominionDTO child : children) {
-            if (!cuboid.contain(child.getCuboid(),
-                    Configuration.getPlayerLimitation(associatedPlayer).getWorldSettings(dominion.getWorldUid()).autoIncludeVertical)) {
+            boolean autoIncludeVertical = dominion instanceof DominionDOO doo && doo.isTownOutpost()
+                    ? Configuration.town.outpostAutoIncludeVertical
+                    : Configuration.getPlayerLimitation(associatedPlayer)
+                    .getWorldSettings(dominion.getWorldUid()).autoIncludeVertical;
+            if (!cuboid.contain(child.getCuboid(), autoIncludeVertical)) {
                 throw new DominionException(Language.assertsText.cantContainChild, dominion.getName(), child.getName());
             }
         }

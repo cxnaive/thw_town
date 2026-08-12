@@ -133,6 +133,7 @@ select-point-events-handler-text:
   second-point: 第二个选点坐标：{0}, {1}, {2}
   not-same-world: 两个选点不在同一世界
   price: 预计领地花费：{0} {1}
+  town-outpost-price: 小镇附属领地预计花费：{0}
   size: 尺寸：{0} x {1} x {2}
   square: 面积：{0}
   volume: 体积：{0}
@@ -671,7 +672,8 @@ town-manager-text:
   release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
   release-not-outpost: 领地 {0} 不是城镇前哨。
   release-founding-denied: 建国前哨不可被释放，它随城镇一同消亡。
-  release-admin-only: 只有 OP 可以释放镇属领地。
+  release-admin-only: 只有 OP 可以使用小镇管理员仲裁操作。
+  release-mayor-contributed-only: 只有本镇镇长可以归还贡献领地；小镇自行创建的附属领地不可归还。
   only-member-can-deposit: 只有 {0} 的成员才能向其金库存款。
   outpost-admin-set: 已将前哨 {0} 的次级管理员设为 {1}。
   outpost-admin-cleared: 已清除前哨 {0} 的次级管理员。
@@ -714,7 +716,7 @@ town-command-text:
 
     &b/town upgrade [confirm] &7- 一次性升级到小镇权限模板（仅镇长）
 
-    &b/town release <领地> [confirm] &7- 将镇属领地归还贡献者（仅 OP）
+    &b/town release <领地> [confirm] &7- 镇长归还贡献领地（OP 可仲裁）
 
     &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
 
@@ -745,7 +747,7 @@ town-command-text:
   attach-one-success: 已将领地 {0} 挂靠到小镇 {1}。
   attach-not-owned: 你没有名为 {0} 的个人领地。
   upgrade-confirm: 升级 {0} 会重置所有镇属领地的小镇组权限，并让全部领地继承新模板。此操作不可撤销。执行 /town upgrade confirm 继续。
-  release-confirm: 释放 {0} 会将其归还给贡献者 {1}，并删除属地 Trust 及全部小镇组镜像。执行 /town release {0} confirm 继续。
+  release-confirm: 归还贡献领地 {0} 会将其交还给 {1}，并删除该属地的 Trust 及全部小镇组镜像。执行 /town release {0} confirm 继续。
   town-group-usage: '&b/town group create <名称> [显示名]
 
     &b/town group rename <内部名> <显示名>

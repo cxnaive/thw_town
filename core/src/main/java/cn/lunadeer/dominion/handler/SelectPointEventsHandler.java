@@ -6,6 +6,9 @@ import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.configuration.Limitation;
+import cn.lunadeer.dominion.doos.TownMemberDOO;
+import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.utils.BorderRenderUtil;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
@@ -27,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static cn.lunadeer.dominion.misc.Others.sortLocations;
+import static cn.lunadeer.dominion.misc.Converts.normalizePersonalSelection;
 import static cn.lunadeer.dominion.utils.BorderRenderUtil.DEFAULT_GLOW_COLOR;
 
 
@@ -37,6 +41,7 @@ public class SelectPointEventsHandler implements Listener {
         public String secondPoint = "Second point selected at {0}, {1}, {2}.";
         public String notSameWorld = "The two points are not in the same world.";
         public String price = "The price of the dominion is {0} {1}.";
+        public String townOutpostPrice = "Estimated town outpost price: {0}.";
         public String owner = "Owner: {0}";
         public String size = "Size: {0}x{1}x{2}";
         public String square = "Square: {0}";
@@ -72,17 +77,11 @@ public class SelectPointEventsHandler implements Listener {
             event.setCancelled(true);
             Notification.info(player, Language.selectPointEventsHandlerText.firstPoint, block.getX(), block.getY(), block.getZ());
             Location loc = block.getLocation();
-            if (Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld()).autoIncludeVertical) {
-                loc.setY(Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld()).noLowerThan);
-            }
             points.put(0, loc);
         } else if (action == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             Notification.info(player, Language.selectPointEventsHandlerText.secondPoint, block.getX(), block.getY(), block.getZ());
             Location loc = block.getLocation();
-            if (Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld()).autoIncludeVertical) {
-                loc.setY(Configuration.getPlayerLimitation(player).getWorldSettings(player.getWorld()).noHigherThan - 1);
-            }
             points.put(1, loc);
         } else {
             return;
@@ -99,22 +98,33 @@ public class SelectPointEventsHandler implements Listener {
                 return;
             }
             Location[] locs = sortLocations(points.get(0), points.get(1));
-            CuboidDTO cuboid = new CuboidDTO(locs[0], locs[1]);
+            CuboidDTO rawCuboid = new CuboidDTO(locs[0], locs[1]);
             try {
-                if (Configuration.getPlayerLimitation(player).economy.enable) {
-                    long amount;
-                    if (Configuration.getPlayerLimitation(player).economy.squareOnly) {
-                        amount = cuboid.getSquare();
-                    } else {
-                        amount = cuboid.getVolume();
-                    }
-                    double price = amount * Configuration.getPlayerLimitation(player).economy.pricePerBlock;
-                    Notification.info(player, Language.selectPointEventsHandlerText.price, price, VaultConnect.instance.currencyNamePlural());
+                Limitation limitation = Configuration.getPlayerLimitation(player);
+                CuboidDTO personalCuboid = normalizePersonalSelection(player, rawCuboid);
+                if (limitation.economy.enable) {
+                    long amount = limitation.economy.squareOnly
+                            ? personalCuboid.getSquare()
+                            : personalCuboid.getVolume();
+                    double price = amount * limitation.economy.pricePerBlock;
+                    Notification.info(player, Language.selectPointEventsHandlerText.price,
+                            price, VaultConnect.instance.currencyNamePlural());
                 }
-                BorderRenderUtil.showBorder(player, points.get(0).getWorld(), cuboid, DEFAULT_GLOW_COLOR);
-                Notification.info(player, Language.selectPointEventsHandlerText.size, cuboid.xLength(), cuboid.yLength(), cuboid.zLength());
-                Notification.info(player, Language.selectPointEventsHandlerText.square, cuboid.getSquare());
-                Notification.info(player, Language.selectPointEventsHandlerText.volume, cuboid.getVolume());
+                boolean managesTown = CacheManager.instance.getTownCache()
+                        .getMembershipsOf(player.getUniqueId()).stream()
+                        .map(TownMemberDOO::getRole)
+                        .anyMatch(role -> role == TownMemberDOO.TownRole.MAYOR
+                                || role == TownMemberDOO.TownRole.ASSISTANT);
+                CuboidDTO townCuboid = TownManager.normalizeTownOutpostCuboid(rawCuboid);
+                if (managesTown && Configuration.town.outpostPricing.enable) {
+                    double price = TownManager.townOutpostPrice(CuboidDTO.ZERO, townCuboid);
+                    Notification.info(player, Language.selectPointEventsHandlerText.townOutpostPrice, price);
+                }
+                CuboidDTO displayCuboid = managesTown ? townCuboid : personalCuboid;
+                BorderRenderUtil.showBorder(player, points.get(0).getWorld(), displayCuboid, DEFAULT_GLOW_COLOR);
+                Notification.info(player, Language.selectPointEventsHandlerText.size, displayCuboid.xLength(), displayCuboid.yLength(), displayCuboid.zLength());
+                Notification.info(player, Language.selectPointEventsHandlerText.square, displayCuboid.getSquare());
+                Notification.info(player, Language.selectPointEventsHandlerText.volume, displayCuboid.getVolume());
             } catch (Exception e) {
                 Notification.error(player, e.getMessage());
             }

@@ -32,9 +32,9 @@ dominion-list-tui-text:
   legacy-tag: （旧系统——请尽快创建或加入小镇）
   legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），你的领地会挂靠为镇属地。
 dominion-manage-tui-text:
-  release-description: 仅管理员：把此前哨从镇里剥离，归还给贡献者。
-  release-button: 剥离
-  release-confirm: §c5 秒内再次点击确认释放 {0}。小镇组、镜像成员和该属地 Trust 都会被删除。
+  release-description: 将贡献领地归还给原贡献者（镇长操作，OP 可仲裁）。
+  release-button: 归还
+  release-confirm: §c5 秒内再次点击确认归还贡献领地 {0}。小镇组、镜像成员和该属地 Trust 都会被删除。
   trusts-description: 管理此镇属前哨的单人 Trust 授权。
   title: 管理领地 {0}
   button: 管理领地

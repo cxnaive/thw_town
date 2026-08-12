@@ -1,7 +1,9 @@
 package cn.lunadeer.dominion.managers;
 
+import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.cache.server.ServerCache;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
@@ -9,6 +11,7 @@ import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -178,6 +181,16 @@ public final class TownGroupSyncHandler {
      * returned to its contributor. Ordinary personal groups are preserved.
      */
     public static void releaseOutpost(int dominionId) throws Exception {
+        releaseOutpost(dominionId, null);
+    }
+
+    /**
+     * Release with an optional mayor constraint. A null mayor UUID denotes a
+     * trusted internal/admin operation. Otherwise the current mayor and the
+     * contributed-land marker are checked again while holding the town lock.
+     */
+    public static void releaseOutpost(int dominionId,
+                                      @Nullable UUID requiredMayorUuid) throws Exception {
         int serverId = transaction(connection -> {
             int owningServer;
             int townId;
@@ -193,7 +206,7 @@ public final class TownGroupSyncHandler {
             }
             TownPermissionManager.lockTown(connection, townId);
             try (PreparedStatement statement = connection.prepareStatement(
-                    "SELECT server_id, claim_kind FROM dominion WHERE id = ? AND town_id = ?")) {
+                    "SELECT server_id, claim_kind, attached_by FROM dominion WHERE id = ? AND town_id = ?")) {
                 statement.setInt(1, dominionId);
                 statement.setInt(2, townId);
                 try (ResultSet row = statement.executeQuery()) {
@@ -204,6 +217,23 @@ public final class TownGroupSyncHandler {
                     if ("FOUNDING".equals(row.getString("claim_kind"))) {
                         throw new DominionException(
                                 Language.townManagerText.releaseFoundingDenied);
+                    }
+                    if (requiredMayorUuid != null && row.getString("attached_by") == null) {
+                        throw new DominionException(
+                                Language.townManagerText.releaseMayorContributedOnly);
+                    }
+                }
+            }
+            if (requiredMayorUuid != null) {
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "SELECT mayor_uuid FROM town WHERE id = ?")) {
+                    statement.setInt(1, townId);
+                    try (ResultSet row = statement.executeQuery()) {
+                        if (!row.next() || !requiredMayorUuid.toString().equalsIgnoreCase(
+                                row.getString("mayor_uuid"))) {
+                            throw new DominionException(
+                                    Language.townManagerText.releaseMayorContributedOnly);
+                        }
                     }
                 }
             }
@@ -231,7 +261,8 @@ public final class TownGroupSyncHandler {
             }
             try (PreparedStatement statement = connection.prepareStatement(
                     "UPDATE dominion SET town_id = NULL, attached_by = NULL, attached_at = NULL, "
-                            + "outpost_admin_uuid = NULL WHERE id = ? AND town_id IS NOT NULL")) {
+                            + "outpost_admin_uuid = NULL, town_paid_value = 0 "
+                            + "WHERE id = ? AND town_id IS NOT NULL")) {
                 statement.setInt(1, dominionId);
                 if (statement.executeUpdate() != 1) {
                     throw new SQLException("Outpost disappeared during release: " + dominionId);
@@ -316,41 +347,134 @@ public final class TownGroupSyncHandler {
             TownPermissionManager.lockTown(connection, town.getId());
             TownPermissionManager.requireOutpostOfTown(
                     connection, town.getId(), outpost.getId());
-            ensureTownMemberMirror(connection, outpost.getId());
-            Map<Integer, Integer> mirrorByTownGroup = new LinkedHashMap<>();
-            try (PreparedStatement groups = connection.prepareStatement(
-                    "SELECT id, name, display_name FROM town_group WHERE town_id = ? ORDER BY priority DESC, id")) {
-                groups.setInt(1, town.getId());
-                try (ResultSet rows = groups.executeQuery()) {
-                    while (rows.next()) {
-                        int townGroupId = rows.getInt("id");
-                        String name = rows.getString("name");
-                        String display = rows.getString("display_name");
-                        if (display == null || display.isBlank()) display = name;
-                        mirrorByTownGroup.put(townGroupId,
-                                ensureMirror(connection, outpost.getId(), townGroupId, name, display));
-                    }
-                }
-            }
-            try (PreparedStatement members = connection.prepareStatement(
-                    "SELECT player_uuid, group_id FROM town_member WHERE town_id = ? AND group_id > 0")) {
-                members.setInt(1, town.getId());
-                try (ResultSet rows = members.executeQuery()) {
-                    while (rows.next()) {
-                        Integer mirrorId = mirrorByTownGroup.get(rows.getInt("group_id"));
-                        if (mirrorId == null) continue;
-                        ensureMirrorMember(connection, outpost.getId(), mirrorId,
-                                UUID.fromString(rows.getString("player_uuid")));
-                    }
-                }
-            }
-            if (TownPermissionManager.isTemplateMode(connection, town.getId())) {
-                TownPermissionManager.syncOutpostFlags(
-                        connection, town.getId(), outpost.getId());
-            }
+            syncOutpost(connection, town.getId(), outpost.getId());
             return null;
         });
         reloadCaches();
+    }
+
+    /**
+     * Create, charge, attach and initialize a remote town outpost atomically.
+     * No partially-created personal dominion or incomplete permission mirror
+     * can survive a rollback or process interruption before commit.
+     */
+    public static @NotNull DominionDOO createRemoteOutpost(
+            @NotNull TownDOO town,
+            @NotNull UUID owner,
+            @NotNull String name,
+            @NotNull UUID worldUid,
+            @NotNull CuboidDTO cuboid,
+            long paidValueCents) throws Exception {
+        if (paidValueCents < 0) {
+            throw new IllegalArgumentException("paidValueCents must be >= 0");
+        }
+        int dominionId = transaction(connection -> {
+            TownPermissionManager.lockTown(connection, town.getId());
+            if (paidValueCents > 0) {
+                int charged;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE town SET balance = balance - ? "
+                                + "WHERE id = ? AND balance >= ?")) {
+                    statement.setLong(1, paidValueCents);
+                    statement.setInt(2, town.getId());
+                    statement.setLong(3, paidValueCents);
+                    charged = statement.executeUpdate();
+                }
+                if (charged != 1) {
+                    throw new DominionException(
+                            Language.townManagerText.insufficientTownFunds,
+                            town.getName(), paidValueCents / 100.0,
+                            townBalanceCents(connection, town.getId()) / 100.0);
+                }
+            }
+
+            int insertedId;
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO dominion (owner, name, world_uid, "
+                            + "x1, y1, z1, x2, y2, z2, parent_dom_id, "
+                            + "join_message, leave_message, tp_location, server_id, "
+                            + "town_id, claim_kind, town_paid_value) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, -1, ?, ?, 'default', ?, ?, 'NORMAL', ?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
+                statement.setString(1, owner.toString());
+                statement.setString(2, name);
+                statement.setString(3, worldUid.toString());
+                statement.setInt(4, cuboid.x1());
+                statement.setInt(5, cuboid.y1());
+                statement.setInt(6, cuboid.z1());
+                statement.setInt(7, cuboid.x2());
+                statement.setInt(8, cuboid.y2());
+                statement.setInt(9, cuboid.z2());
+                statement.setString(10, Configuration.pluginMessage.defaultEnterMessage);
+                statement.setString(11, Configuration.pluginMessage.defaultLeaveMessage);
+                statement.setInt(12, Configuration.multiServer.serverId);
+                statement.setInt(13, town.getId());
+                statement.setLong(14, paidValueCents);
+                statement.executeUpdate();
+                insertedId = generatedId(statement);
+            }
+            if (insertedId <= 0) {
+                throw new SQLException("Failed to resolve inserted dominion id.");
+            }
+            syncOutpost(connection, town.getId(), insertedId);
+            return insertedId;
+        });
+
+        reloadCaches();
+        CacheManager.instance.getCache().getDominionCache().load(dominionId);
+        DominionDOO created = DominionDOO.select(dominionId);
+        if (created == null) {
+            throw new SQLException("Inserted dominion disappeared: " + dominionId);
+        }
+        return created;
+    }
+
+    private static void syncOutpost(Connection connection, int townId,
+                                    int dominionId) throws SQLException {
+        ensureTownMemberMirror(connection, dominionId);
+        Map<Integer, Integer> mirrorByTownGroup = new LinkedHashMap<>();
+        try (PreparedStatement groups = connection.prepareStatement(
+                "SELECT id, name, display_name FROM town_group "
+                        + "WHERE town_id = ? ORDER BY priority DESC, id")) {
+            groups.setInt(1, townId);
+            try (ResultSet rows = groups.executeQuery()) {
+                while (rows.next()) {
+                    int townGroupId = rows.getInt("id");
+                    String name = rows.getString("name");
+                    String display = rows.getString("display_name");
+                    if (display == null || display.isBlank()) display = name;
+                    mirrorByTownGroup.put(townGroupId,
+                            ensureMirror(connection, dominionId, townGroupId, name, display));
+                }
+            }
+        }
+        try (PreparedStatement members = connection.prepareStatement(
+                "SELECT player_uuid, group_id FROM town_member "
+                        + "WHERE town_id = ? AND group_id > 0")) {
+            members.setInt(1, townId);
+            try (ResultSet rows = members.executeQuery()) {
+                while (rows.next()) {
+                    Integer mirrorId = mirrorByTownGroup.get(rows.getInt("group_id"));
+                    if (mirrorId == null) continue;
+                    ensureMirrorMember(connection, dominionId, mirrorId,
+                            UUID.fromString(rows.getString("player_uuid")));
+                }
+            }
+        }
+        if (TownPermissionManager.isTemplateMode(connection, townId)) {
+            TownPermissionManager.syncOutpostFlags(connection, townId, dominionId);
+        }
+    }
+
+    private static long townBalanceCents(Connection connection, int townId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT balance FROM town WHERE id = ?")) {
+            statement.setInt(1, townId);
+            try (ResultSet row = statement.executeQuery()) {
+                if (!row.next()) throw new SQLException("Town does not exist: " + townId);
+                return row.getLong(1);
+            }
+        }
     }
 
     private static int ensureMirror(Connection connection, int dominionId, int townGroupId,

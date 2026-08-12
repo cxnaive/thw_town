@@ -132,6 +132,7 @@ select-point-events-handler-text:
   second-point: 第二個選取點：{0}, {1}, {2}。
   not-same-world: 兩個選取點不在同一世界。
   price: 領地費用預估：{0}{1}。
+  town-outpost-price: 小鎮附屬領地預計花費：{0}。
   owner: 擁有者：{0}。
   size: 尺寸：{0}×{1}×{2}。
   square: 面積：{0}。
@@ -642,6 +643,8 @@ town-manager-text:
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
   release-not-outpost: Dominion {0} is not a town outpost.
   release-founding-denied: A founding outpost can never be released; it dissolves with its town.
+  release-admin-only: Only an OP may use administrator town arbitration.
+  release-mayor-contributed-only: Only the mayor may return contributed outposts of their own town; town-created outposts cannot be returned.
   only-member-can-deposit: Only members of {0} can deposit into its bank.
   outpost-admin-set: Outpost admin of {0} set to {1}.
   outpost-admin-cleared: Outpost admin of {0} cleared.
@@ -678,6 +681,8 @@ town-command-text:
 
     &b/town admin <outpost> [player] &7- set/clear the outpost admin
 
+    &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
 
     &b/town untrust <player> [town|outpost <name>]
@@ -699,6 +704,7 @@ town-command-text:
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
   create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
+  release-confirm: Returning contributed outpost {0} gives it back to {1}, and removes its outpost trust and town group mirrors. Run /town release {0} confirm to proceed.
 migration-text:
   town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:

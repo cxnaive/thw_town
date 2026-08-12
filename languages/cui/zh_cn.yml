@@ -638,12 +638,12 @@ dominion-manage-cui:
     material: GOLDEN_HELMET
   release-button:
     symbol: i
-    name: §c✂ §c释放属地
+    name: §c✂ §c归还贡献领地
     lore:
-    - §7仅管理员：将此属地从小镇
-    - §7释放回贡献者个人。
+    - §7将此贡献领地归还给原贡献者。
+    - §7镇长操作，OP 可仲裁。
     - ''
-    - §c▶ 连续点击两次确认释放
+    - §c▶ 连续点击两次确认归还
     material: SHEARS
 copy-menu-cui:
   title: §6✦ §a§l复制设置 §6✦

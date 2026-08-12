@@ -656,12 +656,13 @@ dominion-manage-cui:
     material: GOLDEN_HELMET
   release-button:
     symbol: i
-    name: §c✂ §cRelease Outpost
+    name: §c✂ §cReturn Contributed Land
     lore:
-    - '§7Admin only: detach this outpost'
-    - §7from its town back to the contributor.
+    - §7Return this contributed outpost
+    - §7to its original contributor.
+    - §7Mayor operation; OPs may arbitrate.
     - ''
-    - §c▶ Click twice to release
+    - §c▶ Click twice to return
     material: SHEARS
 copy-menu-cui:
   title: §6✦ §a§lCopy Settings §6✦

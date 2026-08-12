@@ -196,21 +196,26 @@ public class DominionProviderHandler extends DominionProvider {
                 if (!resizeDoo.isTownOutpost()) {
                     assertDominionOwner(event.getOperator(), event.getDominion());
                 }
-                assertDominionSize(event.getOperator(), event.getDominion().getWorldUid(), event.getNewCuboid());
+                if (resizeTown != null) {
+                    assertTownOutpostResizeSize(event.getDominion().getWorldUid(),
+                            event.getOldCuboid(), event.getNewCuboid());
+                } else {
+                    assertDominionSize(event.getOperator(), event.getDominion().getWorldUid(), event.getNewCuboid());
+                }
                 assertWithinParent(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertContainSubs(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertDominionIntersect(event.getOperator(), event.getDominion(), event.getNewCuboid());
-                if (!event.isSkipEconomy()) {
-                    if (resizeTown != null) {
-                        if (event.getOperator() instanceof Player resizePlayer) {
-                            TownManager.chargeTownResize(resizePlayer, resizeTown,
-                                    event.getOldCuboid(), event.getNewCuboid());
-                        }
-                    } else {
-                        assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(), dominion.getParentDomId() != -1);
-                    }
+                if (resizeTown == null && !event.isSkipEconomy()) {
+                    assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(),
+                            dominion.getParentDomId() != -1);
                 }
-                event.setDominion(event.getDominion().setCuboid(event.getNewCuboid()));
+                if (resizeTown != null) {
+                    Player resizePlayer = event.getOperator() instanceof Player p ? p : null;
+                    event.setDominion(TownManager.resizeTownOutpost(resizePlayer, resizeTown, resizeDoo,
+                            event.getOldCuboid(), event.getNewCuboid(), event.isSkipEconomy()));
+                } else {
+                    event.setDominion(event.getDominion().setCuboid(event.getNewCuboid()));
+                }
                 BorderRenderUtil.showBorder(event.getOperator(), event.getDominion());
                 if (expand) {
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.expandSuccess, event.getDominion().getName());
@@ -245,8 +250,8 @@ public class DominionProviderHandler extends DominionProvider {
                 TownDOO delTown = null;
                 if (delDoo.isTownOutpost()) {
                     // town property: personal deletion is impossible; admins
-                    // may force-delete (refund goes to the town bank), the
-                    // regular paths are town disband or admin release.
+                    // may force-delete without a refund; regular lifecycle
+                    // paths are town disband or admin release.
                     delTown = TownManager.requireTown(delDoo.getTownId());
                     boolean privileged = !(event.getOperator() instanceof Player p) || Others.bypassLimit(p);
                     if (!privileged) {
@@ -276,11 +281,7 @@ public class DominionProviderHandler extends DominionProvider {
                 DominionDOO.deleteById(event.getDominion().getId());
                 Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, event.getDominion().getName());
                 if (!event.isSkipEconomy()) {
-                    if (delTown != null) {
-                        if (event.getOperator() instanceof Player p) {
-                            TownManager.chargeTownResize(p, delTown, event.getDominion().getCuboid(), CuboidDTO.ZERO);
-                        }
-                    } else {
+                    if (delTown == null) {
                         assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO, event.getDominion().getParentDomId() != -1);
                     }
                 }
