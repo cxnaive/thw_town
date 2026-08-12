@@ -19,12 +19,15 @@ import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.doos.TownTrustDOO;
+import cn.lunadeer.dominion.events.CallableEvent;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import cn.lunadeer.dominion.utils.databse.syntax.Show.Show;
+import cn.lunadeer.dominion.utils.scheduler.Scheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,6 +44,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionIntersect;
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionName;
@@ -61,6 +66,39 @@ import static cn.lunadeer.dominion.misc.Others.bypassLimit;
  * - old dominion_member rows are archived, never hard-deleted without a copy.
  */
 public class TownManager {
+
+    /**
+     * Town mutations deliberately run off-thread because they perform real
+     * database I/O, while Bukkit lifecycle events are synchronous events.
+     * Bridge only the event dispatch back to the server thread and wait for
+     * listeners before continuing the surrounding transaction/rollback flow.
+     */
+    private static void callLifecycleEvent(@NotNull CallableEvent event) throws Exception {
+        if (Bukkit.isPrimaryThread()) {
+            event.call();
+            return;
+        }
+        CompletableFuture<Void> called = new CompletableFuture<>();
+        Scheduler.runTask(() -> {
+            try {
+                event.call();
+                called.complete(null);
+            } catch (Throwable throwable) {
+                called.completeExceptionally(throwable);
+            }
+        });
+        try {
+            called.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception exception) throw exception;
+            if (cause instanceof Error error) throw error;
+            throw new RuntimeException(cause);
+        }
+    }
 
     public static class TownManagerText extends ConfigurationPart {
         public String townNameShouldNotEmpty = "Town name should not be empty.";
@@ -570,7 +608,7 @@ public class TownManager {
                                 founder, foundingCreated.getName(), founder.getUniqueId(),
                                 founder.getWorld(), foundingCuboid, null);
                 createEvent.setSkipEconomy(true);
-                createEvent.call();
+                callLifecycleEvent(createEvent);
                 // like the provider pipeline, complete the future so
                 // third-party afterCreated callbacks fire
                 createEvent.getFutureToComplete().complete(foundingCreated);
@@ -666,7 +704,7 @@ public class TownManager {
                     cn.lunadeer.dominion.events.dominion.DominionDeleteEvent subDeleteEvent =
                             new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, sub);
                     subDeleteEvent.setSkipEconomy(true);
-                    subDeleteEvent.call(); // notification only; town disband is not vetoable
+                    callLifecycleEvent(subDeleteEvent); // notification only; town disband is not vetoable
                     DominionDOO.deleteById(sub.getId());
                     notifyIfOnline(enclaveOwner, Language.townManagerText.disbandEnclaveDissolved,
                             sub.getName(), town.getName());
@@ -676,7 +714,7 @@ public class TownManager {
                 cn.lunadeer.dominion.events.dominion.DominionDeleteEvent deleteEvent =
                         new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, outpost);
                 deleteEvent.setSkipEconomy(true);
-                deleteEvent.call(); // notification only
+                callLifecycleEvent(deleteEvent); // notification only
                 DominionDOO.deleteById(outpost.getId());
                 dissolved++;
             } else {
@@ -1059,7 +1097,7 @@ public class TownManager {
                     new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
                             operator, dominionName, operator.getUniqueId(), world, cuboid, null);
             createEvent.setSkipEconomy(true);
-            createEvent.call();
+            callLifecycleEvent(createEvent);
             createEvent.getFutureToComplete().complete(created);
         } catch (Exception e) {
             // any failure after the insert must undo both legs: free the

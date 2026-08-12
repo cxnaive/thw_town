@@ -31,6 +31,7 @@ import java.util.List;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
+import static cn.lunadeer.dominion.misc.Others.bypassLimit;
 import static cn.lunadeer.dominion.utils.Misc.formatString;
 
 /**
@@ -115,8 +116,9 @@ public class TownInfo extends AbstractUI {
             TownDOO town = requireTown(args[0]);
             int page = toIntegrity(args[1], 1);
             TownMemberDOO.TownRole role = TownManager.roleOf(town, player.getUniqueId());
-            boolean manager = TownManager.isManager(town, player.getUniqueId())
-                    || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
+            boolean bypass = bypassLimit(player);
+            boolean memberOrAdmin = role != null || bypass;
+            boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
 
             ListView view = ListView.create(10, button(player, town.getName()));
             view.title(formatString(TextUserInterface.townInfoTuiText.title, town.getName()));
@@ -140,8 +142,7 @@ public class TownInfo extends AbstractUI {
                 view.add(Line.create().append(TextUserInterface.townInfoTuiText.permissionModeTemplate));
             } else {
                 view.add(Line.create().append(TextUserInterface.townInfoTuiText.permissionModeLegacy));
-                if (role == TownMemberDOO.TownRole.MAYOR
-                        || cn.lunadeer.dominion.misc.Others.bypassLimit(player)) {
+                if (role == TownMemberDOO.TownRole.MAYOR || bypass) {
                     view.add(Line.create()
                             .append(new FunctionalButton(TextUserInterface.townInfoTuiText.upgradeButton) {
                                 @Override
@@ -168,7 +169,7 @@ public class TownInfo extends AbstractUI {
                     .append(TownOutposts.button(player, town.getName()).build())
                     .append(TextUserInterface.townInfoTuiText.outpostsDescription));
 
-            if (role != null) {
+            if (memberOrAdmin) {
                 view.add(Line.create()
                         .append(TownAttachSelector.button(player, town.getName()).build())
                         .append(TextUserInterface.townInfoTuiText.attachDescription));
@@ -186,8 +187,7 @@ public class TownInfo extends AbstractUI {
                                 .needPermission(defaultPermission).build())
                         .append(TextUserInterface.townInfoTuiText.disbandDescription));
             }
-            boolean bypassInfo = cn.lunadeer.dominion.misc.Others.bypassLimit(player);
-            if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypassInfo)) {
+            if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypass)) {
                 view.add(Line.create()
                         .append(new FunctionalButton(TextUserInterface.townInfoTuiText.leaveButton) {
                             @Override
@@ -261,8 +261,9 @@ public class TownInfo extends AbstractUI {
         try {
             TownDOO town = requireTown(args[0]);
             TownMemberDOO.TownRole role = TownManager.roleOf(town, player.getUniqueId());
-            boolean bypassInfo = cn.lunadeer.dominion.misc.Others.bypassLimit(player);
-            boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypassInfo;
+            boolean bypass = bypassLimit(player);
+            boolean memberOrAdmin = role != null || bypass;
+            boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townInfoCui.title, town.getName()));
@@ -281,7 +282,7 @@ public class TownInfo extends AbstractUI {
             outposts = outposts.setLoreArgs(String.valueOf(outpostCount(town.getId())));
             view = view.addItem(outposts);
 
-            if (role != null) {
+            if (memberOrAdmin) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.attachButton,
                         () -> TownAttachSelector.show(player, town.getName(), "1")));
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.groupsButton,
@@ -294,11 +295,11 @@ public class TownInfo extends AbstractUI {
                         () -> TownDisbandConfirmInputter.createOn(player, town.getName()), true));
             }
             if (!town.isTemplatePermissionMode()
-                    && (role == TownMemberDOO.TownRole.MAYOR || bypassInfo)) {
+                    && (role == TownMemberDOO.TownRole.MAYOR || bypass)) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.upgradeButton,
                         () -> confirmPermissionUpgrade(player, town)));
             }
-            if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypassInfo)) {
+            if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypass)) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.leaveButton,
                         () -> TownUI.action(player, () -> TownManager.leaveTown(player, town),
                                 () -> MainMenu.show(player, "1"))));

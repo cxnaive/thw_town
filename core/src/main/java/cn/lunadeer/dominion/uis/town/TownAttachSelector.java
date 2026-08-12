@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
+import static cn.lunadeer.dominion.misc.Others.bypassLimit;
 import static cn.lunadeer.dominion.utils.Misc.formatString;
 
 /**
@@ -47,16 +48,16 @@ public class TownAttachSelector extends AbstractUI {
             return;
         }
         TownUI.prefetchThenRender(player, () -> {
-            requireMemberTown(player, townName);
+            requireAccessibleTown(player, townName);
             ui.prefetchedAttachable = DominionDOO.selectByOwner(player.getUniqueId()).stream()
                     .filter(d -> !d.isTownOutpost())
                     .toList();
         }, () -> ui.displayByPreference(player, townName, pageStr));
     }
 
-    private static TownDOO requireMemberTown(Player player, String townName) throws Exception {
+    private static TownDOO requireAccessibleTown(Player player, String townName) throws Exception {
         TownDOO town = TownManager.requireTown(townName);
-        if (TownManager.roleOf(town, player.getUniqueId()) == null) {
+        if (TownManager.roleOf(town, player.getUniqueId()) == null && !bypassLimit(player)) {
             throw new cn.lunadeer.dominion.misc.DominionException(
                     cn.lunadeer.dominion.configuration.Language.townManagerText.notInTown,
                     town.getName());
@@ -92,7 +93,7 @@ public class TownAttachSelector extends AbstractUI {
     @Override
     protected void showTUI(Player player, String... args) {
         try {
-            TownDOO town = requireMemberTown(player, args[0]);
+            TownDOO town = requireAccessibleTown(player, args[0]);
             int page = toIntegrity(args[1], 1);
 
             List<DominionDOO> attachable = prefetchedAttachable;
@@ -207,7 +208,7 @@ public class TownAttachSelector extends AbstractUI {
     @Override
     protected void showCUI(Player player, String... args) {
         try {
-            TownDOO town = requireMemberTown(player, args[0]);
+            TownDOO town = requireAccessibleTown(player, args[0]);
 
             List<DominionDOO> attachable = prefetchedAttachable;
 
@@ -293,7 +294,7 @@ public class TownAttachSelector extends AbstractUI {
         Set<Integer> selectedSnapshot = new HashSet<>(selected);
         selections.remove(player.getUniqueId());
         TownUI.action(player, () -> {
-            TownDOO currentTown = requireMemberTown(player, town.getName());
+            TownDOO currentTown = requireAccessibleTown(player, town.getName());
             int count = 0;
             for (Integer dominionId : selectedSnapshot) {
                 // Re-query and re-check ownership: ownership can change while
