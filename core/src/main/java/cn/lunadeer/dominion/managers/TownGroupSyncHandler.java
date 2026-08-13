@@ -1,6 +1,8 @@
 package cn.lunadeer.dominion.managers;
 
 import cn.lunadeer.dominion.api.dtos.CuboidDTO;
+import cn.lunadeer.dominion.api.dtos.flag.Flags;
+import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.cache.server.ServerCache;
 import cn.lunadeer.dominion.configuration.Configuration;
@@ -9,7 +11,9 @@ import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.misc.DominionException;
+import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -370,6 +375,7 @@ public final class TownGroupSyncHandler {
         }
         int dominionId = transaction(connection -> {
             TownPermissionManager.lockTown(connection, town.getId());
+            assertOutpostCapacity(connection, town.getId(), Map.of(worldUid, 1));
             if (paidValueCents > 0) {
                 int charged;
                 try (PreparedStatement statement = connection.prepareStatement(
@@ -427,6 +433,279 @@ public final class TownGroupSyncHandler {
             throw new SQLException("Inserted dominion disappeared: " + dominionId);
         }
         return created;
+    }
+
+    /**
+     * Atomically reserve capacity, convert legacy members, attach one or more
+     * existing dominions and initialize their town permission mirrors. Town
+     * and candidate rows are locked in a stable order, so capacity, ownership
+     * and attachment state cannot change between validation and commit.
+     */
+    public static @NotNull List<Integer> attachOutposts(
+            @NotNull TownDOO town,
+            @NotNull List<DominionDOO> candidates,
+            @NotNull UUID operator,
+            @Nullable UUID expectedOwner) throws Exception {
+        if (candidates.isEmpty()) return List.of();
+        AttachResult result = transaction(connection -> {
+            TownPermissionManager.lockTown(connection, town.getId());
+
+            List<AttachCandidate> available = new ArrayList<>();
+            Map<UUID, Integer> additionsByWorld = new LinkedHashMap<>();
+            List<Integer> candidateIds = candidates.stream()
+                    .map(DominionDOO::getId)
+                    .distinct()
+                    .sorted(Comparator.naturalOrder())
+                    .toList();
+            for (Integer candidateId : candidateIds) {
+                // Portable row lock: MySQL/PostgreSQL lock the updated row;
+                // SQLite serializes writers. Stable id order avoids batch
+                // deadlocks when two towns contend for overlapping land.
+                try (PreparedStatement lock = connection.prepareStatement(
+                        "UPDATE dominion SET town_id = town_id "
+                                + "WHERE id = ? AND town_id IS NULL")) {
+                    lock.setInt(1, candidateId);
+                    // Do not inspect the affected-row count here.  MySQL may
+                    // report zero for a matched no-op UPDATE when
+                    // useAffectedRows=true even though the row was locked.
+                    lock.executeUpdate();
+                }
+                try (PreparedStatement select = connection.prepareStatement(
+                        "SELECT world_uid, owner, name, server_id FROM dominion "
+                                + "WHERE id = ? AND town_id IS NULL")) {
+                    select.setInt(1, candidateId);
+                    try (ResultSet row = select.executeQuery()) {
+                        if (!row.next()) continue;
+                        UUID owner = UUID.fromString(row.getString("owner"));
+                        if (expectedOwner != null && !expectedOwner.equals(owner)) {
+                            throw new SQLException("Dominion " + candidateId
+                                    + " changed owner while being attached.");
+                        }
+                        UUID worldUid = UUID.fromString(row.getString("world_uid"));
+                        available.add(new AttachCandidate(candidateId, worldUid, owner,
+                                row.getString("name"), row.getInt("server_id")));
+                        additionsByWorld.merge(worldUid, 1, Integer::sum);
+                    }
+                }
+            }
+            if (available.isEmpty()) return new AttachResult(List.of(), List.of());
+            assertOutpostCapacity(connection, town.getId(), additionsByWorld);
+
+            List<Integer> updated = new ArrayList<>();
+            List<ConvertedMember> convertedMembers = new ArrayList<>();
+            try (PreparedStatement attach = connection.prepareStatement(
+                    "UPDATE dominion SET town_id = ?, attached_by = ?, "
+                            + "attached_at = CURRENT_TIMESTAMP, town_paid_value = 0 "
+                            + "WHERE id = ? AND town_id IS NULL"
+                            + (expectedOwner == null ? "" : " AND owner = ?"))) {
+                for (AttachCandidate candidate : available) {
+                    convertedMembers.addAll(convertMembers(connection, town.getId(), candidate));
+                    attach.setInt(1, town.getId());
+                    attach.setString(2, operator.toString());
+                    attach.setInt(3, candidate.id());
+                    if (expectedOwner != null) attach.setString(4, expectedOwner.toString());
+                    if (attach.executeUpdate() != 1) {
+                        throw new SQLException("Dominion " + candidate.id()
+                                + " changed while being attached; retry the operation.");
+                    }
+                    syncOutpost(connection, town.getId(), candidate.id());
+                    updated.add(candidate.id());
+                }
+            }
+            return new AttachResult(updated, convertedMembers);
+        });
+
+        for (AttachCandidate candidate : candidatesById(result.attachedIds(), candidates)) {
+            ServerCache cache = CacheManager.instance.getCache(candidate.serverId());
+            if (cache != null) cache.getDominionCache().load(candidate.id());
+        }
+        reloadCaches();
+        for (ConvertedMember converted : result.convertedMembers()) {
+            Player online = cn.lunadeer.dominion.Dominion.instance.getServer()
+                    .getPlayer(converted.player());
+            if (online != null) {
+                Notification.info(online, Language.townManagerText.mergeMemberTrusted,
+                        CacheManager.instance.getPlayerName(converted.player()), converted.dominionName());
+            }
+        }
+        return result.attachedIds();
+    }
+
+    private static @NotNull List<AttachCandidate> candidatesById(
+            @NotNull List<Integer> attachedIds,
+            @NotNull List<DominionDOO> candidates) {
+        Map<Integer, DominionDOO> byId = new LinkedHashMap<>();
+        for (DominionDOO candidate : candidates) byId.put(candidate.getId(), candidate);
+        List<AttachCandidate> attached = new ArrayList<>();
+        for (Integer id : attachedIds) {
+            DominionDOO candidate = byId.get(id);
+            if (candidate != null) {
+                attached.add(new AttachCandidate(id, candidate.getWorldUid(), candidate.getOwner(),
+                        candidate.getName(), candidate.getServerId()));
+            }
+        }
+        return attached;
+    }
+
+    private static @NotNull List<ConvertedMember> convertMembers(
+            Connection connection, int townId, AttachCandidate candidate) throws SQLException {
+        String archiveColumns = memberArchiveColumns();
+        try (PreparedStatement archive = connection.prepareStatement(
+                "INSERT INTO dominion_member_archive (" + archiveColumns
+                        + ", town_id, archived_at, archive_reason) SELECT " + archiveColumns
+                        + ", ?, CURRENT_TIMESTAMP, 'MERGED_INTO_TOWN' "
+                        + "FROM dominion_member WHERE dom_id = ?")) {
+            archive.setInt(1, townId);
+            archive.setInt(2, candidate.id());
+            archive.executeUpdate();
+        }
+
+        List<ConvertedMember> converted = new ArrayList<>();
+        List<PriFlag> flags = Flags.getAllPriFlags();
+        String flagColumns = String.join(", ", flags.stream().map(PriFlag::getFlagName).toList());
+        String selectSql = "SELECT player_uuid" + (flagColumns.isEmpty() ? "" : ", " + flagColumns)
+                + " FROM dominion_member WHERE dom_id = ?";
+        try (PreparedStatement members = connection.prepareStatement(selectSql)) {
+            members.setInt(1, candidate.id());
+            try (ResultSet rows = members.executeQuery()) {
+                while (rows.next()) {
+                    UUID player = UUID.fromString(rows.getString("player_uuid"));
+                    if (player.equals(candidate.owner()) || isTownMember(connection, townId, player)) {
+                        continue;
+                    }
+                    boolean build = false;
+                    boolean destroy = false;
+                    boolean switchFlag = false;
+                    boolean itemUse = false;
+                    for (PriFlag flag : flags) {
+                        if (!rows.getBoolean(flag.getFlagName())) continue;
+                        TownManager.TrustCategory category = TownManager.trustCategoryOf(flag);
+                        if (category == null) continue;
+                        switch (category) {
+                            case BUILD -> build = true;
+                            case DESTROY -> destroy = true;
+                            case SWITCH -> switchFlag = true;
+                            case ITEM_USE -> itemUse = true;
+                        }
+                    }
+                    replaceOutpostTrust(connection, townId, player, candidate.id(),
+                            build, destroy, switchFlag, itemUse, candidate.owner());
+                    converted.add(new ConvertedMember(player, candidate.name()));
+                }
+            }
+        }
+        try (PreparedStatement delete = connection.prepareStatement(
+                "DELETE FROM dominion_member WHERE dom_id = ?")) {
+            delete.setInt(1, candidate.id());
+            delete.executeUpdate();
+        }
+        return converted;
+    }
+
+    private static boolean isTownMember(Connection connection, int townId,
+                                        UUID player) throws SQLException {
+        try (PreparedStatement select = connection.prepareStatement(
+                "SELECT 1 FROM town_member WHERE town_id = ? AND player_uuid = ?")) {
+            select.setInt(1, townId);
+            select.setString(2, player.toString());
+            try (ResultSet row = select.executeQuery()) {
+                return row.next();
+            }
+        }
+    }
+
+    private static void replaceOutpostTrust(Connection connection, int townId, UUID player,
+                                            int dominionId, boolean build, boolean destroy,
+                                            boolean switchFlag, boolean itemUse,
+                                            UUID createdBy) throws SQLException {
+        try (PreparedStatement delete = connection.prepareStatement(
+                "DELETE FROM town_trust WHERE town_id = ? AND player_uuid = ? "
+                        + "AND scope_type = 'OUTPOST' AND scope_id = ?")) {
+            delete.setInt(1, townId);
+            delete.setString(2, player.toString());
+            delete.setInt(3, dominionId);
+            delete.executeUpdate();
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO town_trust(town_id, player_uuid, scope_type, scope_id, "
+                        + "build, destroy, switch, item_use, created_by) "
+                        + "VALUES (?, ?, 'OUTPOST', ?, ?, ?, ?, ?, ?)")) {
+            insert.setInt(1, townId);
+            insert.setString(2, player.toString());
+            insert.setInt(3, dominionId);
+            insert.setBoolean(4, build);
+            insert.setBoolean(5, destroy);
+            insert.setBoolean(6, switchFlag);
+            insert.setBoolean(7, itemUse);
+            insert.setString(8, createdBy.toString());
+            insert.executeUpdate();
+        }
+    }
+
+    private static @NotNull String memberArchiveColumns() {
+        List<String> columns = new ArrayList<>(List.of(
+                "id", "player_uuid", "dom_id", "group_id"));
+        for (PriFlag flag : Flags.getAllPriFlags()) columns.add(flag.getFlagName());
+        return String.join(", ", columns);
+    }
+
+    private record AttachCandidate(int id, UUID worldUid, UUID owner, String name, int serverId) {
+    }
+
+    private record ConvertedMember(UUID player, String dominionName) {
+    }
+
+    private record AttachResult(List<Integer> attachedIds,
+                                List<ConvertedMember> convertedMembers) {
+    }
+
+    /** Check both all-world and per-world limits using the locked DB state. */
+    private static void assertOutpostCapacity(Connection connection, int townId,
+                                              Map<UUID, Integer> additionsByWorld) throws Exception {
+        int level;
+        String townName;
+        try (PreparedStatement town = connection.prepareStatement(
+                "SELECT name, level FROM town WHERE id = ?")) {
+            town.setInt(1, townId);
+            try (ResultSet row = town.executeQuery()) {
+                if (!row.next()) throw new SQLException("Town does not exist: " + townId);
+                townName = row.getString("name");
+                level = TownManager.effectiveLevel(row.getInt("level"));
+            }
+        }
+
+        int additions = additionsByWorld.values().stream().mapToInt(Integer::intValue).sum();
+        int allWorldsLimit = TownManager.outpostLimit(level, Configuration.town.outpostMaxCount);
+        if (allWorldsLimit != -1
+                && countOutposts(connection, townId, null) + additions > allWorldsLimit) {
+            throw new DominionException(Language.townManagerText.outpostAmountExceeded,
+                    townName, level, allWorldsLimit);
+        }
+
+        int perWorldLimit = TownManager.outpostLimit(
+                level, Configuration.town.outpostMaxCountPerWorld);
+        if (perWorldLimit == -1) return;
+        for (Map.Entry<UUID, Integer> addition : additionsByWorld.entrySet()) {
+            if (countOutposts(connection, townId, addition.getKey()) + addition.getValue()
+                    > perWorldLimit) {
+                throw new DominionException(Language.townManagerText.outpostAmountExceeded,
+                        townName, level, perWorldLimit);
+            }
+        }
+    }
+
+    private static int countOutposts(Connection connection, int townId,
+                                     @Nullable UUID worldUid) throws SQLException {
+        String sql = worldUid == null
+                ? "SELECT COUNT(*) FROM dominion WHERE town_id = ?"
+                : "SELECT COUNT(*) FROM dominion WHERE town_id = ? AND world_uid = ?";
+        try (PreparedStatement count = connection.prepareStatement(sql)) {
+            count.setInt(1, townId);
+            if (worldUid != null) count.setString(2, worldUid.toString());
+            try (ResultSet row = count.executeQuery()) {
+                return row.next() ? row.getInt(1) : 0;
+            }
+        }
     }
 
     private static void syncOutpost(Connection connection, int townId,

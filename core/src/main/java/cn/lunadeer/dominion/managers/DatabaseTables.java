@@ -359,6 +359,7 @@ public class DatabaseTables {
             Column town_mayor = Column.of(new FieldString("mayor_uuid")).notNull();
             Column town_balance = Column.of(new FieldLong("balance")).notNull().defaultSqlVal("0");
             Column town_status = Column.of(new FieldString("status")).notNull().defaultSqlVal("'ACTIVE'");
+            Column town_level = Column.of(new FieldInteger("level")).notNull().defaultSqlVal("1");
             Column town_created_at = Column.of(new FieldTimestamp("created_at")).notNull().defaultSqlVal("CURRENT_TIMESTAMP");
             Create.create().table("town")
                     .column(town_id)
@@ -367,6 +368,7 @@ public class DatabaseTables {
                     .column(town_mayor)
                     .column(town_balance)
                     .column(town_status)
+                    .column(town_level)
                     .column(town_created_at)
                     .execute();
         }
@@ -377,6 +379,13 @@ public class DatabaseTables {
             Alter.alter().table("town").add()
                     .column(Column.of(new FieldString("permission_mode"))
                             .notNull().defaultSqlVal("'LEGACY'"))
+                    .execute();
+        }
+        // Town progression starts at level 1. Existing towns keep every
+        // outpost they already own; the level only gates future additions.
+        if (!Show.show().columns().from("town").execute().containsKey("level")) {
+            Alter.alter().table("town").add()
+                    .column(Column.of(new FieldInteger("level")).notNull().defaultSqlVal("1"))
                     .execute();
         }
 

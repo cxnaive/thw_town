@@ -667,7 +667,11 @@ town-manager-text:
   invalid-amount: 无效的金额：{0}。
   outpost-create-success: 已为城镇 {1} 创建前哨 {0}，从金库扣除 {2}。
   outpost-remote-disabled: 远程前哨已禁用，城镇只能扩建现有前哨。
-  outpost-amount-exceeded: 城镇 {0} 已达到前哨数量上限。
+  outpost-amount-exceeded: 小镇 {0} 已达到 {1} 级镇属地上限（{2} 个）。
+  town-level-admin-only: 只有 OP 可以设置小镇等级。
+  town-level-invalid: 小镇等级必须在 1 到 {0} 之间。
+  town-level-set: 已将小镇 {0} 设置为 {1} 级，镇属地容量为全服 {2} 个 / 单世界 {3} 个。
+  outpost-attach-unavailable: 镇属地 {0} 已无法挂靠，请刷新后重试。
   founding-required: 你名下没有领地：创建城镇需要一个建国前哨位置。
   release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
   release-not-outpost: 领地 {0} 不是城镇前哨。
@@ -718,6 +722,8 @@ town-command-text:
 
     &b/town release <领地> [confirm] &7- 镇长归还贡献领地（OP 可仲裁）
 
+    &b/town level set <小镇> <等级> &7- 设置小镇等级（仅 OP）
+
     &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
 
     &b/town untrust <玩家> [town|outpost <名称>]
@@ -738,7 +744,9 @@ town-command-text:
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。
   no-managed-town: 你不是任何城镇的镇长或助理。
-  town-info: '&b{0} &7（镇长：{1}，成员：{2}，前哨：{3}，金库：{4}）'
+  town-info: '&b{0} &7（镇长：{1}，成员：{2}，镇属地：{3}，金库：{4}）'
+  town-level-info: '&7小镇等级：&b{0}&7/{1}，镇属地容量：&b全服 {2} 个 / 单世界 {3} 个'
+  level-usage: '&b/town level set <小镇> <1-{0}> &7- 设置小镇等级（仅 OP）'
   town-list-entry: '{0}（镇长：{1}）'
   need-points: 请先用选点工具选择两个点。
   player-not-found: 找不到玩家 {0}。
@@ -777,6 +785,8 @@ town-outpost-admin-inputter-text:
   button: 次级管理员
   hint: 输入玩家名任命，输入 clear 移除。
   description: 任命或清除此前哨的次级管理员。
+town-outpost-create-inputter-text:
+  hint: 请输入新镇属地名称，将使用当前选中的两个点。
 town-disband-confirm-inputter-text:
   button: 解散小镇
   hint: 输入 confirm 确认解散小镇。

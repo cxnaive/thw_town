@@ -28,9 +28,17 @@ import cn.lunadeer.dominion.utils.command.NoPermissionException;
 import cn.lunadeer.dominion.utils.configuration.*;
 import cn.lunadeer.dominion.utils.stui.inputter.InputterRunner;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 @Headers({
         "Language file for Dominion plugin",
@@ -62,6 +70,13 @@ public class Language extends ConfigurationFile {
             for (LanguageCode languageCode : LanguageCode.values()) {
                 updateLanguageFiles(plugin, languageCode.name(), false);
             }
+            // ConfigurationManager uses Bukkit's forgiving loader, which
+            // turns malformed YAML into an empty configuration and then saves
+            // defaults over it. Validate the active files strictly first so
+            // an operator typo can never destroy a customized locale.
+            validateLanguageFile(new File(languagesFolder, code + ".yml"));
+            validateLanguageFile(new File(cuiFolder, code + ".yml"));
+            validateLanguageFile(new File(tuiFolder, code + ".yml"));
             Notification.info(sender != null ? sender : Dominion.instance.getServer().getConsoleSender(), Language.configurationText.loadingLanguage, code);
             ConfigurationManager.load(Language.class, new File(languagesFolder, code + ".yml"));
             ConfigurationManager.load(ChestUserInterface.class, new File(cuiFolder, code + ".yml"));
@@ -72,7 +87,7 @@ public class Language extends ConfigurationFile {
         }
     }
 
-    public static void updateLanguageFiles(JavaPlugin plugin, String code, boolean overwrite) {
+    public static boolean updateLanguageFiles(JavaPlugin plugin, String code, boolean overwrite) {
         File languagesFolder = new File(plugin.getDataFolder(), "languages");
         if (!languagesFolder.exists()) {
             languagesFolder.mkdir();
@@ -85,23 +100,86 @@ public class Language extends ConfigurationFile {
         if (!tuiFolder.exists()) {
             tuiFolder.mkdir();
         }
-        if (!new File(languagesFolder, code + ".yml").exists()) try {
-            Dominion.instance.saveResource("languages/" + code + ".yml", overwrite);
+        boolean main = installOrMergeLanguageFile(plugin, "languages/" + code + ".yml",
+                new File(languagesFolder, code + ".yml"), overwrite);
+        boolean cui = installOrMergeLanguageFile(plugin, "languages/cui/" + code + ".yml",
+                new File(cuiFolder, code + ".yml"), overwrite);
+        boolean tui = installOrMergeLanguageFile(plugin, "languages/tui/" + code + ".yml",
+                new File(tuiFolder, code + ".yml"), overwrite);
+        return main && cui && tui;
+    }
+
+    /**
+     * Preserve every operator customization while copying newly introduced
+     * keys from the matching bundled locale.  ConfigurationManager also
+     * fills missing fields, but its reflection defaults are English; merging
+     * the locale resource first keeps upgraded Chinese/Japanese installations
+     * localized without asking the operator to delete language files.
+     */
+    private static boolean installOrMergeLanguageFile(JavaPlugin plugin, String resourcePath,
+                                                      File target, boolean overwrite) {
+        try {
+            if (overwrite) {
+                plugin.saveResource(resourcePath, true);
+                return true;
+            }
+            if (!target.exists()) {
+                plugin.saveResource(resourcePath, false);
+                return true;
+            }
+            try (InputStream stream = plugin.getResource(resourcePath)) {
+                if (stream == null) {
+                    XLogger.warn("Bundled language resource not found: {0}", resourcePath);
+                    return false;
+                }
+                YamlConfiguration bundled = new YamlConfiguration();
+                bundled.load(new InputStreamReader(stream, StandardCharsets.UTF_8));
+                YamlConfiguration installed = loadLanguageFileStrict(target);
+                boolean changed = false;
+                for (String key : bundled.getKeys(true)) {
+                    if (bundled.isConfigurationSection(key) || installed.contains(key)) continue;
+                    installed.set(key, bundled.get(key));
+                    changed = true;
+                }
+                if (changed) {
+                    installed.options().width(250);
+                    saveLanguageFileAtomically(installed, target);
+                }
+            }
+            return true;
         } catch (Exception e) {
-            XLogger.warn("Failed to save language file for {0}, This language may not in official repo : {1}.", code, e.getMessage());
+            XLogger.warn("Failed to install/update language resource {0}: {1}",
+                    resourcePath, e.getMessage());
             XLogger.warn("See https://dominion.lunadeer.cn/en/notes/doc/owner/config-ref/languages , If you want to help us to add this language.");
+            return false;
         }
-        if (!new File(cuiFolder, code + ".yml").exists()) try {
-            Dominion.instance.saveResource("languages/cui/" + code + ".yml", overwrite);
-        } catch (Exception e) {
-            XLogger.warn("Failed to save CUI language file for {0}, This language may not in official repo : {1}.", code, e.getMessage());
-            XLogger.warn("See https://dominion.lunadeer.cn/en/notes/doc/owner/config-ref/languages , If you want to help us to add this language.");
-        }
-        if (!new File(tuiFolder, code + ".yml").exists()) try {
-            Dominion.instance.saveResource("languages/tui/" + code + ".yml", overwrite);
-        } catch (Exception e) {
-            XLogger.warn("Failed to save TUI language file for {0}, This language may not in official repo : {1}.", code, e.getMessage());
-            XLogger.warn("See https://dominion.lunadeer.cn/en/notes/doc/owner/config-ref/languages , If you want to help us to add this language.");
+    }
+
+    private static void validateLanguageFile(File file) throws Exception {
+        if (file.exists()) loadLanguageFileStrict(file);
+    }
+
+    private static YamlConfiguration loadLanguageFileStrict(File file) throws Exception {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.options().parseComments(true);
+        yaml.load(file);
+        return yaml;
+    }
+
+    /** Write through a sibling temp file so the original survives any failure. */
+    private static void saveLanguageFileAtomically(YamlConfiguration yaml, File target) throws Exception {
+        Path targetPath = target.toPath();
+        Path temp = Files.createTempFile(targetPath.getParent(), target.getName(), ".tmp");
+        try {
+            yaml.save(temp.toFile());
+            try {
+                Files.move(temp, targetPath, StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException ignored) {
+                Files.move(temp, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temp);
         }
     }
 
@@ -132,6 +210,7 @@ public class Language extends ConfigurationFile {
     public static RenameDominionInputter.RenameDominionInputterText renameDominionInputterText = new RenameDominionInputter.RenameDominionInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter.TownDisbandConfirmInputterText townDisbandConfirmInputterText = new cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter.TownDisbandConfirmInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownOutpostAdminInputter.TownOutpostAdminInputterText townOutpostAdminInputterText = new cn.lunadeer.dominion.inputters.town.TownOutpostAdminInputter.TownOutpostAdminInputterText();
+    public static cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter.TownOutpostCreateInputterText townOutpostCreateInputterText = new cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter.TownOutpostCreateInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownCreateInputter.TownCreateInputterText townCreateInputterText = new cn.lunadeer.dominion.inputters.town.TownCreateInputter.TownCreateInputterText();
     public static EditMessageInputter.EditMessageInputterText editMessageInputterText = new EditMessageInputter.EditMessageInputterText();
     public static CreateTemplateInputter.CreateTemplateInputterText createTemplateInputterText = new CreateTemplateInputter.CreateTemplateInputterText();

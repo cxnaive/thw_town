@@ -392,10 +392,19 @@ public class DominionProviderHandler extends DominionProvider {
                     if (town != null) {
                         UUID attachOperator = event.getOperator() instanceof Player p
                                 ? p.getUniqueId() : newOwnerBukkit.getUniqueId();
+                        List<DominionDOO> attachCandidates = new ArrayList<>();
                         for (DominionDTO sub : sub_dominions) {
-                            TownManager.attachOutpost(town, (DominionDOO) sub, attachOperator);
+                            if (!((DominionDOO) sub).isTownOutpost()) {
+                                attachCandidates.add((DominionDOO) sub);
+                            }
                         }
-                        TownManager.attachOutpost(town, (DominionDOO) event.getDominion(), attachOperator);
+                        attachCandidates.add((DominionDOO) event.getDominion());
+                        List<Integer> attached = TownManager.attachOwnedOutposts(town, attachCandidates,
+                                attachOperator, newOwnerBukkit.getUniqueId());
+                        if (!attached.contains(event.getDominion().getId())) {
+                            throw new DominionException(Language.townManagerText.outpostAttachUnavailable,
+                                    event.getDominion().getName());
+                        }
                         // merged members/trusts are written directly; make
                         // them visible immediately instead of within the
                         // 4s throttle window

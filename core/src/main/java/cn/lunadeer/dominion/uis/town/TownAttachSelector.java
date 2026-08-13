@@ -295,7 +295,7 @@ public class TownAttachSelector extends AbstractUI {
         selections.remove(player.getUniqueId());
         TownUI.action(player, () -> {
             TownDOO currentTown = requireAccessibleTown(player, town.getName());
-            int count = 0;
+            List<DominionDOO> candidates = new ArrayList<>();
             for (Integer dominionId : selectedSnapshot) {
                 // Re-query and re-check ownership: ownership can change while
                 // the selector is open, and stale UI state must never attach
@@ -305,9 +305,10 @@ public class TownAttachSelector extends AbstractUI {
                         || !dominion.getOwner().equals(player.getUniqueId())) {
                     continue;
                 }
-                TownManager.attachOutpost(currentTown, dominion, player.getUniqueId());
-                count++;
+                candidates.add(dominion);
             }
+            int count = TownManager.attachOwnedOutposts(currentTown, candidates,
+                    player.getUniqueId(), player.getUniqueId()).size();
             Notification.info(player, TextUserInterface.townAttachSelectorTuiText.attachSuccess,
                     count, currentTown.getName());
         }, () -> TownInfo.show(player, town.getName(), "1"));

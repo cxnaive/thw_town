@@ -251,8 +251,10 @@ default/VIP limitation 完全解耦：
 - 尺寸与 Y 范围：`outpost-max-horizontal-size`、`outpost-min-size-*`、
   `outpost-max-size-y`、`outpost-no-higher/lower-than` 和
   `outpost-auto-include-vertical`；
-- 数量：`outpost-max-count` 与 `outpost-max-count-per-world`，
-  Founding/贡献/新建全部计入，远程新建和挂靠都会校验；已有老镇若超过新上限，
+- 数量：小镇持久化 `level`（默认 1，当前最高 10），1 级使用
+  `outpost-max-count` / `outpost-max-count-per-world` 的基础额度 3，之后每级按
+  `outpost-count-per-level: 2` 增加，公式为 `3 + (level - 1) * 2`；
+  Founding/贡献/新建全部计入，远程新建和挂靠都会校验；已有老镇若超过等级上限，
   不删除现有领地，只阻止继续增加；
 - 不与任何 Dominion 重叠（常规重叠检查）；
 - 计费：使用 `town.outpost-pricing` 的 X*Z 面积阶梯价格，
@@ -474,8 +476,10 @@ town:
   founding-max-size: 32                  # Founding Outpost 单边上限
 
   outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
-  outpost-max-count: 3                   # 全服每镇附属领地上限，-1 无限
-  outpost-max-count-per-world: 3         # 单世界每镇附属领地上限，-1 无限
+  max-level: 10                          # 小镇最高等级；晋升玩法 TODO，OP 可手动设置
+  outpost-count-per-level: 2             # 每高一级增加的属地容量
+  outpost-max-count: 3                   # 1 级全服基础容量，-1 无限
+  outpost-max-count-per-world: 3         # 1 级单世界基础容量，-1 无限
   outpost-max-horizontal-size: 2000
   outpost-min-size-x: 4
   outpost-min-size-y: 4
@@ -486,9 +490,9 @@ town:
   outpost-auto-include-vertical: false
   outpost-pricing:
     enable: true
-    price-per-block-500-to-1000: 0.0
-    price-per-block-1000-to-1500: 0.0
-    price-per-block-1500-to-2000: 0.0
+    price-per-block-500-to-1000: 0.0133
+    price-per-block-1000-to-1500: 0.0133
+    price-per-block-1500-to-2000: 0.0133
     refund-rate: 0.85
 
   disband-policy: dissolve-all           # dissolve-all: 全部 Outpost 随镇解散（默认）
@@ -659,7 +663,7 @@ limitations 仅保留旧个人领地与玩家传送兼容。**
 |---|---|---|
 | `noHigherThan` / `noLowerThan` | Y 范围约束 | 仅用于旧个人领地兼容；镇属规则迁到 `town.outpost-no-*` |
 | `sizeMax/MinXYZ`、`autoIncludeVertical` | 尺寸约束 | 仅用于旧个人领地兼容；镇属规则迁到 `town.outpost-*` |
-| `amount`（per-world）、`amountAllOverTheWorld` | 每玩家创建配额 | 仅用于旧个人领地兼容；镇属数量由 `town.outpost-max-count*` 控制 |
+| `amount`（per-world）、`amountAllOverTheWorld` | 每玩家创建配额 | 仅用于旧个人领地兼容；镇属数量由小镇等级和 `town.outpost-max-count*` 控制 |
 | `maxSubDominionDepth`、`doNotCountSubs` | 子区深度/计数 | 仅为重新开放旧子区创建保留 |
 | `priority`（多 limitation 文件优先级） | VIP 阶梯选择 | 仅选择旧个人领地/传送配置，不再影响镇土地 |
 | `economy`（pricePerBlock/squareOnly/refundRate） | 个人创建计费 | 仅用于旧个人领地兼容；镇属计费迁到 `town.outpost-pricing` |

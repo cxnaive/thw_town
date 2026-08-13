@@ -62,6 +62,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town admin <outpost> [player] &7- set/clear the outpost admin\n"
                 + "&b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)\n"
                 + "&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n"
+                + "&b/town level set <town> <level> &7- set town level (OP only)\n"
                 + "&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n"
                 + "&b/town untrust <player> [town|outpost <name>]\n"
                 + "&b/town info [town] &7- town information\n"
@@ -84,6 +85,8 @@ public class TownCommand implements TabExecutor {
         public String noTown = "You are not in any town.";
         public String noManagedTown = "You are not the mayor or an assistant of any town.";
         public String townInfo = "&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})";
+        public String townLevelInfo = "&7Town level: &b{0}&7/{1}, outpost capacity: &b{2} total / {3} per world";
+        public String levelUsage = "&b/town level set <town> <1-{0}> &7- set town level (OP only)";
         public String townListEntry = "{0} (mayor: {1})";
         public String needPoints = "Select two points with the select tool first.";
         public String playerNotFound = "Player {0} not found.";
@@ -193,6 +196,7 @@ public class TownCommand implements TabExecutor {
                 case "admin" -> handleAdmin(sender, args);
                 case "upgrade" -> handleUpgrade(sender, args);
                 case "release" -> handleRelease(sender, args);
+                case "level" -> handleLevel(sender, args);
                 case "info" -> handleInfo(sender, args);
                 case "list" -> handleList(sender);
                 default -> {
@@ -406,7 +410,10 @@ public class TownCommand implements TabExecutor {
                     .findFirst()
                     .orElseThrow(() -> new cn.lunadeer.dominion.misc.DominionException(
                             Language.townCommandText.attachNotOwned, dominionName));
-            TownManager.attachOutpost(town, dominion, player.getUniqueId());
+            if (!TownManager.attachOutpost(town, dominion, player.getUniqueId())) {
+                throw new cn.lunadeer.dominion.misc.DominionException(
+                        Language.townManagerText.outpostAttachUnavailable, dominion.getName());
+            }
             CacheManager.instance.reloadCache();
             Notification.info(player, Language.townCommandText.attachOneSuccess,
                     dominion.getName(), town.getName());
@@ -618,7 +625,47 @@ public class TownCommand implements TabExecutor {
         int outposts = TownManager.outpostsOf(town.getId()).size();
         Notification.info(sender, Language.townCommandText.townInfo,
                 town.getName(), CacheManager.instance.getPlayerName(town.getMayorUuid()),
-                members, outposts, town.getBalance());
+                // Keep the two trailing arguments for installations that
+                // briefly used the combined 5.1.0 preview template.  The
+                // restored five-argument template ignores them, while the
+                // preview template still formats cleanly instead of showing
+                // literal {5}/{6} placeholders.
+                members, outposts, town.getBalance(), TownManager.effectiveLevel(town),
+                formatLimit(TownManager.outpostLimit(town)),
+                formatLimit(TownManager.outpostLimitPerWorld(town)));
+        // Preview builds placed level/capacity directly in town-info using
+        // {5}/{6}.  Keep such customized/preview files working without a
+        // duplicate line; older five-argument files receive the new line.
+        if (!Language.townCommandText.townInfo.contains("{5}")
+                && !Language.townCommandText.townInfo.contains("{6}")) {
+            Notification.info(sender, Language.townCommandText.townLevelInfo,
+                    TownManager.effectiveLevel(town), Configuration.town.maxLevel,
+                    formatLimit(TownManager.outpostLimit(town)),
+                    formatLimit(TownManager.outpostLimitPerWorld(town)));
+        }
+    }
+
+    private void handleLevel(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        if (!sender.isOp()) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.townLevelAdminOnly);
+        }
+        if (args.length < 4 || !args[1].equalsIgnoreCase("set")) {
+            Notification.info(sender, Language.townCommandText.levelUsage, Configuration.town.maxLevel);
+            return;
+        }
+        int level;
+        try {
+            level = Integer.parseInt(args[3]);
+        } catch (NumberFormatException ignored) {
+            throw new cn.lunadeer.dominion.misc.DominionException(
+                    Language.townManagerText.townLevelInvalid, Configuration.town.maxLevel);
+        }
+        TownManager.setTownLevel(sender, TownManager.requireTown(args[2]), level);
+    }
+
+    private static @NotNull String formatLimit(int limit) {
+        return limit == -1 ? "∞" : String.valueOf(limit);
     }
 
     private void handleList(@NotNull CommandSender sender) throws Exception {
@@ -745,7 +792,7 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
     private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
-            "admin", "upgrade", "release", "group", "info", "list");
+            "admin", "upgrade", "release", "level", "group", "info", "list");
     private static final List<String> GROUP_SUB_COMMANDS = List.of(
             "create", "rename", "delete", "list", "info", "add", "remove");
 
@@ -757,6 +804,9 @@ public class TownCommand implements TabExecutor {
             List<String> visible = new ArrayList<>(SUB_COMMANDS);
             if (!canUseReleaseCommand(sender)) {
                 visible.remove("release");
+            }
+            if (!sender.isOp()) {
+                visible.remove("level");
             }
             filter(visible, args[0], suggestions);
         } else if (args.length == 2) {
@@ -780,6 +830,9 @@ public class TownCommand implements TabExecutor {
                 case "admin" -> filter(dominionNames(), args[1], suggestions);
                 case "release" -> filter(releasableOutpostNames(sender), args[1], suggestions);
                 case "upgrade" -> filter(List.of("confirm"), args[1], suggestions);
+                case "level" -> {
+                    if (sender.isOp()) filter(List.of("set"), args[1], suggestions);
+                }
                 case "group" -> filter(GROUP_SUB_COMMANDS, args[1], suggestions);
             }
         } else if (args.length == 3) {
@@ -794,6 +847,11 @@ public class TownCommand implements TabExecutor {
                 }
                 case "trust", "untrust" -> filter(List.of("town", "outpost"), args[2], suggestions);
                 case "admin" -> filter(playerNames(), args[2], suggestions);
+                case "level" -> {
+                    if (sender.isOp() && args[1].equalsIgnoreCase("set")) {
+                        filter(townNames(), args[2], suggestions);
+                    }
+                }
                 case "group" -> {
                     if (args[1].equalsIgnoreCase("rename") || args[1].equalsIgnoreCase("delete")
                             || args[1].equalsIgnoreCase("info")) {
@@ -806,7 +864,14 @@ public class TownCommand implements TabExecutor {
                 }
             }
         } else if (args.length == 4) {
-            if (args[0].equalsIgnoreCase("group") && args[1].equalsIgnoreCase("add")) {
+            if (args[0].equalsIgnoreCase("level") && sender.isOp()
+                    && args[1].equalsIgnoreCase("set")) {
+                List<String> levels = new ArrayList<>();
+                for (int i = 1; i <= Configuration.town.maxLevel; i++) {
+                    levels.add(String.valueOf(i));
+                }
+                filter(levels, args[3], suggestions);
+            } else if (args[0].equalsIgnoreCase("group") && args[1].equalsIgnoreCase("add")) {
                 filter(townGroupNames(sender), args[3], suggestions);
             } else if (args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust")) {
                 if (args[2].equalsIgnoreCase("outpost")) {

@@ -3,7 +3,6 @@ package cn.lunadeer.dominion.managers;
 import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.api.dtos.GroupDTO;
-import cn.lunadeer.dominion.api.dtos.MemberDTO;
 import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
@@ -13,7 +12,6 @@ import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.GroupDOO;
-import cn.lunadeer.dominion.doos.MemberDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
@@ -160,7 +158,11 @@ public class TownManager {
         public String invalidAmount = "Invalid amount: {0}.";
         public String outpostCreateSuccess = "Outpost {0} created for town {1}, cost {2} from the town bank.";
         public String outpostRemoteDisabled = "Remote outposts are disabled; towns may only resize existing outposts.";
-        public String outpostAmountExceeded = "Town {0} has reached the outpost amount limit.";
+        public String outpostAmountExceeded = "Town {0} has reached its level {1} outpost limit ({2}).";
+        public String townLevelAdminOnly = "Only an OP may set a town's level.";
+        public String townLevelInvalid = "Town level must be between 1 and {0}.";
+        public String townLevelSet = "Set town {0} to level {1}; outpost capacity is {2} total / {3} per world.";
+        public String outpostAttachUnavailable = "Dominion {0} is no longer available to attach; refresh and retry.";
         public String foundingRequired = "You own no land: a founding outpost location is required to create a town.";
         public String releaseSuccess = "Outpost {0} released from town {1}, returned to contributor {2}.";
         public String releaseNotOutpost = "Dominion {0} is not a town outpost.";
@@ -1076,7 +1078,6 @@ public class TownManager {
         }
         assertDominionName(dominionName);
         assertTownOutpostSize(world.getUID(), cuboid);
-        assertTownOutpostAmount(town, world.getUID());
 
         DominionDOO toCreate = new DominionDOO(operator.getUniqueId(), dominionName, world.getUID(), cuboid, -1);
         assertDominionIntersect(operator, toCreate, cuboid);
@@ -1252,17 +1253,47 @@ public class TownManager {
      * Town-global amount check. Founding and contributed land count too, so
      * changing the command operator can never change a town's capacity.
      */
-    private static void assertTownOutpostAmount(@NotNull TownDOO town,
-                                                @NotNull UUID worldUid) throws Exception {
-        if (Configuration.town.outpostMaxCount != -1
-                && outpostsOf(town.getId()).size() >= Configuration.town.outpostMaxCount) {
-            throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
+    public static int outpostLimit(@NotNull TownDOO town) {
+        return outpostLimit(effectiveLevel(town), Configuration.town.outpostMaxCount);
+    }
+
+    public static int outpostLimitPerWorld(@NotNull TownDOO town) {
+        return outpostLimit(effectiveLevel(town), Configuration.town.outpostMaxCountPerWorld);
+    }
+
+    static int outpostLimit(int level, int base) {
+        if (base == -1) return -1;
+        long limit = (long) base + (long) (effectiveLevel(level) - 1)
+                * Configuration.town.outpostCountPerLevel;
+        return limit > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) limit;
+    }
+
+    public static int effectiveLevel(@NotNull TownDOO town) {
+        return effectiveLevel(town.getLevel());
+    }
+
+    static int effectiveLevel(int level) {
+        return Math.max(1, Math.min(level, Configuration.town.maxLevel));
+    }
+
+    public static void setTownLevel(@NotNull CommandSender sender, @NotNull TownDOO town,
+                                    int level) throws Exception {
+        if (!sender.isOp()) {
+            throw new DominionException(Language.townManagerText.townLevelAdminOnly);
         }
-        if (Configuration.town.outpostMaxCountPerWorld != -1
-                && countOutpostsInWorld(town.getId(), worldUid)
-                >= Configuration.town.outpostMaxCountPerWorld) {
-            throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
+        if (level < 1 || level > Configuration.town.maxLevel) {
+            throw new DominionException(Language.townManagerText.townLevelInvalid,
+                    Configuration.town.maxLevel);
         }
+        town.setLevel(level);
+        cache().reloadNow();
+        Notification.info(sender, Language.townManagerText.townLevelSet,
+                town.getName(), level, formatLimit(outpostLimit(town)),
+                formatLimit(outpostLimitPerWorld(town)));
+    }
+
+    private static @NotNull String formatLimit(int limit) {
+        return limit == -1 ? "∞" : String.valueOf(limit);
     }
 
     /** Apply the town-global full-height selection rule to a raw cuboid. */
@@ -1406,13 +1437,38 @@ public class TownManager {
      * Attach a single dominion to a town (member merge + attach + member
      * group). Idempotent: already-attached dominions are skipped.
      */
-    public static void attachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
-                                     @NotNull UUID operator) throws Exception {
-        if (dominion.isTownOutpost()) return;
-        assertTownOutpostAmount(town, dominion.getWorldUid());
-        mergeMembers(town, dominion, operator);
-        dominion.attachToTown(town.getId(), operator);
-        TownGroupSyncHandler.syncOutpost(town, dominion);
+    public static boolean attachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
+                                        @NotNull UUID operator) throws Exception {
+        return attachOutpost(town, dominion, operator, dominion.getOwner());
+    }
+
+    /** Force path; the caller is responsible for administrator authorization. */
+    public static boolean forceAttachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
+                                             @NotNull UUID operator) throws Exception {
+        return attachOutpost(town, dominion, operator, null);
+    }
+
+    private static boolean attachOutpost(@NotNull TownDOO town, @NotNull DominionDOO dominion,
+                                         @NotNull UUID operator,
+                                         @Nullable UUID expectedOwner) throws Exception {
+        if (dominion.isTownOutpost()) return false;
+        List<Integer> attached = attachOwnedOutposts(
+                town, List.of(dominion), operator, expectedOwner);
+        return attached.contains(dominion.getId());
+    }
+
+    /**
+     * Atomically attach a selected set of personal dominions. The owner is
+     * rechecked while the rows are locked, so a stale GUI selection cannot
+     * attach land that changed hands in the meantime.
+     */
+    public static @NotNull List<Integer> attachOwnedOutposts(
+            @NotNull TownDOO town,
+            @NotNull List<DominionDOO> candidates,
+            @NotNull UUID operator,
+            @NotNull UUID expectedOwner) throws Exception {
+        return TownGroupSyncHandler.attachOutposts(
+                town, candidates, operator, expectedOwner);
     }
 
     /**
@@ -1425,91 +1481,7 @@ public class TownManager {
         List<DominionDOO> candidates = ownedDominions(player).stream()
                 .filter(dominion -> !dominion.isTownOutpost())
                 .toList();
-        assertTownOutpostCapacity(town, candidates);
-        int attached = 0;
-        for (DominionDOO dominion : candidates) {
-            attachOutpost(town, dominion, operator);
-            attached++;
-        }
-        return attached;
-    }
-
-    private static void assertTownOutpostCapacity(@NotNull TownDOO town,
-                                                  @NotNull List<DominionDOO> candidates) throws Exception {
-        if (candidates.isEmpty()) return;
-        List<DominionDOO> existing = outpostsOf(town.getId());
-        if (Configuration.town.outpostMaxCount != -1
-                && existing.size() + candidates.size() > Configuration.town.outpostMaxCount) {
-            throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
-        }
-        if (Configuration.town.outpostMaxCountPerWorld == -1) return;
-        Map<UUID, Long> additionsByWorld = candidates.stream().collect(
-                java.util.stream.Collectors.groupingBy(
-                        DominionDOO::getWorldUid, java.util.stream.Collectors.counting()));
-        for (Map.Entry<UUID, Long> entry : additionsByWorld.entrySet()) {
-            if (countOutpostsInWorld(town.getId(), entry.getKey()) + entry.getValue()
-                    > Configuration.town.outpostMaxCountPerWorld) {
-                throw new DominionException(Language.townManagerText.outpostAmountExceeded, town.getName());
-            }
-        }
-    }
-
-    /**
-     * Convert the dominion's member overlay on attach (plan §4.2, revised):
-     * archive every member row, then convert each non-owner member to an
-     * OUTPOST-scoped trust grant mapped from their member flags. Members
-     * are never auto-enrolled as town residents — town membership requires
-     * the person's own consent (/town join), and a resident whose own land
-     * sits outside the town is exactly the inconsistency this avoids.
-     * The live dominion_member rows are then deleted.
-     */
-    private static void mergeMembers(@NotNull TownDOO town, @NotNull DominionDOO dominion,
-                                     @NotNull UUID operator) throws Exception {
-        List<MemberDOO> members = MemberDOO.selectByDominionId(dominion.getId());
-        if (members.isEmpty()) return;
-        archiveMembers(dominion, town.getId(), "MERGED_INTO_TOWN");
-        for (MemberDOO member : members) {
-            UUID uuid = member.getPlayerUUID();
-            try {
-                if (uuid.equals(dominion.getOwner())) {
-                    // the contributor is covered by their own membership
-                } else if (TownMemberDOO.select(town.getId(), uuid) != null) {
-                    // already a member of this town — the member cascade
-                    // covers them, no trust grant needed. DB truth, not the
-                    // cache: a stale snapshot would double-grant
-                } else {
-                    boolean[] mapped = mapMemberFlagsToTrust(member);
-                    TownTrustDOO.delete(town.getId(), uuid, TownTrustDOO.TrustScope.OUTPOST, dominion.getId());
-                    TownTrustDOO.insert(town.getId(), uuid, TownTrustDOO.TrustScope.OUTPOST, dominion.getId(),
-                            mapped[0], mapped[1], mapped[2], mapped[3], dominion.getOwner());
-                    notifyIfOnline(uuid, Language.townManagerText.mergeMemberTrusted,
-                            CacheManager.instance.getPlayerName(uuid), dominion.getName());
-                }
-            } catch (Exception e) {
-                XLogger.error(e);
-            }
-            MemberDOO.deleteById(member.getId());
-        }
-    }
-
-    /**
-     * §4.5 lossy mapping: OR of the source PriFlags per trust boolean.
-     * ADMIN/TELEPORT/FLY/PVP/... are deliberately dropped.
-     */
-    private static boolean[] mapMemberFlagsToTrust(@NotNull MemberDTO member) {
-        boolean build = false, destroy = false, switchFlag = false, itemUse = false;
-        for (Map.Entry<PriFlag, Boolean> entry : member.getFlagsValue().entrySet()) {
-            if (!entry.getValue()) continue;
-            TrustCategory category = trustCategoryOf(entry.getKey());
-            if (category == null) continue;
-            switch (category) {
-                case BUILD -> build = true;
-                case DESTROY -> destroy = true;
-                case SWITCH -> switchFlag = true;
-                case ITEM_USE -> itemUse = true;
-            }
-        }
-        return new boolean[]{build, destroy, switchFlag, itemUse};
+        return attachOwnedOutposts(town, candidates, operator, player).size();
     }
 
     /**
@@ -1590,18 +1562,6 @@ public class TownManager {
 
     public static @NotNull List<DominionDOO> outpostsOf(@NotNull Integer townId) throws SQLException {
         return DominionDOO.selectByTownId(townId);
-    }
-
-    private static int countOutpostsInWorld(@NotNull Integer townId, @NotNull UUID worldUid) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM dominion WHERE town_id = ? AND world_uid = ?";
-        try (Connection conn = DatabaseManager.instance.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, townId);
-            ps.setString(2, worldUid.toString());
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        }
     }
 
     private static void clearOutpostAdmin(@NotNull Integer townId, @NotNull UUID player) throws SQLException {

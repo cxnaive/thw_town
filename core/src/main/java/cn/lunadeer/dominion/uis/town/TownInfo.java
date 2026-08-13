@@ -1,11 +1,13 @@
 package cn.lunadeer.dominion.uis.town;
 
 import cn.lunadeer.dominion.cache.CacheManager;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
+import cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter;
 import cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
@@ -25,6 +27,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +85,7 @@ public class TownInfo extends AbstractUI {
         public String mayorLine = "§7Mayor: §b{0}";
         public String memberCountLine = "§7Members: §b{0}";
         public String balanceLine = "§7Bank balance: §b{0}";
+        public String levelLine = "§7Town level: §b{0}§7/§b{1} §7- capacity: §b{2} total / {3} per world";
         public String outpostCountLine = "§7Outposts: §b{0}";
         public String yourRoleLine = "§7Your role: §b{0}";
         public String permissionModeLegacy = "§7Permission mode: §6Legacy per-outpost";
@@ -98,6 +102,8 @@ public class TownInfo extends AbstractUI {
         public String bankDescription = "Town bank deposit/withdraw.";
         public String outpostsButton = "OUTPOSTS";
         public String outpostsDescription = "List outposts of this town.";
+        public String createOutpostButton = "CREATE OUTPOST";
+        public String createOutpostDescription = "Create from the two selected points and charge the town bank.";
         public String attachButton = "ATTACH";
         public String attachDescription = "Attach your personal dominions to this town.";
         public String groupsButton = "GROUPS";
@@ -133,6 +139,10 @@ public class TownInfo extends AbstractUI {
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.memberCountLine,
                     CacheManager.instance.getTownCache().getMembersOf(town.getId()).size())));
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.balanceLine, town.getBalance())));
+            view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.levelLine,
+                    TownManager.effectiveLevel(town), Configuration.town.maxLevel,
+                    formatLimit(TownManager.outpostLimit(town)),
+                    formatLimit(TownManager.outpostLimitPerWorld(town)))));
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.outpostCountLine,
                     outpostCount(town.getId()))));
             if (role != null) {
@@ -180,6 +190,13 @@ public class TownInfo extends AbstractUI {
             }
 
             if (manager) {
+                if (Configuration.town.outpostAllowRemote) {
+                    view.add(Line.create()
+                            .append(TownOutpostCreateInputter.createTuiButtonOn(player, town.getName(),
+                                    TextUserInterface.townInfoTuiText.createOutpostButton)
+                                    .needPermission(defaultPermission).build())
+                            .append(TextUserInterface.townInfoTuiText.createOutpostDescription));
+                }
                 view.add(Line.create()
                         .append(TownMembers.inviteButton(player, town.getName()).build())
                         .append(TextUserInterface.townInfoTuiText.inviteDescription));
@@ -234,6 +251,16 @@ public class TownInfo extends AbstractUI {
         public ButtonConfiguration outpostsButton = ButtonConfiguration.createMaterial(
                 'i', Material.FILLED_MAP, "§eOutposts",
                 List.of("§7Total: §b{0}", "§a▶ Click to open"));
+        public ButtonConfiguration levelButton = ButtonConfiguration.createMaterial(
+                'i', Material.EXPERIENCE_BOTTLE, "§eTown Level",
+                List.of("§7Level: §b{0}§7/§b{1}",
+                        "§7Total capacity: §b{2}",
+                        "§7Per-world capacity: §b{3}"));
+        public ButtonConfiguration createOutpostButton = ButtonConfiguration.createMaterial(
+                'i', Material.GRASS_BLOCK, "§aCreate Outpost",
+                List.of("§7Uses your two selected points.",
+                        "§7The town bank pays the configured area price.",
+                        "§a▶ Click, then enter a name"));
         public ButtonConfiguration attachButton = ButtonConfiguration.createMaterial(
                 'i', Material.LEAD, "§eAttach Dominions",
                 List.of("§7Attach your personal dominions to this town.", "§a▶ Click to select"));
@@ -285,6 +312,15 @@ public class TownInfo extends AbstractUI {
                     () -> TownOutposts.show(player, town.getName(), "1"));
             outposts = outposts.setLoreArgs(String.valueOf(outpostCount(town.getId())));
             view = view.addItem(outposts);
+            view = view.addItem(new ChestButton(ChestUserInterface.townInfoCui.levelButton) {
+                @Override
+                public void onClick(ClickType type) {
+                    // Read-only progression summary. Promotion gameplay is TODO;
+                    // OPs use /town level set in the meantime.
+                }
+            }.setLoreArgs(String.valueOf(TownManager.effectiveLevel(town)), String.valueOf(Configuration.town.maxLevel),
+                    formatLimit(TownManager.outpostLimit(town)),
+                    formatLimit(TownManager.outpostLimitPerWorld(town))));
 
             if (memberOrAdmin) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.attachButton,
@@ -293,6 +329,10 @@ public class TownInfo extends AbstractUI {
                         () -> TownGroups.show(player, town.getName(), "1")));
             }
             if (manager) {
+                if (Configuration.town.outpostAllowRemote) {
+                    view = view.addItem(nav(player, ChestUserInterface.townInfoCui.createOutpostButton,
+                            () -> TownOutpostCreateInputter.createOn(player, town.getName()), true));
+                }
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.inviteButton,
                         () -> TownMembers.createInviteOn(player, town.getName()), true));
             }
@@ -364,6 +404,10 @@ public class TownInfo extends AbstractUI {
         Notification.info(sender, formatString(TextUserInterface.townInfoTuiText.memberCountLine,
                 CacheManager.instance.getTownCache().getMembersOf(town.getId()).size()));
         Notification.info(sender, formatString(TextUserInterface.townInfoTuiText.balanceLine, town.getBalance()));
+        Notification.info(sender, formatString(TextUserInterface.townInfoTuiText.levelLine,
+                TownManager.effectiveLevel(town), Configuration.town.maxLevel,
+                formatLimit(TownManager.outpostLimit(town)),
+                formatLimit(TownManager.outpostLimitPerWorld(town))));
         Notification.info(sender, formatString(TextUserInterface.townInfoTuiText.outpostCountLine,
                 outpostCount(town.getId())));
         List<String> members = new ArrayList<>();
@@ -371,5 +415,9 @@ public class TownInfo extends AbstractUI {
             members.add(CacheManager.instance.getPlayerName(member.getPlayerUuid()) + "(" + member.getRole() + ")");
         }
         Notification.info(sender, String.join(", ", members));
+    }
+
+    private static @NotNull String formatLimit(int limit) {
+        return limit == -1 ? "∞" : String.valueOf(limit);
     }
 }

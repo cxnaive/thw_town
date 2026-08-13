@@ -161,6 +161,7 @@ town-info-tui-text:
   mayor-line: '§7Mayor: §b{0}'
   member-count-line: '§7Members: §b{0}'
   balance-line: '§7Bank balance: §b{0}'
+  level-line: '§7Town level: §b{0}§7/§b{1} §7- capacity: §b{2} total / {3} per world'
   outpost-count-line: '§7Outposts: §b{0}'
   your-role-line: '§7Your role: §b{0}'
   members-button: MEMBERS
@@ -171,6 +172,8 @@ town-info-tui-text:
   bank-description: Town bank deposit/withdraw.
   outposts-button: OUTPOSTS
   outposts-description: List outposts of this town.
+  create-outpost-button: CREATE OUTPOST
+  create-outpost-description: Create from the two selected points and charge the town bank.
   invite-button: INVITE
   invite-description: Invite a player to join.
   leave-button: LEAVE

@@ -638,7 +638,11 @@ town-manager-text:
   invalid-amount: 'Invalid amount: {0}.'
   outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
   outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
-  outpost-amount-exceeded: Town {0} has reached the outpost amount limit.
+  outpost-amount-exceeded: 小鎮 {0} 已達到 {1} 級鎮屬地上限（{2} 個）。
+  town-level-admin-only: 只有 OP 可以設定小鎮等級。
+  town-level-invalid: 小鎮等級必須在 1 到 {0} 之間。
+  town-level-set: 已將小鎮 {0} 設定為 {1} 級，鎮屬地容量為全服 {2} 個 / 單世界 {3} 個。
+  outpost-attach-unavailable: 鎮屬地 {0} 已無法掛靠，請重新整理後再試。
   founding-required: 'You own no land: a founding outpost location is required to create a town.'
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
   release-not-outpost: Dominion {0} is not a town outpost.
@@ -683,6 +687,8 @@ town-command-text:
 
     &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
 
+    &b/town level set <town> <level> &7- set town level (OP only)
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
 
     &b/town untrust <player> [town|outpost <name>]
@@ -698,7 +704,9 @@ town-command-text:
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
-  town-info: '&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})'
+  town-info: '&b{0} &7（鎮長：{1}，成員：{2}，鎮屬地：{3}，金庫：{4}）'
+  town-level-info: '&7小鎮等級：&b{0}&7/{1}，鎮屬地容量：&b全服 {2} 個 / 單世界 {3} 個'
+  level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
@@ -715,6 +723,8 @@ town-outpost-admin-inputter-text:
   button: OUTPOST ADMIN
   hint: Enter the player name to appoint, or 'clear' to remove.
   description: Appoint or clear the outpost admin.
+town-outpost-create-inputter-text:
+  hint: 請輸入新鎮屬地名稱，將使用目前選取的兩個點。
 town-disband-confirm-inputter-text:
   button: DISBAND
   hint: Type 'confirm' to disband the town.

@@ -1494,6 +1494,22 @@ town-info-cui:
     - '§7Total: §b{0}'
     - §a▶ Click to open
     material: FILLED_MAP
+  level-button:
+    symbol: i
+    name: §eTown Level
+    lore:
+    - '§7Level: §b{0}§7/§b{1}'
+    - '§7Total capacity: §b{2}'
+    - '§7Per-world capacity: §b{3}'
+    material: EXPERIENCE_BOTTLE
+  create-outpost-button:
+    symbol: i
+    name: §aCreate Outpost
+    lore:
+    - §7Uses your two selected points.
+    - §7The town bank pays the configured area price.
+    - §a▶ Click, then enter a name
+    material: GRASS_BLOCK
   invite-button:
     symbol: i
     name: §aInvite

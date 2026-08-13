@@ -169,7 +169,10 @@ public class AdministratorCommand {
                                 ? p.getUniqueId() 
                                 : java.util.UUID.fromString("00000000-0000-0000-0000-000000000000");
                         
-                        TownManager.attachOutpost(town, dominion, operatorUuid);
+                        if (!TownManager.forceAttachOutpost(town, dominion, operatorUuid)) {
+                            throw new DominionException(Language.townManagerText.outpostAttachUnavailable,
+                                    dominion.getName());
+                        }
                         Notification.info(sender, "§aAdmin: Attached dominion {0} to town {1}.", dominionName, townName);
                         
                     } catch (Exception e) {
@@ -346,7 +349,9 @@ public class AdministratorCommand {
                 return;
             }
             try {
-                Language.updateLanguageFiles(Dominion.instance, Configuration.language, true);
+                if (!Language.updateLanguageFiles(Dominion.instance, Configuration.language, true)) {
+                    throw new IllegalStateException("One or more language resources could not be updated.");
+                }
                 Language.loadLanguageFiles(sender, Dominion.instance, Configuration.language);
             } catch (Exception e) {
                 Notification.error(sender, "Failed to update language files: {0}", e.getMessage());

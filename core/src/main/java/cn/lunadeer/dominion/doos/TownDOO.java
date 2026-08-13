@@ -50,6 +50,7 @@ public class TownDOO {
     private final FieldLong balanceCents = new FieldLong("balance", 0L);
     private final FieldString status = new FieldString("status", TownStatus.ACTIVE.name());
     private final FieldString permissionMode = new FieldString("permission_mode", PermissionMode.LEGACY.name());
+    private final FieldInteger level = new FieldInteger("level", 1);
     private final FieldTimestamp createdAt = new FieldTimestamp("created_at");
 
     private static Field<?>[] fields() {
@@ -61,6 +62,7 @@ public class TownDOO {
                 new FieldLong("balance"),
                 new FieldString("status"),
                 new FieldString("permission_mode"),
+                new FieldInteger("level"),
                 new FieldTimestamp("created_at"),
         };
     }
@@ -74,17 +76,18 @@ public class TownDOO {
                 (Long) map.get("balance").getValue(),
                 (String) map.get("status").getValue(),
                 (String) map.get("permission_mode").getValue(),
+                (Integer) map.get("level").getValue(),
                 (Timestamp) map.get("created_at").getValue()
         );
     }
 
     public static @NotNull TownDOO insert(@NotNull String name, @NotNull UUID founder) throws SQLException {
         TownDOO town = new TownDOO(null, name, founder, founder, 0L, TownStatus.ACTIVE.name(),
-                PermissionMode.TEMPLATE_V1.name(), null);
+                PermissionMode.TEMPLATE_V1.name(), 1, null);
         Map<String, Field<?>> res = Insert.insert()
                 .into("town")
                 .values(town.name, town.founderUuid, town.mayorUuid, town.balanceCents, town.status,
-                        town.permissionMode)
+                        town.permissionMode, town.level)
                 .returning(fields())
                 .execute();
         if (res.isEmpty()) {
@@ -246,6 +249,17 @@ public class TownDOO {
         return getPermissionMode() == PermissionMode.TEMPLATE_V1;
     }
 
+    public int getLevel() {
+        Integer value = level.getValue();
+        return value == null ? 1 : value;
+    }
+
+    public @NotNull TownDOO setLevel(int newLevel) throws SQLException {
+        this.level.setValue(newLevel);
+        Update.update("town").set(this.level).where("id = ?", id.getValue()).execute();
+        return this;
+    }
+
     public @NotNull TownDOO setStatus(@NotNull TownStatus newStatus) throws SQLException {
         this.status.setValue(newStatus.name());
         Update.update("town").set(this.status).where("id = ?", id.getValue()).execute();
@@ -257,7 +271,8 @@ public class TownDOO {
     }
 
     private TownDOO(Integer id, String name, UUID founderUuid, UUID mayorUuid,
-                    Long balanceCents, String status, String permissionMode, Timestamp createdAt) {
+                    Long balanceCents, String status, String permissionMode, Integer level,
+                    Timestamp createdAt) {
         this.id.setValue(id);
         this.name.setValue(name);
         this.founderUuid.setValue(founderUuid.toString());
@@ -266,6 +281,7 @@ public class TownDOO {
         this.status.setValue(status);
         this.permissionMode.setValue(permissionMode == null
                 ? PermissionMode.LEGACY.name() : permissionMode);
+        this.level.setValue(level == null ? 1 : level);
         this.createdAt.setValue(createdAt);
     }
 }

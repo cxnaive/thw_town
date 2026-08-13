@@ -1436,6 +1436,22 @@ town-info-cui:
     - '§7Total: §b{0}'
     - §a▶ Click to open
     material: FILLED_MAP
+  level-button:
+    symbol: i
+    name: §e小鎮等級
+    lore:
+    - '§7等級: §b{0}§7/§b{1}'
+    - '§7全服容量: §b{2}'
+    - '§7單世界容量: §b{3}'
+    material: EXPERIENCE_BOTTLE
+  create-outpost-button:
+    symbol: i
+    name: §a建立鎮屬地
+    lore:
+    - §7使用目前選取的兩個點。
+    - §7費用依設定從鎮庫扣除。
+    - §a▶ 點擊後輸入名稱
+    material: GRASS_BLOCK
   invite-button:
     symbol: i
     name: §aInvite

@@ -429,12 +429,52 @@ public class DominionDOO implements DominionDTO {
                             + "owner is a contributor record and cannot be transferred. "
                             + "Use the town admin release flow instead.");
         }
+        try (Connection connection = DatabaseManager.instance.getConnection()) {
+            boolean oldAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                int updated;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE dominion SET owner = ? WHERE id = ? AND town_id IS NULL")) {
+                    statement.setString(1, owner.toString());
+                    statement.setInt(2, id.getValue());
+                    updated = statement.executeUpdate();
+                }
+                if (updated != 1) {
+                    try (PreparedStatement verify = connection.prepareStatement(
+                            "SELECT owner, town_id FROM dominion WHERE id = ?")) {
+                        verify.setInt(1, id.getValue());
+                        try (ResultSet row = verify.executeQuery()) {
+                            if (!row.next()) {
+                                throw new SQLException("Dominion " + id.getValue() + " no longer exists.");
+                            }
+                            if (row.getObject("town_id") != null) {
+                                throw new IllegalStateException(
+                                        "Dominion " + getId() + " (" + getName() + ") became a town outpost "
+                                                + "while being transferred; owner was not changed.");
+                            }
+                            // MySQL may report zero for a matched no-op UPDATE
+                            // with useAffectedRows=true. Treat an already-equal
+                            // owner as an idempotent success.
+                            if (!owner.toString().equals(row.getString("owner"))) {
+                                throw new SQLException("Dominion " + id.getValue()
+                                        + " owner changed concurrently; retry the transfer.");
+                            }
+                        }
+                    }
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(oldAutoCommit);
+            }
+        }
         this.owner.setValue(owner.toString());
-        Update.update("dominion")
-                .set(this.owner)
-                .where("id = ?", id.getValue())
-                .execute();
-        CacheManager.instance.getCache().getDominionCache().load();
+        cn.lunadeer.dominion.cache.server.ServerCache serverCache =
+                CacheManager.instance.getCache(getServerId());
+        if (serverCache != null) serverCache.getDominionCache().load(getId());
         return this;
     }
 

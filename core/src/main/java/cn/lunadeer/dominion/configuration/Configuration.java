@@ -201,14 +201,20 @@ public class Configuration extends ConfigurationFile {
                 "false: towns can only expand existing outposts (resize)."
         })
         public boolean outpostAllowRemote = true;
+        @Comments("Maximum town level. Promotion rules are reserved for future gameplay; OPs may set it manually.")
+        public int maxLevel = 10;
+        @Comments("Extra outpost capacity granted by each level above level 1.")
+        public int outpostCountPerLevel = 2;
         @Comments({
-                "Maximum number of outposts owned by one town across all worlds.",
-                "Founding and contributed outposts are included. -1 for unlimited."
+                "Base number of outposts at town level 1 across all worlds.",
+                "Founding and contributed outposts are included. -1 for unlimited.",
+                "Effective limit = this value + (level - 1) * outpost-count-per-level."
         })
         public int outpostMaxCount = 3;
         @Comments({
-                "Maximum number of outposts owned by one town in one world.",
-                "The all-world limit still applies. -1 for unlimited."
+                "Base number of outposts at town level 1 in one world.",
+                "The all-world limit still applies. -1 for unlimited.",
+                "This limit receives the same per-level increase."
         })
         public int outpostMaxCountPerWorld = 3;
         @Comments({
@@ -248,11 +254,11 @@ public class Configuration extends ConfigurationFile {
             @Comments("Enable area-tier pricing for remote town outposts and later resizing.")
             public boolean enable = true;
             @Comments("Price per block for area from 500*500 through 1000*1000.")
-            public double pricePerBlock500To1000 = 0.0;
+            public double pricePerBlock500To1000 = 0.0133;
             @Comments("Price per block for area from 1000*1000 through 1500*1500.")
-            public double pricePerBlock1000To1500 = 0.0;
+            public double pricePerBlock1000To1500 = 0.0133;
             @Comments("Price per block for area from 1500*1500 through 2000*2000.")
-            public double pricePerBlock1500To2000 = 0.0;
+            public double pricePerBlock1500To2000 = 0.0133;
             @Comments("Refund rate when a town outpost is contracted.")
             public double refundRate = 0.85;
         }
@@ -386,6 +392,15 @@ public class Configuration extends ConfigurationFile {
             XLogger.warn("Invalid town founding-cost: {0}", town.foundingCost);
             town.foundingCost = 0;
         }
+        if (town.maxLevel < 1) {
+            XLogger.warn("Invalid town max-level: {0}; resetting to 10.", town.maxLevel);
+            town.maxLevel = 10;
+        }
+        if (town.outpostCountPerLevel < 0) {
+            XLogger.warn("Invalid town outpost-count-per-level: {0}; resetting to 2.",
+                    town.outpostCountPerLevel);
+            town.outpostCountPerLevel = 2;
+        }
         if (town.outpostMaxCount == 0 || town.outpostMaxCount < -1) {
             XLogger.warn("Invalid town outpost-max-count: {0}; resetting to 3.",
                     town.outpostMaxCount);
@@ -435,21 +450,21 @@ public class Configuration extends ConfigurationFile {
         }
         if (!Double.isFinite(town.outpostPricing.pricePerBlock500To1000)
                 || town.outpostPricing.pricePerBlock500To1000 < 0) {
-            XLogger.warn("Invalid town outpost price-per-block-500-to-1000: {0}; resetting to 0.",
+            XLogger.warn("Invalid town outpost price-per-block-500-to-1000: {0}; resetting to 0.0133.",
                     town.outpostPricing.pricePerBlock500To1000);
-            town.outpostPricing.pricePerBlock500To1000 = 0;
+            town.outpostPricing.pricePerBlock500To1000 = 0.0133;
         }
         if (!Double.isFinite(town.outpostPricing.pricePerBlock1000To1500)
                 || town.outpostPricing.pricePerBlock1000To1500 < 0) {
-            XLogger.warn("Invalid town outpost price-per-block-1000-to-1500: {0}; resetting to 0.",
+            XLogger.warn("Invalid town outpost price-per-block-1000-to-1500: {0}; resetting to 0.0133.",
                     town.outpostPricing.pricePerBlock1000To1500);
-            town.outpostPricing.pricePerBlock1000To1500 = 0;
+            town.outpostPricing.pricePerBlock1000To1500 = 0.0133;
         }
         if (!Double.isFinite(town.outpostPricing.pricePerBlock1500To2000)
                 || town.outpostPricing.pricePerBlock1500To2000 < 0) {
-            XLogger.warn("Invalid town outpost price-per-block-1500-to-2000: {0}; resetting to 0.",
+            XLogger.warn("Invalid town outpost price-per-block-1500-to-2000: {0}; resetting to 0.0133.",
                     town.outpostPricing.pricePerBlock1500To2000);
-            town.outpostPricing.pricePerBlock1500To2000 = 0;
+            town.outpostPricing.pricePerBlock1500To2000 = 0.0133;
         }
         if (!Double.isFinite(town.outpostPricing.refundRate)
                 || town.outpostPricing.refundRate < 0 || town.outpostPricing.refundRate > 1) {

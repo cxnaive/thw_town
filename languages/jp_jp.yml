@@ -638,7 +638,11 @@ town-manager-text:
   invalid-amount: 'Invalid amount: {0}.'
   outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
   outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
-  outpost-amount-exceeded: Town {0} has reached the outpost amount limit.
+  outpost-amount-exceeded: Town {0} has reached its level {1} outpost limit ({2}).
+  town-level-admin-only: Only an OP may set a town's level.
+  town-level-invalid: Town level must be between 1 and {0}.
+  town-level-set: Set town {0} to level {1}; outpost capacity is {2} total / {3} per world.
+  outpost-attach-unavailable: Dominion {0} is no longer available to attach; refresh and retry.
   founding-required: 'You own no land: a founding outpost location is required to create a town.'
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
   release-not-outpost: Dominion {0} is not a town outpost.
@@ -683,6 +687,8 @@ town-command-text:
 
     &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
 
+    &b/town level set <town> <level> &7- set town level (OP only)
+
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
 
     &b/town untrust <player> [town|outpost <name>]
@@ -699,6 +705,8 @@ town-command-text:
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
   town-info: '&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})'
+  town-level-info: '&7Town level: &b{0}&7/{1}, outpost capacity: &b{2} total / {3} per world'
+  level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
@@ -715,6 +723,8 @@ town-outpost-admin-inputter-text:
   button: OUTPOST ADMIN
   hint: Enter the player name to appoint, or 'clear' to remove.
   description: Appoint or clear the outpost admin.
+town-outpost-create-inputter-text:
+  hint: Enter the new outpost name. The two currently selected points will be used.
 town-disband-confirm-inputter-text:
   button: DISBAND
   hint: Type 'confirm' to disband the town.
