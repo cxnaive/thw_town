@@ -69,6 +69,7 @@ dominion-provider-handler-text:
   town-outpost-no-delete: Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
+  auto-attach-failed: 'Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner''s personal dominion.'
   expand-success: Expand dominion {0} success.
   expand-failed: 'Expand dominion {0} failed, reason: {1}'
   contract-success: Contract dominion {0} success.

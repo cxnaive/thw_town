@@ -69,6 +69,7 @@ dominion-provider-handler-text:
   town-outpost-no-delete: 领地 {0} 属于城镇财产，个人无法删除。可由城镇解散或管理员释放。
   town-outpost-no-transfer: 领地 {0} 属于城镇财产，不可转让。
   auto-attached-to-town: 领地 {0} 已挂靠至城镇 {1}（新主人是城镇成员）。
+  auto-attach-failed: 领地 {0} 已成功转让，但无法自动挂靠至城镇 {1}：{2}。它将保留为新主人的个人领地。
   expand-success: 成功扩张领地 {0}
   expand-failed: 扩张领地 {0} 失败，原因：{1}
   contract-success: 成功缩小领地 {0}

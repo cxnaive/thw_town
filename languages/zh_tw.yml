@@ -61,6 +61,7 @@ vault-connect-text:
   insufficient-funds: 餘額不足，需要 {0}{1}，但你僅有 {2}{1}。
 dominion-provider-handler-text:
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
+  auto-attach-failed: 領地 {0} 已成功轉讓，但無法自動掛靠至城鎮 {1}：{2}。它將保留為新主人的個人領地。
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
   town-outpost-no-delete: Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.
   legacy-delete-disabled: Deleting dominions is disabled on this server.

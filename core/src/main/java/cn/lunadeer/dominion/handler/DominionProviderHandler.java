@@ -58,6 +58,7 @@ public class DominionProviderHandler extends DominionProvider {
         public String townOutpostNoDelete = "Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.";
         public String townOutpostNoTransfer = "Dominion {0} is town property and cannot be transferred.";
         public String autoAttachedToTown = "Dominion {0} was attached to town {1} because its new owner is a town member.";
+        public String autoAttachFailed = "Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner's personal dominion.";
 
         public String expandSuccess = "Expand dominion {0} success.";
         public String expandFailed = "Expand dominion {0} failed, reason: {1}";
@@ -399,20 +400,33 @@ public class DominionProviderHandler extends DominionProvider {
                             }
                         }
                         attachCandidates.add((DominionDOO) event.getDominion());
-                        List<Integer> attached = TownManager.attachOwnedOutposts(town, attachCandidates,
-                                attachOperator, newOwnerBukkit.getUniqueId());
-                        if (!attached.contains(event.getDominion().getId())) {
-                            throw new DominionException(Language.townManagerText.outpostAttachUnavailable,
-                                    event.getDominion().getName());
+                        try {
+                            List<Integer> attached = TownManager.attachOwnedOutposts(town, attachCandidates,
+                                    attachOperator, newOwnerBukkit.getUniqueId());
+                            if (!attached.contains(event.getDominion().getId())) {
+                                throw new DominionException(Language.townManagerText.outpostAttachUnavailable,
+                                        event.getDominion().getName());
+                            }
+                            // merged members/trusts are written directly; make
+                            // them visible immediately instead of within the
+                            // 4s throttle window
+                            CacheManager.instance.getTownCache().reloadNow();
+                            Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
+                                    event.getDominion().getName(), town.getName());
+                            Notification.info(newOwnerBukkit, Language.dominionProviderHandlerText.autoAttachedToTown,
+                                    event.getDominion().getName(), town.getName());
+                        } catch (Exception attachError) {
+                            // Ownership transfer has already committed one row
+                            // at a time before this optional town attachment.
+                            // Report the real partial outcome instead of lying
+                            // that the transfer itself failed.
+                            Notification.warn(event.getOperator(),
+                                    Language.dominionProviderHandlerText.autoAttachFailed,
+                                    event.getDominion().getName(), town.getName(), attachError.getMessage());
+                            Notification.warn(newOwnerBukkit,
+                                    Language.dominionProviderHandlerText.autoAttachFailed,
+                                    event.getDominion().getName(), town.getName(), attachError.getMessage());
                         }
-                        // merged members/trusts are written directly; make
-                        // them visible immediately instead of within the
-                        // 4s throttle window
-                        CacheManager.instance.getTownCache().reloadNow();
-                        Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
-                                event.getDominion().getName(), town.getName());
-                        Notification.info(newOwnerBukkit, Language.dominionProviderHandlerText.autoAttachedToTown,
-                                event.getDominion().getName(), town.getName());
                     }
                 }
                 return event.getDominion();
