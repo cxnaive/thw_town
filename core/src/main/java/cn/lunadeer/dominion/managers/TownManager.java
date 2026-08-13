@@ -156,12 +156,12 @@ public class TownManager {
         public String withdrawSuccess = "Withdrew {0} from the bank of {1}. New balance: {2}.";
         public String insufficientTownFunds = "Town bank of {0} cannot afford {1} (balance: {2}).";
         public String invalidAmount = "Invalid amount: {0}.";
-        public String outpostCreateSuccess = "Outpost {0} created for town {1}, cost {2} from the town bank.";
+        public String outpostCreateSuccess = "Outpost {0} created for town {1}, cost {2} {3} from the town bank.";
         public String outpostRemoteDisabled = "Remote outposts are disabled; towns may only resize existing outposts.";
         public String outpostAmountExceeded = "Town {0} has reached its level {1} outpost limit ({2}).";
         public String townLevelAdminOnly = "Only an OP may set a town's level.";
         public String townLevelInvalid = "Town level must be between 1 and {0}.";
-        public String townLevelSet = "Set town {0} to level {1}; outpost capacity is {2} total / {3} per world.";
+        public String townLevelSet = "Set town {0} to level {1}; outpost limit is {2} total / {3} per world.";
         public String outpostAttachUnavailable = "Dominion {0} is no longer available to attach; refresh and retry.";
         public String foundingRequired = "You own no land: a founding outpost location is required to create a town.";
         public String releaseSuccess = "Outpost {0} released from town {1}, returned to contributor {2}.";
@@ -1104,7 +1104,8 @@ public class TownManager {
         }
         createEvent.getFutureToComplete().complete(created);
         Notification.info(operator, Language.townManagerText.outpostCreateSuccess,
-                dominionName, town.getName(), Math.max(price, 0));
+                dominionName, town.getName(), Math.max(price, 0),
+                VaultConnect.instance.currencyNamePluralOrEmpty());
         return created;
     }
 

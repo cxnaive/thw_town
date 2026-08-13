@@ -1478,15 +1478,15 @@ town-info-cui:
     name: §e小镇等级
     lore:
     - §7等级：§b{0}§7/§b{1}
-    - §7全服容量：§b{2}
-    - §7单世界容量：§b{3}
+    - §7全服镇属地上限：§b{2}
+    - §7单世界镇属地上限：§b{3}
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
     name: §a创建镇属地
     lore:
     - §7使用当前选中的两个点。
-    - §7费用按配置从镇库扣除。
+    - §7点击后会显示准确报价。
     - §a▶ 点击后输入名称
     material: GRASS_BLOCK
   attach-button:

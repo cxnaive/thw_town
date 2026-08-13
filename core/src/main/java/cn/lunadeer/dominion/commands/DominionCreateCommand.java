@@ -22,7 +22,7 @@ import static cn.lunadeer.dominion.misc.Others.autoPoints;
 public class DominionCreateCommand {
 
     public static class DominionCreateCommandText extends ConfigurationPart {
-        public String createDescription = "Create a new dominion using selected points.";
+        public String createDescription = "Create a new dominion using the configured selection tool.";
         public String createSubDescription = "Create a sub-dominion within an existing dominion.";
         public String autoCreateDescription = "Automatically create a dominion around your current position.";
         public String autoCreateSubDescription = "Automatically create a sub-dominion within an existing dominion.";

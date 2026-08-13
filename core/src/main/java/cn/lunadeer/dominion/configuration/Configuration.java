@@ -203,7 +203,7 @@ public class Configuration extends ConfigurationFile {
         public boolean outpostAllowRemote = true;
         @Comments("Maximum town level. Promotion rules are reserved for future gameplay; OPs may set it manually.")
         public int maxLevel = 10;
-        @Comments("Extra outpost capacity granted by each level above level 1.")
+        @Comments("Extra outpost limit granted by each level above level 1.")
         public int outpostCountPerLevel = 2;
         @Comments({
                 "Base number of outposts at town level 1 across all worlds.",

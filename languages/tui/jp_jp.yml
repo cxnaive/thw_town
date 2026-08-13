@@ -161,7 +161,7 @@ town-info-tui-text:
   mayor-line: '§7Mayor: §b{0}'
   member-count-line: '§7Members: §b{0}'
   balance-line: '§7Bank balance: §b{0}'
-  level-line: '§7Town level: §b{0}§7/§b{1} §7- capacity: §b{2} total / {3} per world'
+  level-line: '§7Town level: §b{0}§7/§b{1} §7- outpost limit: §b{2} total / {3} per world'
   outpost-count-line: '§7Outposts: §b{0}'
   your-role-line: '§7Your role: §b{0}'
   members-button: MEMBERS

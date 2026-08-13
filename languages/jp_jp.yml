@@ -33,8 +33,8 @@ asserts-text:
   cant-contain-child: ドミニオン {0} は子ドミニオン {1} を含むことはできません。
   missing-parent-dom: '{0} の親ドミニオンが見つかりません。'
   sub-dom-too-deep: プレイヤー {0} は深さ {1} を超えるサブドミニオンを作成できません。
-  with-draw-money: ドミニオンに {0} を支払いました。
-  deposit-money: ドミニオンから {0} を払い戻しました。
+  with-draw-money: ドミニオンに {0} {1} を支払いました。
+  deposit-money: ドミニオンから {0} {1} を払い戻しました。
   group-not-belong-dominion: グループ {0} はドミニオン {1} に属していません。
 converts-text:
   must-be-player: このコマンド/操作を実行するにはプレイヤーである必要があります。
@@ -74,6 +74,11 @@ dominion-provider-handler-text:
   expand-failed: 'ドミニオン {0} の拡張に失敗しました。理由: {1}'
   contract-success: ドミニオン {0} の縮小に成功しました。
   contract-failed: 'ドミニオン {0} の縮小に失敗しました。理由: {1}'
+  resize-charge-estimate: 'リサイズ料金の見積もり（{0}）: {1} {2}。'
+  resize-refund-estimate: 'リサイズ返金の見積もり（{0}）: {1} {2}。'
+  town-resize-charge-estimate: 'タウン銀行からの見積もり請求（{0}）: {1} {2}。'
+  town-resize-refund-estimate: 'タウン銀行への見積もり返金（{0}）: {1} {2}。'
+  resize-free-estimate: 'リサイズ見積もり（{0}）: 請求・返金なし。'
   delete-success: ドミニオン {0} の削除に成功しました。
   delete-failed: 'ドミニオン {0} の削除に失敗しました。理由: {1}'
   delete-confirm: ドミニオン {1} とそのサブドミニオンを削除することを確認するには、コマンド '{0}' を使用してください。この操作は元に戻せません。
@@ -129,11 +134,12 @@ group-provider-handler-text:
   remove-member-failed: 'グループからメンバーを削除に失敗しました。理由: {0}'
   town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
 select-point-events-handler-text:
+  selection-tool-hint: '選択ツール: {0}。左クリックで1点目、右クリックで2点目を選択します。'
   first-point: 最初のポイントが {0}, {1}, {2} に選択されました。
   second-point: 2番目のポイントが {0}, {1}, {2} に選択されました。
   not-same-world: 2つのポイントは同じワールドにありません。
-  price: ドミニオンの価格は {0} {1} です。
-  town-outpost-price: 'タウン前哨地の推定価格: {0}。'
+  price: '個人ドミニオンの推定価格: {0} {1}。'
+  town-outpost-price: 'タウン前哨地の推定価格: {0} {1}。'
   owner: 'オーナー: {0}'
   size: 'サイズ: {0}x{1}x{2}'
   square: '面積: {0}'
@@ -568,7 +574,7 @@ dominion-operate-command-text:
   tp-description: ドミニオンにテレポートします。
   switch-ui-description: ドミニオンコマンドのUIタイプを切り替えます。
 dominion-create-command-text:
-  create-description: 選択したポイントを使用して新しいドミニオンを作成します。
+  create-description: 設定された選択ツールで新しいドミニオンを作成します。
   create-sub-description: 既存のドミニオン内にサブドミニオンを作成します。
   auto-create-description: 現在の位置の周りにドミニオンを自動的に作成します。
   auto-create-sub-description: 既存のドミニオン内にサブドミニオンを自動的に作成します。
@@ -637,12 +643,12 @@ town-manager-text:
   withdraw-success: 'Withdrew {0} from the bank of {1}. New balance: {2}.'
   insufficient-town-funds: 'Town bank of {0} cannot afford {1} (balance: {2}).'
   invalid-amount: 'Invalid amount: {0}.'
-  outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
+  outpost-create-success: Outpost {0} created for town {1}, cost {2} {3} from the town bank.
   outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
   outpost-amount-exceeded: Town {0} has reached its level {1} outpost limit ({2}).
   town-level-admin-only: Only an OP may set a town's level.
   town-level-invalid: Town level must be between 1 and {0}.
-  town-level-set: Set town {0} to level {1}; outpost capacity is {2} total / {3} per world.
+  town-level-set: Set town {0} to level {1}; outpost limit is {2} total / {3} per world.
   outpost-attach-unavailable: Dominion {0} is no longer available to attach; refresh and retry.
   founding-required: 'You own no land: a founding outpost location is required to create a town.'
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
@@ -706,7 +712,7 @@ town-command-text:
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
   town-info: '&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})'
-  town-level-info: '&7Town level: &b{0}&7/{1}, outpost capacity: &b{2} total / {3} per world'
+  town-level-info: '&7Town level: &b{0}&7/{1}, outpost limit: &b{2} total / {3} per world'
   level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.

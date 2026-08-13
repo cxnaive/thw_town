@@ -33,8 +33,8 @@ asserts-text:
   cant-contain-child: Dominion {0} can not contain it's child dominion {1}.
   missing-parent-dom: Parent dominion of {0} is missing.
   sub-dom-too-deep: Player {0} can't create sub-dominion of depth more than {1}.
-  with-draw-money: Successfully paid {0} for dominion.
-  deposit-money: Successfully refunded {0} from dominion.
+  with-draw-money: Successfully paid {0} {1} for dominion.
+  deposit-money: Successfully refunded {0} {1} from dominion.
   group-not-belong-dominion: Group {0} does not belong to dominion {1}.
 converts-text:
   must-be-player: Must be a player for this command/operation.
@@ -74,6 +74,11 @@ dominion-provider-handler-text:
   expand-failed: 'Expand dominion {0} failed, reason: {1}'
   contract-success: Contract dominion {0} success.
   contract-failed: 'Contract dominion {0} failed, reason: {1}'
+  resize-charge-estimate: 'Estimated resize charge for {0}: {1} {2}.'
+  resize-refund-estimate: 'Estimated resize refund for {0}: {1} {2}.'
+  town-resize-charge-estimate: 'Estimated town-bank charge for {0}: {1} {2}.'
+  town-resize-refund-estimate: 'Estimated town-bank refund for {0}: {1} {2}.'
+  resize-free-estimate: 'Resize estimate for {0}: no charge or refund.'
   delete-success: Delete dominion {0} success.
   delete-failed: 'Delete dominion {0} failed, reason: {1}'
   delete-confirm: Use command '{0}' to confirm delete the dominion {1} and its subs, this operation cannot be undone.
@@ -129,11 +134,12 @@ group-provider-handler-text:
   remove-member-failed: 'Failed to remove member from group, reason: {0}'
   town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
 select-point-events-handler-text:
+  selection-tool-hint: 'Selection tool: {0}. Left-click the first block and right-click the second block.'
   first-point: First point selected at {0}, {1}, {2}.
   second-point: Second point selected at {0}, {1}, {2}.
   not-same-world: The two points are not in the same world.
-  price: The price of the dominion is {0} {1}.
-  town-outpost-price: 'Estimated town outpost price: {0}.'
+  price: 'Estimated personal dominion price: {0} {1}.'
+  town-outpost-price: 'Estimated town outpost price: {0} {1}.'
   owner: 'Owner: {0}'
   size: 'Size: {0}x{1}x{2}'
   square: 'Square: {0}'
@@ -570,7 +576,7 @@ dominion-operate-command-text:
   tp-description: Teleport to a dominion.
   switch-ui-description: Switch the UI type for the dominion commands.
 dominion-create-command-text:
-  create-description: Create a new dominion using selected points.
+  create-description: Create a new dominion using the configured selection tool.
   create-sub-description: Create a sub-dominion within an existing dominion.
   auto-create-description: Automatically create a dominion around your current position.
   auto-create-sub-description: Automatically create a sub-dominion within an existing dominion.
@@ -639,12 +645,12 @@ town-manager-text:
   withdraw-success: 'Withdrew {0} from the bank of {1}. New balance: {2}.'
   insufficient-town-funds: 'Town bank of {0} cannot afford {1} (balance: {2}).'
   invalid-amount: 'Invalid amount: {0}.'
-  outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
+  outpost-create-success: Outpost {0} created for town {1}, cost {2} {3} from the town bank.
   outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
   outpost-amount-exceeded: Town {0} has reached its level {1} outpost limit ({2}).
   town-level-admin-only: Only an OP may set a town's level.
   town-level-invalid: Town level must be between 1 and {0}.
-  town-level-set: Set town {0} to level {1}; outpost capacity is {2} total / {3} per world.
+  town-level-set: Set town {0} to level {1}; outpost limit is {2} total / {3} per world.
   outpost-attach-unavailable: Dominion {0} is no longer available to attach; refresh and retry.
   founding-required: 'You own no land: a founding outpost location is required to create a town.'
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
@@ -716,7 +722,7 @@ town-command-text:
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
   town-info: '&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})'
-  town-level-info: '&7Town level: &b{0}&7/{1}, outpost capacity: &b{2} total / {3} per world'
+  town-level-info: '&7Town level: &b{0}&7/{1}, outpost limit: &b{2} total / {3} per world'
   level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.

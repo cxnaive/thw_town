@@ -1441,15 +1441,15 @@ town-info-cui:
     name: §e小鎮等級
     lore:
     - '§7等級: §b{0}§7/§b{1}'
-    - '§7全服容量: §b{2}'
-    - '§7單世界容量: §b{3}'
+    - '§7全服鎮屬地上限: §b{2}'
+    - '§7單世界鎮屬地上限: §b{3}'
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
     name: §a建立鎮屬地
     lore:
     - §7使用目前選取的兩個點。
-    - §7費用依設定從鎮庫扣除。
+    - §7點擊後會顯示準確報價。
     - §a▶ 點擊後輸入名稱
     material: GRASS_BLOCK
   invite-button:

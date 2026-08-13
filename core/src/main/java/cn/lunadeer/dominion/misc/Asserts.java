@@ -68,8 +68,8 @@ public class Asserts {
         public String missingParentDom = "Parent dominion of {0} is missing.";
         public String subDomTooDeep = "Player {0} can't create sub-dominion of depth more than {1}.";
 
-        public String withDrawMoney = "Successfully paid {0} for dominion.";
-        public String depositMoney = "Successfully refunded {0} from dominion.";
+        public String withDrawMoney = "Successfully paid {0} {1} for dominion.";
+        public String depositMoney = "Successfully refunded {0} {1} from dominion.";
 
         public String groupNotBelongDominion = "Group {0} does not belong to dominion {1}.";
     }
@@ -558,11 +558,13 @@ public class Asserts {
         double price = amount * ecoConf.pricePerBlock;
         if (price > 0) {
             VaultConnect.instance.withdrawPlayer(associatedPlayer, price);
-            Notification.info(associatedPlayer, Language.assertsText.withDrawMoney, price);
+            Notification.info(associatedPlayer, Language.assertsText.withDrawMoney,
+                    price, VaultConnect.instance.currencyNamePluralOrEmpty());
         } else {
             price = price * ecoConf.refundRate * -1;
             VaultConnect.instance.depositPlayer(associatedPlayer, price);
-            Notification.info(associatedPlayer, Language.assertsText.depositMoney, price);
+            Notification.info(associatedPlayer, Language.assertsText.depositMoney,
+                    price, VaultConnect.instance.currencyNamePluralOrEmpty());
         }
     }
 

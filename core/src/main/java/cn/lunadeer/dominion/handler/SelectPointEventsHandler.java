@@ -9,6 +9,7 @@ import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.utils.BorderRenderUtil;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
@@ -37,11 +38,12 @@ import static cn.lunadeer.dominion.utils.BorderRenderUtil.DEFAULT_GLOW_COLOR;
 public class SelectPointEventsHandler implements Listener {
 
     public static class SelectPointEventsHandlerText extends ConfigurationPart {
+        public String selectionToolHint = "Selection tool: {0}. Left-click the first block and right-click the second block.";
         public String firstPoint = "First point selected at {0}, {1}, {2}.";
         public String secondPoint = "Second point selected at {0}, {1}, {2}.";
         public String notSameWorld = "The two points are not in the same world.";
-        public String price = "The price of the dominion is {0} {1}.";
-        public String townOutpostPrice = "Estimated town outpost price: {0}.";
+        public String price = "Estimated personal dominion price: {0} {1}.";
+        public String townOutpostPrice = "Estimated town outpost price: {0} {1}.";
         public String owner = "Owner: {0}";
         public String size = "Size: {0}x{1}x{2}";
         public String square = "Square: {0}";
@@ -73,6 +75,14 @@ public class SelectPointEventsHandler implements Listener {
             points = new HashMap<>();
         }
 
+        // Explain the selection controls once per selection session.  The
+        // configured material is deliberately resolved at runtime so this
+        // remains accurate when an administrator changes select-tool.
+        if (points.isEmpty() || points.size() == 2 && action == Action.LEFT_CLICK_BLOCK) {
+            Notification.info(player, Language.selectPointEventsHandlerText.selectionToolHint,
+                    Configuration.selectTool);
+        }
+
         if (action == Action.LEFT_CLICK_BLOCK) {
             event.setCancelled(true);
             Notification.info(player, Language.selectPointEventsHandlerText.firstPoint, block.getX(), block.getY(), block.getZ());
@@ -102,13 +112,15 @@ public class SelectPointEventsHandler implements Listener {
             try {
                 Limitation limitation = Configuration.getPlayerLimitation(player);
                 CuboidDTO personalCuboid = normalizePersonalSelection(player, rawCuboid);
-                if (limitation.economy.enable) {
+                boolean bypass = Others.bypassLimit(player);
+                if (Configuration.landSystem.allowNewPersonalDominion
+                        && limitation.economy.enable && !bypass) {
                     long amount = limitation.economy.squareOnly
                             ? personalCuboid.getSquare()
                             : personalCuboid.getVolume();
                     double price = amount * limitation.economy.pricePerBlock;
                     Notification.info(player, Language.selectPointEventsHandlerText.price,
-                            price, VaultConnect.instance.currencyNamePlural());
+                            price, VaultConnect.instance.currencyNamePluralOrEmpty());
                 }
                 boolean managesTown = CacheManager.instance.getTownCache()
                         .getMembershipsOf(player.getUniqueId()).stream()
@@ -117,8 +129,10 @@ public class SelectPointEventsHandler implements Listener {
                                 || role == TownMemberDOO.TownRole.ASSISTANT);
                 CuboidDTO townCuboid = TownManager.normalizeTownOutpostCuboid(rawCuboid);
                 if (managesTown && Configuration.town.outpostPricing.enable) {
-                    double price = TownManager.townOutpostPrice(CuboidDTO.ZERO, townCuboid);
-                    Notification.info(player, Language.selectPointEventsHandlerText.townOutpostPrice, price);
+                    double price = bypass ? 0
+                            : TownManager.townOutpostPrice(CuboidDTO.ZERO, townCuboid);
+                    Notification.info(player, Language.selectPointEventsHandlerText.townOutpostPrice,
+                            price, VaultConnect.instance.currencyNamePluralOrEmpty());
                 }
                 CuboidDTO displayCuboid = managesTown ? townCuboid : personalCuboid;
                 BorderRenderUtil.showBorder(player, points.get(0).getWorld(), displayCuboid, DEFAULT_GLOW_COLOR);

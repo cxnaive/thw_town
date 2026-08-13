@@ -2,10 +2,13 @@ package cn.lunadeer.dominion.inputters.town;
 
 import cn.lunadeer.dominion.api.dtos.CuboidDTO;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.uis.town.TownInfo;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import cn.lunadeer.dominion.utils.stui.components.buttons.FunctionalButton;
@@ -32,13 +35,20 @@ public final class TownOutpostCreateInputter {
             world = points[0].getWorld();
             if (world == null) {
                 throw new cn.lunadeer.dominion.misc.DominionException(
-                        Language.townCommandText.needPoints);
+                        Language.selectPointEventsHandlerText.selectionToolHint, Configuration.selectTool);
             }
             cuboid = TownManager.normalizeTownOutpostCuboid(new CuboidDTO(points[0], points[1]));
         } catch (Exception e) {
             Notification.error(player, e);
             return;
         }
+
+        Notification.info(player, Language.selectPointEventsHandlerText.selectionToolHint,
+                Configuration.selectTool);
+        double price = Others.bypassLimit(player) ? 0
+                : TownManager.townOutpostPrice(CuboidDTO.ZERO, cuboid);
+        Notification.info(player, Language.selectPointEventsHandlerText.townOutpostPrice,
+                price, VaultConnect.instance.currencyNamePluralOrEmpty());
 
         new InputterRunner(player, Language.townOutpostCreateInputterText.hint) {
             @Override

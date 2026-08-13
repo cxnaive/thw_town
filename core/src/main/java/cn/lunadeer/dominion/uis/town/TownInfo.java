@@ -2,6 +2,7 @@ package cn.lunadeer.dominion.uis.town;
 
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.configuration.Configuration;
+import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.DominionDOO;
@@ -85,7 +86,7 @@ public class TownInfo extends AbstractUI {
         public String mayorLine = "§7Mayor: §b{0}";
         public String memberCountLine = "§7Members: §b{0}";
         public String balanceLine = "§7Bank balance: §b{0}";
-        public String levelLine = "§7Town level: §b{0}§7/§b{1} §7- capacity: §b{2} total / {3} per world";
+        public String levelLine = "§7Town level: §b{0}§7/§b{1} §7- outpost limit: §b{2} total / {3} per world";
         public String outpostCountLine = "§7Outposts: §b{0}";
         public String yourRoleLine = "§7Your role: §b{0}";
         public String permissionModeLegacy = "§7Permission mode: §6Legacy per-outpost";
@@ -191,6 +192,9 @@ public class TownInfo extends AbstractUI {
 
             if (manager) {
                 if (Configuration.town.outpostAllowRemote) {
+                    view.add(Line.create().append(formatString(
+                            Language.selectPointEventsHandlerText.selectionToolHint,
+                            Configuration.selectTool)));
                     view.add(Line.create()
                             .append(TownOutpostCreateInputter.createTuiButtonOn(player, town.getName(),
                                     TextUserInterface.townInfoTuiText.createOutpostButton)
@@ -254,12 +258,12 @@ public class TownInfo extends AbstractUI {
         public ButtonConfiguration levelButton = ButtonConfiguration.createMaterial(
                 'i', Material.EXPERIENCE_BOTTLE, "§eTown Level",
                 List.of("§7Level: §b{0}§7/§b{1}",
-                        "§7Total capacity: §b{2}",
-                        "§7Per-world capacity: §b{3}"));
+                        "§7Total outpost limit: §b{2}",
+                        "§7Per-world outpost limit: §b{3}"));
         public ButtonConfiguration createOutpostButton = ButtonConfiguration.createMaterial(
                 'i', Material.GRASS_BLOCK, "§aCreate Outpost",
                 List.of("§7Uses your two selected points.",
-                        "§7The town bank pays the configured area price.",
+                        "§7The exact quote is shown after clicking.",
                         "§a▶ Click, then enter a name"));
         public ButtonConfiguration attachButton = ButtonConfiguration.createMaterial(
                 'i', Material.LEAD, "§eAttach Dominions",
@@ -330,8 +334,9 @@ public class TownInfo extends AbstractUI {
             }
             if (manager) {
                 if (Configuration.town.outpostAllowRemote) {
-                    view = view.addItem(nav(player, ChestUserInterface.townInfoCui.createOutpostButton,
-                            () -> TownOutpostCreateInputter.createOn(player, town.getName()), true));
+                    ChestButton createOutpost = nav(player, ChestUserInterface.townInfoCui.createOutpostButton,
+                            () -> TownOutpostCreateInputter.createOn(player, town.getName()), true);
+                    view = view.addItem(createOutpost);
                 }
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.inviteButton,
                         () -> TownMembers.createInviteOn(player, town.getName()), true));

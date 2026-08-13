@@ -14,6 +14,7 @@ import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -85,7 +86,7 @@ public class TownCommand implements TabExecutor {
         public String noTown = "You are not in any town.";
         public String noManagedTown = "You are not the mayor or an assistant of any town.";
         public String townInfo = "&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})";
-        public String townLevelInfo = "&7Town level: &b{0}&7/{1}, outpost capacity: &b{2} total / {3} per world";
+        public String townLevelInfo = "&7Town level: &b{0}&7/{1}, outpost limit: &b{2} total / {3} per world";
         public String levelUsage = "&b/town level set <town> <1-{0}> &7- set town level (OP only)";
         public String townListEntry = "{0} (mayor: {1})";
         public String needPoints = "Select two points with the select tool first.";
@@ -564,14 +565,22 @@ public class TownCommand implements TabExecutor {
             String name = requireArg(args, 2);
             Location[] points = getSelectedPoints(player);
             if (points == null || points[0] == null || points[1] == null) {
-                throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.needPoints);
+                throw new cn.lunadeer.dominion.misc.DominionException(
+                        Language.selectPointEventsHandlerText.selectionToolHint,
+                        Configuration.selectTool);
             }
             org.bukkit.World selectedWorld = points[0].getWorld();
             if (selectedWorld == null) {
-                throw new cn.lunadeer.dominion.misc.DominionException(Language.townCommandText.needPoints);
+                throw new cn.lunadeer.dominion.misc.DominionException(
+                        Language.selectPointEventsHandlerText.selectionToolHint,
+                        Configuration.selectTool);
             }
             CuboidDTO cuboid = TownManager.normalizeTownOutpostCuboid(
                     new CuboidDTO(points[0], points[1]));
+            double price = Others.bypassLimit(player) ? 0
+                    : TownManager.townOutpostPrice(CuboidDTO.ZERO, cuboid);
+            Notification.info(player, Language.selectPointEventsHandlerText.townOutpostPrice,
+                    price, VaultConnect.instance.currencyNamePluralOrEmpty());
             TownManager.createRemoteOutpost(player, town, name, selectedWorld, cuboid);
         } else {
             Notification.info(sender, Language.townCommandText.usage);

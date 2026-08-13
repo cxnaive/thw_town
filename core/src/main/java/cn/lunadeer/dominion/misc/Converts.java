@@ -249,10 +249,13 @@ public class Converts {
     public static Location[] getSelectedPoints(@NotNull Player player) throws DominionException {
         Map<Integer, Location> points = Dominion.pointsSelect.get(player.getUniqueId());
         if (points == null || points.size() != 2) {
-            throw new DominionException(Language.convertsText.invalidPoints);
+            throw new DominionException(Language.selectPointEventsHandlerText.selectionToolHint,
+                    Configuration.selectTool);
         }
-        if (!points.get(0).getWorld().getUID().equals(points.get(1).getWorld().getUID())) {
-            throw new DominionException(Language.convertsText.invalidPoints);
+        if (points.get(0) == null || points.get(1) == null
+                || points.get(0).getWorld() == null || points.get(1).getWorld() == null
+                || !points.get(0).getWorld().getUID().equals(points.get(1).getWorld().getUID())) {
+            throw new DominionException(Language.selectPointEventsHandlerText.notSameWorld);
         }
         return sortLocations(points.get(0), points.get(1));
     }

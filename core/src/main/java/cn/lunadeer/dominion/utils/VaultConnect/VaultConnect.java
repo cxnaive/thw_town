@@ -59,6 +59,19 @@ public class VaultConnect implements Listener {
         return vaultInstance.currencyNamePlural();
     }
 
+    /**
+     * Currency label for informational messages.  A display-only lookup must
+     * never turn an already committed land or balance operation into a
+     * reported failure when Vault is temporarily unavailable.
+     */
+    public String currencyNamePluralOrEmpty() {
+        try {
+            return currencyNamePlural();
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
     public String currencyNameSingular() throws Exception {
         assertEconomy();
         return vaultInstance.currencyNameSingular();

@@ -169,7 +169,7 @@ town-info-tui-text:
   mayor-line: '§7镇长: §b{0}'
   member-count-line: '§7成员数: §b{0}'
   balance-line: '§7镇库余额: §b{0}'
-  level-line: '§7小镇等级: §b{0}§7/§b{1} §7- 容量: §b全服 {2} 个 / 单世界 {3} 个'
+  level-line: '§7小镇等级: §b{0}§7/§b{1} §7- 镇属地上限: §b全服 {2} 个 / 单世界 {3} 个'
   outpost-count-line: '§7镇属地: §b{0}'
   your-role-line: '§7你的角色: §b{0}'
   permission-mode-legacy: §7权限模式：§6旧版属地独立权限

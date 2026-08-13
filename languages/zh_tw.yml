@@ -33,8 +33,8 @@ asserts-text:
   cant-contain-child: 領地 {0} 無法包含子領地 {1}。
   missing-parent-dom: 找不到父領地：{0}。
   sub-dom-too-deep: 玩家 {0} 的子領地層級不可超過 {1}。
-  with-draw-money: 已成功支付 {0} 給領地。
-  deposit-money: 已從領地獲得退款 {0}。
+  with-draw-money: 已成功支付 {0} {1} 給領地。
+  deposit-money: 已從領地獲得退款 {0} {1}。
   group-not-belong-dominion: 權限組 {0} 不屬於領地 {1}。
 converts-text:
   must-be-player: 此指令或操作必須由玩家執行。
@@ -74,6 +74,11 @@ dominion-provider-handler-text:
   expand-failed: 擴張領地 {0} 失敗，原因：{1}。
   contract-success: 成功縮小領地 {0}。
   contract-failed: 縮小領地 {0} 失敗，原因：{1}。
+  resize-charge-estimate: 預計調整領地 {0} 扣除：{1} {2}。
+  resize-refund-estimate: 預計調整領地 {0} 退款：{1} {2}。
+  town-resize-charge-estimate: 預計從小鎮金庫扣除（{0}）：{1} {2}。
+  town-resize-refund-estimate: 預計退回小鎮金庫（{0}）：{1} {2}。
+  resize-free-estimate: 預計調整領地 {0}：本次無扣款或退款。
   delete-success: 成功刪除領地 {0}。
   delete-failed: 刪除領地 {0} 失敗，原因：{1}。
   delete-confirm: 請使用指令「{0}」確認刪除領地 {1} 及其子領地，此操作無法還原！
@@ -129,11 +134,12 @@ group-provider-handler-text:
   remove-member-failed: 從群組移除成員失敗，原因：{0}。
   town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
 select-point-events-handler-text:
+  selection-tool-hint: '選點工具：{0}。左鍵選擇第一個方塊，右鍵選擇第二個方塊。'
   first-point: 第一個選取點：{0}, {1}, {2}。
   second-point: 第二個選取點：{0}, {1}, {2}。
   not-same-world: 兩個選取點不在同一世界。
-  price: 領地費用預估：{0}{1}。
-  town-outpost-price: 小鎮附屬領地預計花費：{0}。
+  price: 個人領地費用預估：{0} {1}。
+  town-outpost-price: 小鎮附屬領地預計花費：{0} {1}。
   owner: 擁有者：{0}。
   size: 尺寸：{0}×{1}×{2}。
   square: 面積：{0}。
@@ -568,7 +574,7 @@ dominion-operate-command-text:
   tp-description: 傳送至領地
   switch-ui-description: 切換領地指令的介面模式
 dominion-create-command-text:
-  create-description: 使用選取點建立新領地
+  create-description: 使用設定的選點工具建立新領地
   create-sub-description: 在既有領地中建立子領地
   auto-create-description: 自動於目前位置周圍建立領地
   auto-create-sub-description: 自動於既有領地中建立子領地
@@ -637,12 +643,12 @@ town-manager-text:
   withdraw-success: 'Withdrew {0} from the bank of {1}. New balance: {2}.'
   insufficient-town-funds: 'Town bank of {0} cannot afford {1} (balance: {2}).'
   invalid-amount: 'Invalid amount: {0}.'
-  outpost-create-success: Outpost {0} created for town {1}, cost {2} from the town bank.
+  outpost-create-success: Outpost {0} created for town {1}, cost {2} {3} from the town bank.
   outpost-remote-disabled: Remote outposts are disabled; towns may only resize existing outposts.
   outpost-amount-exceeded: 小鎮 {0} 已達到 {1} 級鎮屬地上限（{2} 個）。
   town-level-admin-only: 只有 OP 可以設定小鎮等級。
   town-level-invalid: 小鎮等級必須在 1 到 {0} 之間。
-  town-level-set: 已將小鎮 {0} 設定為 {1} 級，鎮屬地容量為全服 {2} 個 / 單世界 {3} 個。
+  town-level-set: 已將小鎮 {0} 設定為 {1} 級，鎮屬地上限為全服 {2} 個 / 單世界 {3} 個。
   outpost-attach-unavailable: 鎮屬地 {0} 已無法掛靠，請重新整理後再試。
   founding-required: 'You own no land: a founding outpost location is required to create a town.'
   release-success: Outpost {0} released from town {1}, returned to contributor {2}.
@@ -706,7 +712,7 @@ town-command-text:
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
   town-info: '&b{0} &7（鎮長：{1}，成員：{2}，鎮屬地：{3}，金庫：{4}）'
-  town-level-info: '&7小鎮等級：&b{0}&7/{1}，鎮屬地容量：&b全服 {2} 個 / 單世界 {3} 個'
+  town-level-info: '&7小鎮等級：&b{0}&7/{1}，鎮屬地上限：&b全服 {2} 個 / 單世界 {3} 個'
   level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.

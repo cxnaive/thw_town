@@ -477,9 +477,9 @@ town:
 
   outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
   max-level: 10                          # 小镇最高等级；晋升玩法 TODO，OP 可手动设置
-  outpost-count-per-level: 2             # 每高一级增加的属地容量
-  outpost-max-count: 3                   # 1 级全服基础容量，-1 无限
-  outpost-max-count-per-world: 3         # 1 级单世界基础容量，-1 无限
+  outpost-count-per-level: 2             # 每高一级增加的属地上限
+  outpost-max-count: 3                   # 1 级全服基础属地上限，-1 无限
+  outpost-max-count-per-world: 3         # 1 级单世界基础属地上限，-1 无限
   outpost-max-horizontal-size: 2000
   outpost-min-size-x: 4
   outpost-min-size-y: 4

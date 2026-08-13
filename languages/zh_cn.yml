@@ -33,8 +33,8 @@ asserts-text:
   cant-contain-child: 领地 {0} 无法包含子领地 {1}
   missing-parent-dom: 父领地 {0} 不存在
   sub-dom-too-deep: 玩家 {0} 的子领地层级不允许超过 {1}
-  with-draw-money: 成功为领地支付 {0}
-  deposit-money: 成功从领地获得退款 {0}
+  with-draw-money: 成功为领地支付 {0} {1}
+  deposit-money: 成功从领地获得退款 {0} {1}
   group-not-belong-dominion: 权限组 {0} 不属于领地 {1}
 converts-text:
   must-be-player: 此指令/操作无法通过控制台执行
@@ -74,6 +74,11 @@ dominion-provider-handler-text:
   expand-failed: 扩张领地 {0} 失败，原因：{1}
   contract-success: 成功缩小领地 {0}
   contract-failed: 缩小领地 {0} 失败，原因：{1}
+  resize-charge-estimate: 预计调整领地 {0} 扣除：{1} {2}
+  resize-refund-estimate: 预计调整领地 {0} 退款：{1} {2}
+  town-resize-charge-estimate: 预计从小镇金库扣除（{0}）：{1} {2}
+  town-resize-refund-estimate: 预计退回小镇金库（{0}）：{1} {2}
+  resize-free-estimate: 预计调整领地 {0}：本次无扣款或退款
   delete-success: 删除领地 {0} 成功
   delete-failed: 删除领地 {0} 失败，原因：{1}
   delete-confirm: 请使用指令 '{0}' 来确认删除领地 {1} 及其子领地，此操作无法撤销！
@@ -130,11 +135,12 @@ group-provider-handler-text:
   remove-member-failed: 移除成员失败，原因：{0}
   town-group-members-implicit: 小镇成员组的权限由镇成员身份隐式持有，不能向其中添加或移除成员。
 select-point-events-handler-text:
+  selection-tool-hint: '选点工具：{0}。左键选择第一个方块，右键选择第二个方块。'
   first-point: 第一个选点坐标：{0}, {1}, {2}
   second-point: 第二个选点坐标：{0}, {1}, {2}
   not-same-world: 两个选点不在同一世界
-  price: 预计领地花费：{0} {1}
-  town-outpost-price: 小镇附属领地预计花费：{0}
+  price: 预计个人领地花费：{0} {1}
+  town-outpost-price: 小镇附属领地预计花费：{0} {1}
   size: 尺寸：{0} x {1} x {2}
   square: 面积：{0}
   volume: 体积：{0}
@@ -573,7 +579,7 @@ dominion-operate-command-text:
   tp-description: 传送到领地。
   switch-ui-description: 切换领地指令的界面类型。
 dominion-create-command-text:
-  create-description: 使用选定的点创建新领地。
+  create-description: 使用配置的选点工具创建新领地。
   create-sub-description: 在现有领地内创建子领地。
   auto-create-description: 在你当前位置周围自动创建领地。
   auto-create-sub-description: 在现有领地内自动创建子领地。
@@ -666,12 +672,12 @@ town-manager-text:
   withdraw-success: 已从 {1} 的城镇金库取出 {0}，当前余额：{2}。
   insufficient-town-funds: 城镇 {0} 的金库无法支付 {1}（当前余额：{2}）。
   invalid-amount: 无效的金额：{0}。
-  outpost-create-success: 已为城镇 {1} 创建前哨 {0}，从金库扣除 {2}。
+  outpost-create-success: 已为城镇 {1} 创建前哨 {0}，从金库扣除 {2} {3}。
   outpost-remote-disabled: 远程前哨已禁用，城镇只能扩建现有前哨。
   outpost-amount-exceeded: 小镇 {0} 已达到 {1} 级镇属地上限（{2} 个）。
   town-level-admin-only: 只有 OP 可以设置小镇等级。
   town-level-invalid: 小镇等级必须在 1 到 {0} 之间。
-  town-level-set: 已将小镇 {0} 设置为 {1} 级，镇属地容量为全服 {2} 个 / 单世界 {3} 个。
+  town-level-set: 已将小镇 {0} 设置为 {1} 级，镇属地上限为全服 {2} 个 / 单世界 {3} 个。
   outpost-attach-unavailable: 镇属地 {0} 已无法挂靠，请刷新后重试。
   founding-required: 你名下没有领地：创建城镇需要一个建国前哨位置。
   release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
@@ -746,7 +752,7 @@ town-command-text:
   no-town: 你不属于任何城镇。
   no-managed-town: 你不是任何城镇的镇长或助理。
   town-info: '&b{0} &7（镇长：{1}，成员：{2}，镇属地：{3}，金库：{4}）'
-  town-level-info: '&7小镇等级：&b{0}&7/{1}，镇属地容量：&b全服 {2} 个 / 单世界 {3} 个'
+  town-level-info: '&7小镇等级：&b{0}&7/{1}，镇属地上限：&b全服 {2} 个 / 单世界 {3} 个'
   level-usage: '&b/town level set <小镇> <1-{0}> &7- 设置小镇等级（仅 OP）'
   town-list-entry: '{0}（镇长：{1}）'
   need-points: 请先用选点工具选择两个点。

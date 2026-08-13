@@ -9,6 +9,7 @@ import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.commands.DominionOperateCommand;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
+import cn.lunadeer.dominion.configuration.Limitation;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
@@ -21,6 +22,7 @@ import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.providers.DominionProvider;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.BorderRenderUtil;
+import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -64,6 +66,11 @@ public class DominionProviderHandler extends DominionProvider {
         public String expandFailed = "Expand dominion {0} failed, reason: {1}";
         public String contractSuccess = "Contract dominion {0} success.";
         public String contractFailed = "Contract dominion {0} failed, reason: {1}";
+        public String resizeChargeEstimate = "Estimated resize charge for {0}: {1} {2}.";
+        public String resizeRefundEstimate = "Estimated resize refund for {0}: {1} {2}.";
+        public String townResizeChargeEstimate = "Estimated town-bank charge for {0}: {1} {2}.";
+        public String townResizeRefundEstimate = "Estimated town-bank refund for {0}: {1} {2}.";
+        public String resizeFreeEstimate = "Resize estimate for {0}: no charge or refund.";
 
         public String deleteSuccess = "Delete dominion {0} success.";
         public String deleteFailed = "Delete dominion {0} failed, reason: {1}";
@@ -206,6 +213,10 @@ public class DominionProviderHandler extends DominionProvider {
                 assertWithinParent(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertContainSubs(event.getOperator(), event.getDominion(), event.getNewCuboid());
                 assertDominionIntersect(event.getOperator(), event.getDominion(), event.getNewCuboid());
+                // All ownership/manager and geometry checks passed, so this
+                // preview cannot disclose pricing for an unauthorized land.
+                notifyResizeEstimate(event.getOperator(), event.getDominion(),
+                        event.getOldCuboid(), event.getNewCuboid(), event.isSkipEconomy());
                 if (resizeTown == null && !event.isSkipEconomy()) {
                     assertEconomy(event.getOperator(), event.getOldCuboid(), event.getNewCuboid(),
                             dominion.getParentDomId() != -1);
@@ -233,6 +244,63 @@ public class DominionProviderHandler extends DominionProvider {
                 return null;
             }
         });
+    }
+
+    /**
+     * Show the same pricing policy that the resize transaction will use.
+     * This is deliberately only a preview: all permission, bounds and balance
+     * checks still happen in the existing atomic operation below.
+     */
+    private static void notifyResizeEstimate(@NotNull CommandSender operator,
+                                              @NotNull DominionDTO dominion,
+                                              @NotNull CuboidDTO before,
+                                              @NotNull CuboidDTO after,
+                                              boolean skipEconomy) {
+        if (!(operator instanceof Player player)) return;
+        boolean townOutpost = dominion instanceof DominionDOO doo && doo.isTownOutpost();
+        boolean bypass = Others.bypassLimit(player);
+        double estimate;
+        if (townOutpost) {
+            if (skipEconomy || bypass || !Configuration.town.outpostPricing.enable) {
+                Notification.info(player, Language.dominionProviderHandlerText.resizeFreeEstimate,
+                        dominion.getName());
+                return;
+            }
+            estimate = TownManager.townOutpostPrice(before, after);
+            if (estimate < 0 && dominion instanceof DominionDOO outpost) {
+                long removedGrossCents = Math.round(-estimate * 100.0);
+                long refundableGrossCents = Math.min(outpost.getTownPaidValueCents(), removedGrossCents);
+                estimate = -Math.round(refundableGrossCents
+                        * Configuration.town.outpostPricing.refundRate) / 100.0;
+            }
+        } else {
+            Limitation.Economy economy = Configuration.getPlayerLimitation(player).economy;
+            if (skipEconomy || bypass || !economy.enable
+                    || (dominion.getParentDomId() != -1 && economy.freeForSubs)) {
+                Notification.info(player, Language.dominionProviderHandlerText.resizeFreeEstimate,
+                        dominion.getName());
+                return;
+            }
+            long amount = economy.squareOnly
+                    ? after.minusSquareWith(before)
+                    : after.minusVolumeWith(before);
+            estimate = amount * economy.pricePerBlock;
+            if (estimate < 0) estimate *= economy.refundRate;
+        }
+        if (Math.abs(estimate) < 0.000001) {
+            Notification.info(player, Language.dominionProviderHandlerText.resizeFreeEstimate,
+                    dominion.getName());
+        } else if (estimate > 0) {
+            Notification.info(player, townOutpost
+                            ? Language.dominionProviderHandlerText.townResizeChargeEstimate
+                            : Language.dominionProviderHandlerText.resizeChargeEstimate,
+                    dominion.getName(), estimate, VaultConnect.instance.currencyNamePluralOrEmpty());
+        } else {
+            Notification.info(player, townOutpost
+                            ? Language.dominionProviderHandlerText.townResizeRefundEstimate
+                            : Language.dominionProviderHandlerText.resizeRefundEstimate,
+                    dominion.getName(), -estimate, VaultConnect.instance.currencyNamePluralOrEmpty());
+        }
     }
 
     @Override
