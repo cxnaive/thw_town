@@ -87,6 +87,7 @@ public class TownInfo extends AbstractUI {
         public String memberCountLine = "§7Members: §b{0}";
         public String balanceLine = "§7Bank balance: §b{0}";
         public String levelLine = "§7Town level: §b{0}§7/§b{1} §7- outpost limit: §b{2} total / {3} per world";
+        public String levelTaskDescription = "View the shared town level task and submit items.";
         public String outpostCountLine = "§7Outposts: §b{0}";
         public String yourRoleLine = "§7Your role: §b{0}";
         public String permissionModeLegacy = "§7Permission mode: §6Legacy per-outpost";
@@ -144,6 +145,9 @@ public class TownInfo extends AbstractUI {
                     TownManager.effectiveLevel(town), Configuration.town.maxLevel,
                     formatLimit(TownManager.outpostLimit(town)),
                     formatLimit(TownManager.outpostLimitPerWorld(town)))));
+            view.add(Line.create()
+                    .append(TownLevelTasks.button(player, town.getName()).build())
+                    .append(TextUserInterface.townInfoTuiText.levelTaskDescription));
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.outpostCountLine,
                     outpostCount(town.getId()))));
             if (role != null) {
@@ -259,7 +263,8 @@ public class TownInfo extends AbstractUI {
                 'i', Material.EXPERIENCE_BOTTLE, "§eTown Level",
                 List.of("§7Level: §b{0}§7/§b{1}",
                         "§7Total outpost limit: §b{2}",
-                        "§7Per-world outpost limit: §b{3}"));
+                        "§7Per-world outpost limit: §b{3}",
+                        "§a▶ Click to view shared task"));
         public ButtonConfiguration createOutpostButton = ButtonConfiguration.createMaterial(
                 'i', Material.GRASS_BLOCK, "§aCreate Outpost",
                 List.of("§7Uses your two selected points.",
@@ -316,13 +321,10 @@ public class TownInfo extends AbstractUI {
                     () -> TownOutposts.show(player, town.getName(), "1"));
             outposts = outposts.setLoreArgs(String.valueOf(outpostCount(town.getId())));
             view = view.addItem(outposts);
-            view = view.addItem(new ChestButton(ChestUserInterface.townInfoCui.levelButton) {
-                @Override
-                public void onClick(ClickType type) {
-                    // Read-only progression summary. Promotion gameplay is TODO;
-                    // OPs use /town level set in the meantime.
-                }
-            }.setLoreArgs(String.valueOf(TownManager.effectiveLevel(town)), String.valueOf(Configuration.town.maxLevel),
+            ChestButton level = nav(player, ChestUserInterface.townInfoCui.levelButton,
+                    () -> TownLevelTasks.show(player, town.getName(), "1"));
+            view = view.addItem(level.setLoreArgs(String.valueOf(TownManager.effectiveLevel(town)),
+                    String.valueOf(Configuration.town.maxLevel),
                     formatLimit(TownManager.outpostLimit(town)),
                     formatLimit(TownManager.outpostLimitPerWorld(town))));
 

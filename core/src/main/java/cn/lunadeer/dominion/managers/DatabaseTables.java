@@ -389,6 +389,32 @@ public class DatabaseTables {
                     .execute();
         }
 
+        // Town progression tasks store cumulative contributions separately
+        // from town.level so members can submit items in multiple batches.
+        // The requirement key lets future task definitions change material
+        // types without accidentally reusing progress from another task.
+        if (!Show.show().tables().execute().contains("town_level_progress")) {
+            Column town_level_progress_id = Column.of(new FieldInteger("id"))
+                    .primary().serial().notNull().unique();
+            Column town_level_progress_town_id = Column.of(new FieldInteger("town_id"))
+                    .notNull().foreign("town", new FieldInteger("id"));
+            Column town_level_progress_target = Column.of(new FieldInteger("target_level"))
+                    .notNull();
+            Column town_level_progress_key = Column.of(new FieldString("requirement_key"))
+                    .notNull();
+            Column town_level_progress_submitted = Column.of(new FieldLong("submitted"))
+                    .notNull().defaultSqlVal("0");
+            Create.create().table("town_level_progress")
+                    .column(town_level_progress_id)
+                    .column(town_level_progress_town_id)
+                    .column(town_level_progress_target)
+                    .column(town_level_progress_key)
+                    .column(town_level_progress_submitted)
+                    .execute();
+        }
+        ensureUniqueIndex("idx_town_level_progress_uk", "town_level_progress",
+                "town_id, target_level, requirement_key");
+
         // 5.1.0 town groups: one town-level definition is mirrored onto
         // each attached outpost in Phase 2.  Keep the definition table
         // independent from dominion_group so the latter can still contain
@@ -708,6 +734,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_level_progress",
             "town_group",
             "town_group_flag",
             "town_group_outpost_override",
@@ -740,6 +767,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_level_progress",
             "town_group",
             "town_group_flag",
             "town_group_outpost_override",

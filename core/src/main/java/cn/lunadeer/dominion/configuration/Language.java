@@ -189,6 +189,7 @@ public class Language extends ConfigurationFile {
 
     public static MultiServerManager.MultiServerManagerText multiServerManagerText = new MultiServerManager.MultiServerManagerText();
     public static TownManager.TownManagerText townManagerText = new TownManager.TownManagerText();
+    public static cn.lunadeer.dominion.managers.TownLevelManager.TownLevelManagerText townLevelManagerText = new cn.lunadeer.dominion.managers.TownLevelManager.TownLevelManagerText();
     public static TownCommand.TownCommandText townCommandText = new TownCommand.TownCommandText();
     public static TownRoleText townRoleText = new TownRoleText();
 

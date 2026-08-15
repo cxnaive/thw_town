@@ -1443,6 +1443,7 @@ town-info-cui:
     - '§7等級: §b{0}§7/§b{1}'
     - '§7全服鎮屬地上限: §b{2}'
     - '§7單世界鎮屬地上限: §b{3}'
+    - §a▶ 點擊查看共同任務
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
@@ -1594,6 +1595,65 @@ town-trusts-cui:
     name: §c« Back
     lore:
     - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-level-tasks-cui:
+  title: '§6✦ §e等級任務：{0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#########'
+    - p#######n
+  overview-item:
+    symbol: i
+    name: §e小鎮等級
+    lore:
+    - '§7目前：§b{0}§7/§b{1}'
+    - '§7成員晉升開放至：§b{2} 級'
+    - '§7鎮屬地上限：§b全服 {3} 個 / 單世界 {4} 個'
+    material: EXPERIENCE_BOTTLE
+  task-item:
+    symbol: i
+    name: §6目標等級 {0}
+    lore:
+    - '§7所需物品：§e{0} x {1}'
+    - '§7共同進度：§a{2}§7/§a{3}'
+    - '§7還需：§e{4}'
+    material: CHEST
+  submit-item:
+    symbol: i
+    name: §a提交任務物品
+    lore:
+    - §7從你的背包中扣除相符物品。
+    - §7支援所有成員分批提交。
+    - §a▶ 點擊提交
+    material: HOPPER
+  open-max-item:
+    symbol: i
+    name: §a目前已完成
+    lore:
+    - §7本鎮已達到目前向成員
+    - §7開放的最高等級。
+    material: EMERALD_BLOCK
+  missing-item:
+    symbol: i
+    name: §c任務尚未開放
+    lore:
+    - §7尚未設定晉升到 {0} 級的任務。
+    material: BARRIER
+  outsider-item:
+    symbol: i
+    name: §7僅限成員
+    lore:
+    - §7只有小鎮成員可以提交任務物品。
+    material: GRAY_DYE
+  back-button:
+    symbol: <
+    name: §c« 返回
+    lore:
+    - §e▶ 點擊返回
     material: RED_STAINED_GLASS_PANE
 town-bank-cui:
   title: §6✦ §eBank of {0} §6✦

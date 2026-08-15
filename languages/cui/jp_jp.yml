@@ -1481,6 +1481,7 @@ town-info-cui:
     - '§7Level: §b{0}§7/§b{1}'
     - '§7Total outpost limit: §b{2}'
     - '§7Per-world outpost limit: §b{3}'
+    - §a▶ 共同任務を表示
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
@@ -1632,6 +1633,65 @@ town-trusts-cui:
     name: §c« Back
     lore:
     - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-level-tasks-cui:
+  title: '§6✦ §eレベル任務：{0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#########'
+    - p#######n
+  overview-item:
+    symbol: i
+    name: §eタウンレベル
+    lore:
+    - '§7現在：§b{0}§7/§b{1}'
+    - '§7メンバー昇格の開放上限：§b{2}'
+    - '§7拠点上限：§b全体 {3} / ワールドごと {4}'
+    material: EXPERIENCE_BOTTLE
+  task-item:
+    symbol: i
+    name: §6目標レベル {0}
+    lore:
+    - '§7必要アイテム：§e{0} x {1}'
+    - '§7共同進捗：§a{2}§7/§a{3}'
+    - '§7残り：§e{4}'
+    material: CHEST
+  submit-item:
+    symbol: i
+    name: §a任務アイテムを提出
+    lore:
+    - §7インベントリから該当アイテムを取り出します。
+    - §7メンバー全員が分割して提出できます。
+    - §a▶ クリックして提出
+    material: HOPPER
+  open-max-item:
+    symbol: i
+    name: §a現在の任務完了
+    lore:
+    - §7現在メンバーに開放されている
+    - §7最高レベルに到達しています。
+    material: EMERALD_BLOCK
+  missing-item:
+    symbol: i
+    name: §c任務未開放
+    lore:
+    - §7レベル {0} の任務は設定されていません。
+    material: BARRIER
+  outsider-item:
+    symbol: i
+    name: §7メンバー限定
+    lore:
+    - §7タウンメンバーだけが任務アイテムを提出できます。
+    material: GRAY_DYE
+  back-button:
+    symbol: <
+    name: §c« 戻る
+    lore:
+    - §e▶ クリックして戻る
     material: RED_STAINED_GLASS_PANE
 town-bank-cui:
   title: §6✦ §eBank of {0} §6✦

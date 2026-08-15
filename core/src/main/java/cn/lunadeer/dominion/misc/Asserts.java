@@ -211,6 +211,11 @@ public class Asserts {
         // Resolve the world up front so a stale/foreign UID still fails with
         // the same user-facing error as the legacy size pipeline.
         toWorld(associatedWorldUid);
+        assertTownOutpostHorizontalSize(cuboid);
+        assertTownOutpostVerticalSize(cuboid);
+    }
+
+    private static void assertTownOutpostHorizontalSize(@NotNull CuboidDTO cuboid) throws DominionException {
         int horizontalMax = Configuration.town.outpostMaxHorizontalSize;
         if (cuboid.xLength() > horizontalMax) {
             throw new DominionException(Language.assertsText.xLengthTooLong, cuboid.xLength(), horizontalMax);
@@ -222,13 +227,16 @@ public class Asserts {
             throw new DominionException(Language.assertsText.xLengthTooShort,
                     cuboid.xLength(), Configuration.town.outpostMinSizeX);
         }
-        if (cuboid.yLength() < Configuration.town.outpostMinSizeY) {
-            throw new DominionException(Language.assertsText.yLengthTooShort,
-                    cuboid.yLength(), Configuration.town.outpostMinSizeY);
-        }
         if (cuboid.zLength() < Configuration.town.outpostMinSizeZ) {
             throw new DominionException(Language.assertsText.zLengthTooShort,
                     cuboid.zLength(), Configuration.town.outpostMinSizeZ);
+        }
+    }
+
+    private static void assertTownOutpostVerticalSize(@NotNull CuboidDTO cuboid) throws DominionException {
+        if (cuboid.yLength() < Configuration.town.outpostMinSizeY) {
+            throw new DominionException(Language.assertsText.yLengthTooShort,
+                    cuboid.yLength(), Configuration.town.outpostMinSizeY);
         }
         if (Configuration.town.outpostMaxSizeY > 0
                 && cuboid.yLength() > Configuration.town.outpostMaxSizeY) {
@@ -253,6 +261,9 @@ public class Asserts {
     public static void assertTownOutpostResizeSize(@NotNull UUID associatedWorldUid,
                                                    @NotNull CuboidDTO before,
                                                    @NotNull CuboidDTO after) throws DominionException {
+        // A resize must still point at a world known to this server even when
+        // its historical vertical range is grandfathered below.
+        toWorld(associatedWorldUid);
         int horizontalMax = Configuration.town.outpostMaxHorizontalSize;
         boolean legacyOversize = before.xLength() > horizontalMax || before.zLength() > horizontalMax;
         boolean horizontalGrowth = after.xLength() > before.xLength() || after.zLength() > before.zLength();
@@ -271,13 +282,21 @@ public class Asserts {
             throw new DominionException(Language.assertsText.zLengthTooLong, after.zLength(), horizontalMax);
         }
 
-        // For an already-oversized horizontal footprint, validate all of the
-        // still-applicable minimum/vertical policy via a cap-only surrogate.
+        // For an already-oversized horizontal footprint, validate the
+        // still-applicable horizontal minimums via a cap-only surrogate.
         CuboidDTO capped = new CuboidDTO(
                 after.x1(), after.y1(), after.z1(),
                 after.x1() + (int) Math.min(after.xLength(), horizontalMax), after.y2(),
                 after.z1() + (int) Math.min(after.zLength(), horizontalMax));
-        assertTownOutpostSize(associatedWorldUid, capped);
+        assertTownOutpostHorizontalSize(capped);
+
+        // Existing outposts may predate the town-wide Y bounds. Horizontal
+        // resize must not force them to change an otherwise untouched Y
+        // range. Once either Y boundary changes, the complete current
+        // vertical policy applies to the resulting range.
+        if (before.y1() != after.y1() || before.y2() != after.y2()) {
+            assertTownOutpostVerticalSize(after);
+        }
     }
 
     /**

@@ -203,6 +203,15 @@ public class Configuration extends ConfigurationFile {
         public boolean outpostAllowRemote = true;
         @Comments("Maximum town level. Promotion rules are reserved for future gameplay; OPs may set it manually.")
         public int maxLevel = 10;
+        @Comments({
+                "Highest level that members may reach through shared town tasks.",
+                "OPs may still set any level up to max-level manually.",
+                "Raise this value when later level tasks are ready to open."
+        })
+        public int progressionMaxLevel = 3;
+        /** Target-level task definitions are loaded from this section manually. */
+        @HandleManually
+        public Map<Integer, TownLevelRequirement> levelRequirements = new LinkedHashMap<>();
         @Comments("Extra outpost limit granted by each level above level 1.")
         public int outpostCountPerLevel = 2;
         @Comments({
@@ -261,6 +270,15 @@ public class Configuration extends ConfigurationFile {
             public double pricePerBlock1500To2000 = 0.0133;
             @Comments("Refund rate when a town outpost is contracted.")
             public double refundRate = 0.85;
+        }
+
+        public static class TownLevelRequirement extends ConfigurationPart {
+            @Comments("Currently supported task type: item")
+            public String type = "item";
+            @Comments("Bukkit material name consumed by this task")
+            public String material = "NETHERITE_INGOT";
+            @Comments("Total amount required for the target level")
+            public int amount = 1;
         }
         @Comments({
                 "What happens to outposts when a town disbands:",
@@ -354,6 +372,76 @@ public class Configuration extends ConfigurationFile {
     @Comments("Performance recorder, don't open this unless you are debugging.")
     public static boolean timer = false;
 
+    private static final String TOWN_LEVEL_REQUIREMENTS_KEY = "town.level-requirements";
+
+    @PreProcess(priority = -10)
+    public void prepareTownLevelRequirements() throws Exception {
+        town.levelRequirements.clear();
+        if (getYaml().contains(TOWN_LEVEL_REQUIREMENTS_KEY)) return;
+
+        getYaml().createSection(TOWN_LEVEL_REQUIREMENTS_KEY);
+        getYaml().setComments(TOWN_LEVEL_REQUIREMENTS_KEY, List.of(
+                "Shared town tasks keyed by the TARGET level.",
+                "Members may contribute the configured item in multiple batches.",
+                "Removing a target level disables player progression to that level."
+        ));
+        Town.TownLevelRequirement level2 = new Town.TownLevelRequirement();
+        level2.material = "NETHERITE_INGOT";
+        level2.amount = 9;
+        ConfigurationManager.writeConfigurationPart(getYaml(), level2,
+                TOWN_LEVEL_REQUIREMENTS_KEY + ".2");
+
+        Town.TownLevelRequirement level3 = new Town.TownLevelRequirement();
+        level3.material = "SCULK_CATALYST";
+        level3.amount = 32;
+        ConfigurationManager.writeConfigurationPart(getYaml(), level3,
+                TOWN_LEVEL_REQUIREMENTS_KEY + ".3");
+    }
+
+    @PostProcess(priority = 1)
+    public void loadTownLevelRequirements() {
+        town.levelRequirements.clear();
+        org.bukkit.configuration.ConfigurationSection section =
+                getYaml().getConfigurationSection(TOWN_LEVEL_REQUIREMENTS_KEY);
+        if (section == null) return;
+
+        for (String key : section.getKeys(false)) {
+            try {
+                int targetLevel = Integer.parseInt(key);
+                if (targetLevel < 2 || targetLevel > town.maxLevel) {
+                    XLogger.warn("Ignoring town level requirement for invalid target level: {0}", key);
+                    continue;
+                }
+                Town.TownLevelRequirement requirement = new Town.TownLevelRequirement();
+                ConfigurationManager.readConfigurationPart(getYaml(), requirement,
+                        TOWN_LEVEL_REQUIREMENTS_KEY + "." + key);
+                requirement.type = requirement.type == null
+                        ? "item" : requirement.type.trim().toLowerCase(Locale.ROOT);
+                if (!requirement.type.equals("item")) {
+                    XLogger.warn("Ignoring unsupported town level requirement type {0} for level {1}.",
+                            requirement.type, targetLevel);
+                    continue;
+                }
+                Material material = Material.matchMaterial(requirement.material == null
+                        ? "" : requirement.material.trim());
+                if (material == null || material.isAir() || !material.isItem()) {
+                    XLogger.warn("Ignoring invalid town level requirement material {0} for level {1}.",
+                            requirement.material, targetLevel);
+                    continue;
+                }
+                if (requirement.amount <= 0) {
+                    XLogger.warn("Ignoring non-positive town level requirement amount {0} for level {1}.",
+                            requirement.amount, targetLevel);
+                    continue;
+                }
+                requirement.material = material.name();
+                town.levelRequirements.put(targetLevel, requirement);
+            } catch (Exception e) {
+                XLogger.warn("Failed to load town level requirement {0}: {1}", key, e.getMessage());
+            }
+        }
+    }
+
     @PostProcess
     public static void checkConfigurationParams() {
         if (database.type.equalsIgnoreCase("sqlite") && multiServer.enable) {
@@ -395,6 +483,14 @@ public class Configuration extends ConfigurationFile {
         if (town.maxLevel < 1) {
             XLogger.warn("Invalid town max-level: {0}; resetting to 10.", town.maxLevel);
             town.maxLevel = 10;
+        }
+        if (town.progressionMaxLevel < 1) {
+            XLogger.warn("Invalid town progression-max-level: {0}; resetting to 3.",
+                    town.progressionMaxLevel);
+            town.progressionMaxLevel = 3;
+        }
+        if (town.progressionMaxLevel > town.maxLevel) {
+            town.progressionMaxLevel = town.maxLevel;
         }
         if (town.outpostCountPerLevel < 0) {
             XLogger.warn("Invalid town outpost-count-per-level: {0}; resetting to 2.",

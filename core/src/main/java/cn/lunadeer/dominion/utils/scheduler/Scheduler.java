@@ -123,7 +123,8 @@ public class Scheduler {
         if (instance.isPaper) {
             return new PaperTask(entity.getScheduler().run(instance.plugin, (plugin) -> task.run(), null));
         } else {
-            return new SpigotTask(instance.plugin.getServer().getScheduler().runTaskAsynchronously(instance.plugin, task));
+            // Bukkit entity/inventory access must stay on the primary thread.
+            return new SpigotTask(instance.plugin.getServer().getScheduler().runTask(instance.plugin, task));
         }
     }
 }

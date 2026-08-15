@@ -1480,6 +1480,7 @@ town-info-cui:
     - §7等级：§b{0}§7/§b{1}
     - §7全服镇属地上限：§b{2}
     - §7单世界镇属地上限：§b{3}
+    - §a▶ 点击查看共同任务
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
@@ -1683,6 +1684,65 @@ outpost-trusts-cui:
     - §7授权一名玩家（仅此属地）。
     - §a▶ 点击添加
     material: WRITABLE_BOOK
+  back-button:
+    symbol: <
+    name: §c« 返回
+    lore:
+    - §e▶ 点击返回
+    material: RED_STAINED_GLASS_PANE
+town-level-tasks-cui:
+  title: '§6✦ §e等级任务：{0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#########'
+    - p#######n
+  overview-item:
+    symbol: i
+    name: §e小镇等级
+    lore:
+    - '§7当前：§b{0}§7/§b{1}'
+    - '§7成员晋升开放至：§b{2} 级'
+    - '§7镇属地上限：§b全服 {3} 个 / 单世界 {4} 个'
+    material: EXPERIENCE_BOTTLE
+  task-item:
+    symbol: i
+    name: §6目标等级 {0}
+    lore:
+    - '§7所需物品：§e{0} x {1}'
+    - '§7共同进度：§a{2}§7/§a{3}'
+    - '§7还需：§e{4}'
+    material: CHEST
+  submit-item:
+    symbol: i
+    name: §a提交任务物品
+    lore:
+    - §7从你的背包中扣除匹配物品。
+    - §7支持所有成员分批提交。
+    - §a▶ 点击提交
+    material: HOPPER
+  open-max-item:
+    symbol: i
+    name: §a当前已完成
+    lore:
+    - §7本镇已经达到目前向成员
+    - §7开放的最高等级。
+    material: EMERALD_BLOCK
+  missing-item:
+    symbol: i
+    name: §c任务尚未开放
+    lore:
+    - §7尚未配置晋升到 {0} 级的任务。
+    material: BARRIER
+  outsider-item:
+    symbol: i
+    name: §7仅限成员
+    lore:
+    - §7只有小镇成员可以提交任务物品。
+    material: GRAY_DYE
   back-button:
     symbol: <
     name: §c« 返回

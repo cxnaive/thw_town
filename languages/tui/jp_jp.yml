@@ -162,6 +162,7 @@ town-info-tui-text:
   member-count-line: '§7Members: §b{0}'
   balance-line: '§7Bank balance: §b{0}'
   level-line: '§7Town level: §b{0}§7/§b{1} §7- outpost limit: §b{2} total / {3} per world'
+  level-task-description: タウン共同レベル任務を確認し、アイテムを提出します。
   outpost-count-line: '§7Outposts: §b{0}'
   your-role-line: '§7Your role: §b{0}'
   members-button: MEMBERS
@@ -180,6 +181,19 @@ town-info-tui-text:
   leave-description: Leave this town (land stays).
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
+town-level-tasks-tui-text:
+  title: '{0} のレベル任務'
+  button: レベル任務
+  level-line: '§7現在のレベル：§b{0}§7/§b{1}'
+  open-level-line: '§7メンバー昇格の開放上限：§b{0}'
+  capacity-line: '§7拠点上限：§b全体 {0} / ワールドごと {1}'
+  task-line: '§7目標レベル：§b{0} §7- 必要アイテム：§e{1} x {2}'
+  progress-line: '§7共同進捗：§a{0}§7/§a{1} §7（残り {2}）'
+  submit-button: アイテム提出
+  submit-description: インベントリから該当アイテムを共同任務へ提出します。
+  open-max-line: §aこのタウンは現在メンバーに開放されている最高レベルです。
+  missing-line: §c目標レベル {0} の共同任務は設定されていません。
+  outsider-line: §7タウンメンバーだけが任務アイテムを提出できます。
 town-members-tui-text:
   title: Members of {0}
   button: MEMBERS

@@ -76,6 +76,7 @@ public class TextUserInterface extends ConfigurationFile {
     public static cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsTuiText outpostTrustsTuiText = new cn.lunadeer.dominion.uis.town.OutpostTrusts.OutpostTrustsTuiText();
     public static cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText townBankTuiText = new cn.lunadeer.dominion.uis.town.TownBank.TownBankTuiText();
     public static cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsTuiText townOutpostsTuiText = new cn.lunadeer.dominion.uis.town.TownOutposts.TownOutpostsTuiText();
+    public static cn.lunadeer.dominion.uis.town.TownLevelTasks.TownLevelTasksTuiText townLevelTasksTuiText = new cn.lunadeer.dominion.uis.town.TownLevelTasks.TownLevelTasksTuiText();
 
     @PostProcess
     public void postProcess() {

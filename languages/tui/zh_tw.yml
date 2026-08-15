@@ -164,6 +164,7 @@ town-info-tui-text:
   member-count-line: '§7Members: §b{0}'
   balance-line: '§7Bank balance: §b{0}'
   level-line: '§7小鎮等級: §b{0}§7/§b{1} §7- 鎮屬地上限: §b全服 {2} 個 / 單世界 {3} 個'
+  level-task-description: 查看小鎮共同等級任務並提交物品。
   outpost-count-line: '§7鎮屬地: §b{0}'
   your-role-line: '§7Your role: §b{0}'
   members-button: MEMBERS
@@ -182,6 +183,19 @@ town-info-tui-text:
   leave-description: Leave this town (land stays).
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
+town-level-tasks-tui-text:
+  title: '{0} 的等級任務'
+  button: 等級任務
+  level-line: '§7目前等級：§b{0}§7/§b{1}'
+  open-level-line: '§7成員晉升目前開放至：§b{0} 級'
+  capacity-line: '§7鎮屬地上限：§b全服 {0} 個 / 單世界 {1} 個'
+  task-line: '§7目標等級：§b{0} §7- 所需物品：§e{1} x {2}'
+  progress-line: '§7共同進度：§a{0}§7/§a{1} §7（還需 {2}）'
+  submit-button: 提交物品
+  submit-description: 從背包提交相符物品，支援所有成員分批貢獻。
+  open-max-line: §a本鎮已達到目前向成員開放的最高等級。
+  missing-line: §c尚未設定晉升到 {0} 級的共同任務。
+  outsider-line: §7只有小鎮成員可以提交任務物品。
 town-members-tui-text:
   title: Members of {0}
   button: MEMBERS

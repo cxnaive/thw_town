@@ -170,6 +170,7 @@ town-info-tui-text:
   member-count-line: '§7成员数: §b{0}'
   balance-line: '§7镇库余额: §b{0}'
   level-line: '§7小镇等级: §b{0}§7/§b{1} §7- 镇属地上限: §b全服 {2} 个 / 单世界 {3} 个'
+  level-task-description: 查看小镇共同等级任务并提交物品。
   outpost-count-line: '§7镇属地: §b{0}'
   your-role-line: '§7你的角色: §b{0}'
   permission-mode-legacy: §7权限模式：§6旧版属地独立权限
@@ -198,6 +199,19 @@ town-info-tui-text:
   leave-description: 退出本镇（领地留镇）。
   disband-button: 解散
   disband-description: 解散本镇（需确认）。
+town-level-tasks-tui-text:
+  title: '{0} 的等级任务'
+  button: 等级任务
+  level-line: '§7当前等级：§b{0}§7/§b{1}'
+  open-level-line: '§7成员晋升目前开放至：§b{0} 级'
+  capacity-line: '§7镇属地上限：§b全服 {0} 个 / 单世界 {1} 个'
+  task-line: '§7目标等级：§b{0} §7- 所需物品：§e{1} x {2}'
+  progress-line: '§7共同进度：§a{0}§7/§a{1} §7（还需 {2}）'
+  submit-button: 提交物品
+  submit-description: 从背包中提交匹配物品，支持所有成员分批贡献。
+  open-max-line: §a本镇已达到目前向成员开放的最高等级。
+  missing-line: §c尚未配置晋升到 {0} 级的共同任务。
+  outsider-line: §7只有小镇成员可以提交任务物品。
 town-members-tui-text:
   title: '{0} 的成员'
   button: 成员

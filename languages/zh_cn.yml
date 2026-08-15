@@ -691,6 +691,18 @@ town-manager-text:
   outpost-admin-not-member: 次级管理员必须是城镇 {0} 的成员。
   merge-member-trusted: 你在 {1} 的成员身份已转为该属地的 Trust 授权（该领地已挂靠小镇）。
   town-group-display-name: 小镇成员
+town-level-manager-text:
+  member-only: 只有 {0} 的小镇成员可以为等级任务提交物品。
+  progression-closed: 小镇 {0} 当前为 {1} 级，成员晋升目前只开放到 {2} 级。
+  requirement-missing: 尚未配置晋升到小镇 {0} 级的共同任务。
+  no-items: 你的背包中没有可提交的 {0}。
+  contribution-accepted: 已向 {2} 的 {3} 级任务提交 {0} x {1}（共同进度 {4}/{5}）。
+  contribution-failed-refunded: 提交进度保存失败，已返还扣除的物品：{0}
+  contribution-changed: 提交期间小镇任务已发生变化，物品已返还。
+  level-up: 小镇 {0} 已升到 {1} 级！镇属地上限：全服 {2} 个 / 单世界 {3} 个。
+  dropped-refund: 你的背包空间不足，返还的 {0} 个物品已掉落在脚下。
+  netherite-ingot: 下界合金锭
+  sculk-catalyst: 幽匿催发体
 town-command-text:
   disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
   disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。
@@ -729,6 +741,8 @@ town-command-text:
 
     &b/town release <领地> [confirm] &7- 镇长归还贡献领地（OP 可仲裁）
 
+    &b/town level [submit] &7- 查看共同等级任务或提交背包物品
+
     &b/town level set <小镇> <等级> &7- 设置小镇等级（仅 OP）
 
     &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
@@ -754,6 +768,7 @@ town-command-text:
   town-info: '&b{0} &7（镇长：{1}，成员：{2}，镇属地：{3}，金库：{4}）'
   town-level-info: '&7小镇等级：&b{0}&7/{1}，镇属地上限：&b全服 {2} 个 / 单世界 {3} 个'
   level-usage: '&b/town level set <小镇> <1-{0}> &7- 设置小镇等级（仅 OP）'
+  level-task-usage: '&b/town level [submit] &7- 查看共同任务或提交背包中的匹配物品'
   town-list-entry: '{0}（镇长：{1}）'
   need-points: 请先用选点工具选择两个点。
   player-not-found: 找不到玩家 {0}。

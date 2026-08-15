@@ -254,6 +254,9 @@ default/VIP limitation 完全解耦：
 - 数量：小镇持久化 `level`（默认 1，当前最高 10），1 级使用
   `outpost-max-count` / `outpost-max-count-per-world` 的基础额度 3，之后每级按
   `outpost-count-per-level: 2` 增加，公式为 `3 + (level - 1) * 2`；
+  成员共同任务目前开放至 3 级：1→2 共同提交 9 个下界合金锭，2→3 共同提交
+  32 个幽匿催发体；提交进度持久化且允许全体成员分批贡献，OP 仍可在 1～10
+  之间直接设置等级；
   Founding/贡献/新建全部计入，远程新建和挂靠都会校验；已有老镇若超过等级上限，
   不删除现有领地，只阻止继续增加；
 - 不与任何 Dominion 重叠（常规重叠检查）；
@@ -476,7 +479,17 @@ town:
   founding-max-size: 32                  # Founding Outpost 单边上限
 
   outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
-  max-level: 10                          # 小镇最高等级；晋升玩法 TODO，OP 可手动设置
+  max-level: 10                          # 系统最高等级；OP 可手动设置
+  progression-max-level: 3              # 当前向成员共同任务开放的最高等级
+  level-requirements:                    # key 是目标等级；支持全体成员分批提交
+    2:
+      type: item
+      material: NETHERITE_INGOT
+      amount: 9
+    3:
+      type: item
+      material: SCULK_CATALYST
+      amount: 32
   outpost-count-per-level: 2             # 每高一级增加的属地上限
   outpost-max-count: 3                   # 1 级全服基础属地上限，-1 无限
   outpost-max-count-per-world: 3         # 1 级单世界基础属地上限，-1 无限

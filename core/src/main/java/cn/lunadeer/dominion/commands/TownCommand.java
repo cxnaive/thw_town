@@ -12,6 +12,7 @@ import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.managers.TownLevelManager;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
@@ -63,6 +64,7 @@ public class TownCommand implements TabExecutor {
                 + "&b/town admin <outpost> [player] &7- set/clear the outpost admin\n"
                 + "&b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)\n"
                 + "&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n"
+                + "&b/town level [submit] &7- view the shared level task or submit inventory items\n"
                 + "&b/town level set <town> <level> &7- set town level (OP only)\n"
                 + "&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n"
                 + "&b/town untrust <player> [town|outpost <name>]\n"
@@ -88,6 +90,7 @@ public class TownCommand implements TabExecutor {
         public String townInfo = "&b{0} &7(mayor: {1}, members: {2}, outposts: {3}, bank: {4})";
         public String townLevelInfo = "&7Town level: &b{0}&7/{1}, outpost limit: &b{2} total / {3} per world";
         public String levelUsage = "&b/town level set <town> <1-{0}> &7- set town level (OP only)";
+        public String levelTaskUsage = "&b/town level [submit] &7- view the shared task or submit matching inventory items";
         public String townListEntry = "{0} (mayor: {1})";
         public String needPoints = "Select two points with the select tool first.";
         public String playerNotFound = "Player {0} not found.";
@@ -655,6 +658,26 @@ public class TownCommand implements TabExecutor {
     }
 
     private void handleLevel(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        if (args.length == 1) {
+            if (sender instanceof Player player) {
+                TownDOO town = resolveOwnTown(sender);
+                cn.lunadeer.dominion.uis.town.TownLevelTasks.show(
+                        player, town.getName(), "1");
+            } else {
+                Notification.info(sender, Language.townCommandText.levelTaskUsage);
+                Notification.info(sender, Language.townCommandText.levelUsage,
+                        Configuration.town.maxLevel);
+            }
+            return;
+        }
+        if (args[1].equalsIgnoreCase("submit")) {
+            Player player = requirePlayer(sender);
+            TownDOO town = resolveOwnTown(sender);
+            TownLevelManager.contributeFromInventory(player, town,
+                    () -> cn.lunadeer.dominion.uis.town.TownLevelTasks.show(
+                            player, town.getName(), "1"));
+            return;
+        }
         if (!sender.isOp()) {
             throw new cn.lunadeer.dominion.misc.DominionException(
                     Language.townManagerText.townLevelAdminOnly);
@@ -814,7 +837,7 @@ public class TownCommand implements TabExecutor {
             if (!canUseReleaseCommand(sender)) {
                 visible.remove("release");
             }
-            if (!sender.isOp()) {
+            if (!(sender instanceof Player) && !sender.isOp()) {
                 visible.remove("level");
             }
             filter(visible, args[0], suggestions);
@@ -840,7 +863,10 @@ public class TownCommand implements TabExecutor {
                 case "release" -> filter(releasableOutpostNames(sender), args[1], suggestions);
                 case "upgrade" -> filter(List.of("confirm"), args[1], suggestions);
                 case "level" -> {
-                    if (sender.isOp()) filter(List.of("set"), args[1], suggestions);
+                    List<String> options = new ArrayList<>();
+                    if (sender instanceof Player) options.add("submit");
+                    if (sender.isOp()) options.add("set");
+                    filter(options, args[1], suggestions);
                 }
                 case "group" -> filter(GROUP_SUB_COMMANDS, args[1], suggestions);
             }

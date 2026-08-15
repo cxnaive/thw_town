@@ -662,6 +662,18 @@ town-manager-text:
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
   town-group-display-name: Town Members
+town-level-manager-text:
+  member-only: 只有 {0} 的小鎮成員可以為等級任務提交物品。
+  progression-closed: 小鎮 {0} 目前為 {1} 級，成員晉升目前只開放到 {2} 級。
+  requirement-missing: 尚未設定晉升到小鎮 {0} 級的共同任務。
+  no-items: 你的背包中沒有可提交的 {0}。
+  contribution-accepted: 已向 {2} 的 {3} 級任務提交 {0} x {1}（共同進度 {4}/{5}）。
+  contribution-failed-refunded: 提交進度儲存失敗，已返還扣除的物品：{0}
+  contribution-changed: 提交期間小鎮任務已發生變化，物品已返還。
+  level-up: 小鎮 {0} 已升到 {1} 級！鎮屬地上限：全服 {2} 個 / 單世界 {3} 個。
+  dropped-refund: 你的背包空間不足，返還的 {0} 個物品已掉落在腳下。
+  netherite-ingot: 獄髓錠
+  sculk-catalyst: 伏聆振測體
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
@@ -694,6 +706,8 @@ town-command-text:
 
     &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
 
+    &b/town level [submit] &7- 查看共同等級任務或提交背包物品
+
     &b/town level set <town> <level> &7- set town level (OP only)
 
     &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
@@ -714,6 +728,7 @@ town-command-text:
   town-info: '&b{0} &7（鎮長：{1}，成員：{2}，鎮屬地：{3}，金庫：{4}）'
   town-level-info: '&7小鎮等級：&b{0}&7/{1}，鎮屬地上限：&b全服 {2} 個 / 單世界 {3} 個'
   level-usage: '&b/town level set <town> <1-{0}> &7- set town level (OP only)'
+  level-task-usage: '&b/town level [submit] &7- 查看共同任務或提交背包中的相符物品'
   town-list-entry: '{0} (mayor: {1})'
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.

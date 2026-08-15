@@ -1501,6 +1501,7 @@ town-info-cui:
     - '§7Level: §b{0}§7/§b{1}'
     - '§7Total outpost limit: §b{2}'
     - '§7Per-world outpost limit: §b{3}'
+    - §a▶ Click to view shared task
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
@@ -1657,6 +1658,65 @@ town-trusts-cui:
     - §7Manage this outpost's trusts.
     - §a▶ Click to open
     material: GRASS_BLOCK
+  back-button:
+    symbol: <
+    name: §c« Back
+    lore:
+    - §e▶ Click to go back
+    material: RED_STAINED_GLASS_PANE
+town-level-tasks-cui:
+  title: '§6✦ §eLevel Task: {0} §6✦'
+  list-configuration:
+    item-symbol: i
+    layout:
+    - <########
+    - '#iiiiiii#'
+    - '#iiiiiii#'
+    - '#########'
+    - p#######n
+  overview-item:
+    symbol: i
+    name: §eTown Level
+    lore:
+    - '§7Current: §b{0}§7/§b{1}'
+    - '§7Member progression open through: §b{2}'
+    - '§7Outpost limit: §b{3} total / {4} per world'
+    material: EXPERIENCE_BOTTLE
+  task-item:
+    symbol: i
+    name: §6Target Level {0}
+    lore:
+    - '§7Required: §e{0} x {1}'
+    - '§7Shared progress: §a{2}§7/§a{3}'
+    - '§7Remaining: §e{4}'
+    material: CHEST
+  submit-item:
+    symbol: i
+    name: §aSubmit Task Items
+    lore:
+    - §7Takes matching items from your inventory.
+    - §7Partial submissions are allowed.
+    - §a▶ Click to submit
+    material: HOPPER
+  open-max-item:
+    symbol: i
+    name: §aCurrently Complete
+    lore:
+    - §7This town has reached the highest level
+    - §7currently open to members.
+    material: EMERALD_BLOCK
+  missing-item:
+    symbol: i
+    name: §cTask Not Open
+    lore:
+    - §7No task is configured for target level {0}.
+    material: BARRIER
+  outsider-item:
+    symbol: i
+    name: §7Members Only
+    lore:
+    - §7Only town members may submit task items.
+    material: GRAY_DYE
   back-button:
     symbol: <
     name: §c« Back
