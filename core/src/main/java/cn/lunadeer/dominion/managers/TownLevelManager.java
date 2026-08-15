@@ -6,9 +6,11 @@ import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +23,9 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** Shared, persistent item contributions used to advance town levels. */
 public final class TownLevelManager {
@@ -71,6 +76,17 @@ public final class TownLevelManager {
             return new RemovedItems(List.of(), 0);
         }
     }
+
+    private record RefundDelivery(@NotNull List<ItemStack> pending, int dropped) {
+    }
+
+    /**
+     * Refunds waiting for a player who left while the async database step was
+     * in flight. The queue is drained on the player's entity thread and on
+     * the next join, so a retired Folia entity cannot consume a refund.
+     */
+    private static final ConcurrentHashMap<UUID, List<ItemStack>> pendingRefunds =
+            new ConcurrentHashMap<>();
 
     public static @NotNull ProgressSnapshot snapshot(@NotNull TownDOO town) throws Exception {
         int current = TownManager.effectiveLevel(town);
@@ -150,26 +166,43 @@ public final class TownLevelManager {
                                             @NotNull ProgressSnapshot task,
                                             @NotNull RemovedItems removed,
                                             @Nullable Runnable after) {
+        Configuration.Town.TownLevelRequirement requirement =
+                Configuration.town.levelRequirements.get(task.targetLevel());
+        if (requirement == null || task.material() == null
+                || !task.material().name().equals(requirement.material)) {
+            refundAndNotify(player, removed,
+                    Language.townLevelManagerText.contributionChanged, after);
+            return;
+        }
+        ContributionResult result;
         try {
-            Configuration.Town.TownLevelRequirement requirement =
-                    Configuration.town.levelRequirements.get(task.targetLevel());
-            if (requirement == null || task.material() == null
-                    || !task.material().name().equals(requirement.material)) {
-                refundAndNotify(player, removed,
-                        Language.townLevelManagerText.contributionChanged, after);
-                return;
-            }
-            ContributionResult result = recordContribution(town.getId(), task.currentLevel(),
+            result = recordContribution(town.getId(), task.currentLevel(),
                     task.targetLevel(), requirementKey(requirement), requirement.amount, removed.total());
-            int refund = removed.total() - result.accepted();
-            TownDOO upgraded = null;
-            if (result.upgraded()) {
-                CacheManager.instance.getTownCache().reloadNow();
-                upgraded = CacheManager.instance.getTownCache().getTown(town.getId());
-            }
-            TownDOO finalUpgraded = upgraded;
+        } catch (Exception e) {
+            refundAndNotify(player, removed,
+                    Language.townLevelManagerText.contributionFailedRefunded
+                            .replace("{0}", e.getMessage() == null
+                                    ? e.getClass().getSimpleName() : e.getMessage()),
+                    after);
+            return;
+        }
+
+        // recordContribution has committed at this point. Queue any overage
+        // before cache/UI/broadcast work so a player quit cannot lose it.
+        int refund = removed.total() - result.accepted();
+        if (refund > 0) queueRefund(player.getUniqueId(), removed, refund);
+
+        TownDOO upgraded = null;
+        if (result.upgraded() || result.taskChanged()) {
+            CacheManager.instance.getTownCache().reloadNow();
+        }
+        if (result.upgraded()) {
+            upgraded = CacheManager.instance.getTownCache().getTown(town.getId());
+        }
+        TownDOO finalUpgraded = upgraded;
+        try {
             notifyEntity(player, () -> {
-                if (refund > 0) refundItems(player, removed, refund);
+                deliverPendingRefunds(player);
                 if (result.taskChanged()) {
                     Notification.warn(player, Language.townLevelManagerText.contributionChanged);
                 } else if (result.accepted() > 0) {
@@ -179,12 +212,17 @@ public final class TownLevelManager {
                 }
                 if (after != null) after.run();
             });
-            if (finalUpgraded != null) broadcastLevelUp(finalUpgraded, result.resultingLevel());
         } catch (Exception e) {
-            refundAndNotify(player, removed,
-                    Language.townLevelManagerText.contributionFailedRefunded
-                            .replace("{0}", e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()),
-                    after);
+            XLogger.warn("Town level contribution was committed, but player notification failed: {0}",
+                    e.getMessage());
+        }
+        if (finalUpgraded != null) {
+            try {
+                broadcastLevelUp(finalUpgraded, result.resultingLevel());
+            } catch (Exception e) {
+                XLogger.warn("Town level {0} upgrade broadcast failed: {1}",
+                        result.resultingLevel(), e.getMessage());
+            }
         }
     }
 
@@ -192,7 +230,10 @@ public final class TownLevelManager {
                                                                     int targetLevel,
                                                                     @NotNull String requirementKey,
                                                                     int required, int offered) throws Exception {
-        try (Connection conn = DatabaseManager.instance.getConnection()) {
+        Connection conn = DatabaseManager.instance.getConnection();
+        boolean committed = false;
+        try {
+            boolean originalAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
                 // Cross-database row lock: a no-op write serializes concurrent
@@ -214,6 +255,7 @@ public final class TownLevelManager {
                 }
                 if (currentLevel != expectedLevel) {
                     conn.commit();
+                    committed = true;
                     return new ContributionResult(0, 0, false, currentLevel, true);
                 }
 
@@ -274,13 +316,36 @@ public final class TownLevelManager {
                     }
                 }
                 conn.commit();
+                committed = true;
                 return new ContributionResult(accepted, submitted, upgraded,
                         upgraded ? targetLevel : currentLevel, false);
             } catch (Exception e) {
-                conn.rollback();
+                if (!committed) {
+                    try {
+                        conn.rollback();
+                    } catch (Exception rollbackError) {
+                        e.addSuppressed(rollbackError);
+                    }
+                }
                 throw e;
             } finally {
-                conn.setAutoCommit(true);
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (Exception cleanupError) {
+                    // A cleanup failure after commit must not be reported as
+                    // a failed contribution: that would refund committed items.
+                    XLogger.warn("Failed to restore contribution DB connection state: {0}",
+                            cleanupError.getMessage());
+                }
+            }
+        } finally {
+            try {
+                conn.close();
+            } catch (Exception closeError) {
+                // Same commit boundary rule as above. Hikari will retire a
+                // broken connection; the contribution result stays final.
+                XLogger.warn("Failed to close contribution DB connection: {0}",
+                        closeError.getMessage());
             }
         }
     }
@@ -327,36 +392,125 @@ public final class TownLevelManager {
         return new RemovedItems(List.copyOf(removed), wanted - remaining);
     }
 
-    /** Return exact ItemStacks (including metadata), never synthetic copies. */
-    private static void refundItems(@NotNull Player player, @NotNull RemovedItems removed,
-                                    int amount) {
-        if (amount <= 0) return;
+    private static @NotNull List<ItemStack> selectRefundStacks(@NotNull RemovedItems removed, int amount) {
+        if (amount <= 0) return List.of();
         int remaining = amount;
-        int dropped = 0;
+        List<ItemStack> refund = new ArrayList<>();
         for (int i = removed.stacks().size() - 1; i >= 0 && remaining > 0; i--) {
             ItemStack original = removed.stacks().get(i);
             ItemStack stack = original.clone();
-            stack.setAmount(Math.min(original.getAmount(), remaining));
-            Map<Integer, ItemStack> leftovers = player.getInventory().addItem(stack);
-            for (ItemStack leftover : leftovers.values()) {
-                dropped += leftover.getAmount();
-                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
-            }
-            remaining -= stack.getAmount();
+            int take = Math.min(original.getAmount(), remaining);
+            stack.setAmount(take);
+            refund.add(stack);
+            remaining -= take;
         }
-        if (dropped > 0) {
-            Notification.warn(player, Language.townLevelManagerText.droppedRefund, dropped);
+        return List.copyOf(refund);
+    }
+
+    private static @NotNull RefundDelivery refundItemStacks(@NotNull Player player,
+                                                             @NotNull List<ItemStack> stacks) {
+        List<ItemStack> pending = new ArrayList<>();
+        int dropped = 0;
+        for (ItemStack original : stacks) {
+            ItemStack stack = original.clone();
+            Map<Integer, ItemStack> leftovers;
+            try {
+                leftovers = player.getInventory().addItem(stack);
+            } catch (RuntimeException e) {
+                pending.add(original.clone());
+                XLogger.warn("Failed to add a pending town task refund to {0}'s inventory: {1}",
+                        player.getName(), e.getMessage());
+                continue;
+            }
+            for (ItemStack leftover : leftovers.values()) {
+                try {
+                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                    dropped += leftover.getAmount();
+                } catch (RuntimeException e) {
+                    pending.add(leftover.clone());
+                    XLogger.warn("Failed to drop a pending town task refund for {0}: {1}",
+                            player.getName(), e.getMessage());
+                }
+            }
+        }
+        return new RefundDelivery(List.copyOf(pending), dropped);
+    }
+
+    private static void queueRefund(@NotNull UUID playerUuid, @NotNull RemovedItems removed, int amount) {
+        List<ItemStack> refund = selectRefundStacks(removed, amount);
+        if (refund.isEmpty()) return;
+        pendingRefunds.compute(playerUuid, (uuid, existing) -> {
+            List<ItemStack> merged = new ArrayList<>(existing == null ? List.of() : existing);
+            merged.addAll(refund);
+            return List.copyOf(merged);
+        });
+        schedulePendingRefundDelivery(playerUuid);
+    }
+
+    private static void schedulePendingRefundDelivery(@NotNull UUID playerUuid) {
+        Scheduler.runTask(() -> {
+            Player current = Bukkit.getPlayer(playerUuid);
+            if (current == null) return;
+            Scheduler.runEntityTask(() -> deliverPendingRefunds(current), current,
+                    () -> schedulePendingRefundDelivery(playerUuid));
+        });
+    }
+
+    /** Called by the join listener; the actual inventory work is entity-local. */
+    public static void retryPendingRefunds(@NotNull Player player) {
+        Scheduler.runEntityTask(() -> deliverPendingRefunds(player), player);
+    }
+
+    private static void deliverPendingRefunds(@NotNull Player player) {
+        if (!player.isOnline()) return;
+        AtomicInteger dropped = new AtomicInteger();
+        pendingRefunds.computeIfPresent(player.getUniqueId(), (uuid, stacks) -> {
+            RefundDelivery delivery = refundItemStacks(player, stacks);
+            dropped.set(delivery.dropped());
+            return delivery.pending().isEmpty() ? null : delivery.pending();
+        });
+        if (dropped.get() > 0) {
+            Notification.warn(player, Language.townLevelManagerText.droppedRefund, dropped.get());
         }
     }
 
     private static void refundAndNotify(@NotNull Player player,
                                         @NotNull RemovedItems removed, @NotNull String message,
                                         @Nullable Runnable after) {
+        queueRefund(player.getUniqueId(), removed, removed.total());
         notifyEntity(player, () -> {
-            refundItems(player, removed, removed.total());
+            deliverPendingRefunds(player);
             Notification.error(player, message);
             if (after != null) after.run();
         });
+    }
+
+    public static void setLevelByOperator(int townId, int level) throws Exception {
+        try (Connection conn = DatabaseManager.instance.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE town SET level = ? WHERE id = ?")) {
+                    ps.setInt(1, level);
+                    ps.setInt(2, townId);
+                    if (ps.executeUpdate() != 1) {
+                        throw new IllegalStateException("Town no longer exists.");
+                    }
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM town_level_progress WHERE town_id = ? AND target_level > ?")) {
+                    ps.setInt(1, townId);
+                    ps.setInt(2, level);
+                    ps.executeUpdate();
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
     }
 
     private static void broadcastLevelUp(@NotNull TownDOO town, int level) {

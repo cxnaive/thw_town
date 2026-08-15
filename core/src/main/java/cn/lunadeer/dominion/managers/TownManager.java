@@ -1286,11 +1286,13 @@ public class TownManager {
             throw new DominionException(Language.townManagerText.townLevelInvalid,
                     Configuration.town.maxLevel);
         }
-        town.setLevel(level);
+        TownLevelManager.setLevelByOperator(town.getId(), level);
         cache().reloadNow();
+        TownDOO updated = cache().getTown(town.getId());
+        TownDOO effectiveTown = updated == null ? town : updated;
         Notification.info(sender, Language.townManagerText.townLevelSet,
-                town.getName(), level, formatLimit(outpostLimit(town)),
-                formatLimit(outpostLimitPerWorld(town)));
+                effectiveTown.getName(), level, formatLimit(outpostLimit(effectiveTown)),
+                formatLimit(outpostLimitPerWorld(effectiveTown)));
     }
 
     private static @NotNull String formatLimit(int limit) {

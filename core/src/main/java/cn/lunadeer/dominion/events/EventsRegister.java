@@ -43,6 +43,7 @@ public class EventsRegister {
         new SelectPointEventsHandler(plugin);
         new FlyGlowCheckHandler(plugin);
         new FlagRegisterHandler(plugin);
+        new TownLevelRefundHandler(plugin);
     }
 
     public void registerEvents(String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {

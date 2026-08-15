@@ -120,8 +120,16 @@ public class Scheduler {
     }
 
     public static CancellableTask runEntityTask(Runnable task, Entity entity) {
+        return runEntityTask(task, entity, null);
+    }
+
+    /**
+     * Run an entity task, with an optional callback when the entity retires
+     * before the task can run (Paper/Folia only).
+     */
+    public static CancellableTask runEntityTask(Runnable task, Entity entity, Runnable retired) {
         if (instance.isPaper) {
-            return new PaperTask(entity.getScheduler().run(instance.plugin, (plugin) -> task.run(), null));
+            return new PaperTask(entity.getScheduler().run(instance.plugin, (plugin) -> task.run(), retired));
         } else {
             // Bukkit entity/inventory access must stay on the primary thread.
             return new SpigotTask(instance.plugin.getServer().getScheduler().runTask(instance.plugin, task));
