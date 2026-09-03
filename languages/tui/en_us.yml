@@ -21,6 +21,7 @@ dominion-list-tui-text:
   remote-owned-section: Your dominions on other servers.
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
   town-managed-section: Town outposts you manage (all servers).
+  remote-manage-hint: Outpost {0} is on server {1}. Switch to that server to manage it; use TP to travel there.
   town-tag: ' [{0}]'
   title: Your Dominions
   button: DOMINIONS
@@ -29,7 +30,7 @@ dominion-list-tui-text:
   admin-section: Your admin dominions section.
   server-section: Server {0} dominions section.
   legacy-tag: ' (legacy - create or join a town!)'
-  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu); your land will attach as town outposts.
+  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu), then use /town attach to contribute selected land.
 dominion-manage-tui-text:
   release-description: Return contributed land to its contributor (mayor; OP arbitration).
   release-button: RETURN
@@ -37,6 +38,8 @@ dominion-manage-tui-text:
   trusts-description: Manage per-player trust grants of this town outpost.
   title: Manage {0}
   button: MANAGE
+  teleport-button: TP
+  teleport-description: Teleport to this dominion.
   set-tp-button: SET TP
   set-tp-description: Set your current location as tp location.
 set-size-tui-text:
@@ -190,6 +193,8 @@ town-info-tui-text:
   invite-description: Invite a player to join.
   leave-button: LEAVE
   leave-description: Leave this town (land stays).
+  rename-button: RENAME TOWN
+  rename-description: Rename this town (mayor only).
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
 town-level-tasks-tui-text:
@@ -239,7 +244,9 @@ town-outposts-tui-text:
   title: Outposts of {0}
   button: OUTPOSTS
   outpost-line: §b{0} §7- {1} ({2}, server {3})
-  remote-hint: §8(on another server)
+  contributor-tag: ' §7by §e{0}'
+  remote-hint: REMOTE LOCATION
+  remote-action-hint: Outpost {0} is on server {1}, world {2}. Switch to that server to manage it, or use TELEPORT to travel there.
   teleport-button: TELEPORT
 town-template-flags-tui-text:
   title: 'Town Template: {0}'

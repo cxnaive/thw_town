@@ -22,8 +22,8 @@ public class TownCreateInputter {
     public static class TownCreateInputterText extends ConfigurationPart {
         public String button = "CREATE TOWN";
         public String hint = "Enter the new town name.";
-        public String confirmHint = "Type 'confirm' to create the town with the listed land attached.";
-        public String description = "Create a town: your land attaches, or a starter plot (founding outpost) is created around your location.";
+        public String confirmHint = "Type 'confirm' to create the town without automatically attaching the listed land.";
+        public String description = "Create a town. Existing personal land stays personal and can be contributed later with /town attach; landless founders receive a starter outpost.";
     }
 
     public static void createOn(CommandSender sender) {

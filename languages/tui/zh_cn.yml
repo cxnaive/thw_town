@@ -21,6 +21,7 @@ dominion-list-tui-text:
   remote-owned-section: 你在其他服务器的领地。
   town-managed-line: '§b{0} §7- 小镇: {1}, 服务器 {2}'
   town-managed-section: 你管理的镇属地（所有服务器）。
+  remote-manage-hint: 属地 {0} 位于服务器 {1}。管理需要先切换到该服务器；前往属地请使用 TP。
   town-tag: ' [{0}]'
   contributor-tag: ' §7贡献者: §e{0}'
   title: 你的领地列表
@@ -30,7 +31,7 @@ dominion-list-tui-text:
   admin-section: 以下为你拥有管理权限的领地列表
   server-section: 以下为你在服务器 {0} 的领地列表
   legacy-tag: （旧系统——请尽快创建或加入小镇）
-  legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），你的领地会挂靠为镇属地。
+  legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），再使用 /town attach 选择要贡献的领地。
 dominion-manage-tui-text:
   release-description: 将贡献领地归还给原贡献者（镇长操作，OP 可仲裁）。
   release-button: 归还
@@ -38,6 +39,8 @@ dominion-manage-tui-text:
   trusts-description: 管理此镇属前哨的单人 Trust 授权。
   title: 管理领地 {0}
   button: 管理领地
+  teleport-button: 传送
+  teleport-description: 传送到此领地。
   set-tp-button: 设置传送
   set-tp-description: 将你当前所在位置设置为领地传送点。
 set-size-tui-text:
@@ -197,6 +200,8 @@ town-info-tui-text:
   invite-description: 邀请玩家加入。
   leave-button: 退出
   leave-description: 退出本镇（领地留镇）。
+  rename-button: 重命名小镇
+  rename-description: 修改小镇名称（仅镇长）。
   disband-button: 解散
   disband-description: 解散本镇（需确认）。
 town-level-tasks-tui-text:
@@ -257,7 +262,8 @@ town-outposts-tui-text:
   button: 前哨
   outpost-line: §b{0} §7- {1} ({2}, 服务器 {3})
   contributor-tag: ' §7贡献者: §e{0}'
-  remote-hint: §8（在另一个服务器）
+  remote-hint: 查看远端位置
+  remote-action-hint: 属地 {0} 位于服务器 {1}、世界 {2}。管理需要先切换到对应服务器；需要前往时请点击“传送”。
   teleport-button: 传送
 town-attach-selector-tui-text:
   title: 选择挂靠领地到 {0}

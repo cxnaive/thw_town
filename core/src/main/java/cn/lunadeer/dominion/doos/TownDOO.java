@@ -138,8 +138,12 @@ public class TownDOO {
     }
 
     public @NotNull TownDOO setName(@NotNull String newName) throws SQLException {
+        FieldString updatedName = new FieldString("name", newName);
+        int affected = Update.update("town").set(updatedName).where("id = ?", id.getValue()).execute();
+        if (affected != 1) {
+            throw new SQLException("Town name update affected " + affected + " rows for town " + id.getValue());
+        }
         this.name.setValue(newName);
-        Update.update("town").set(this.name).where("id = ?", id.getValue()).execute();
         return this;
     }
 

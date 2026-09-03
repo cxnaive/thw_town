@@ -6,11 +6,14 @@ import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.managers.WorldMapManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.dominion.DominionManage;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
+import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import cn.lunadeer.dominion.utils.scui.ChestButton;
 import cn.lunadeer.dominion.utils.scui.ChestListView;
 import cn.lunadeer.dominion.utils.scui.ChestUserInterfaceManager;
@@ -26,8 +29,11 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static cn.lunadeer.dominion.Dominion.defaultPermission;
 import static cn.lunadeer.dominion.misc.Converts.toIntegrity;
@@ -36,7 +42,8 @@ import static cn.lunadeer.dominion.utils.Misc.formatString;
 /**
  * Outposts of a town, across every backend server (plan §13.3/§13.5).
  * Entries on THIS server open the (town-aware) DominionManage page;
- * entries on other servers are display-only with their server id.
+ * entries on other servers display their database-mapped location, support
+ * cross-server teleportation, and require switching servers only to manage.
  */
 public class TownOutposts extends AbstractUI {
 
@@ -44,19 +51,38 @@ public class TownOutposts extends AbstractUI {
         TownOutposts ui = new TownOutposts();
         // cross-server outposts come from the database — prefetch async,
         // render on the main thread (TownUI thread discipline, §13.5)
-        cn.lunadeer.dominion.utils.scheduler.Scheduler.runTaskAsync(() -> {
+        Scheduler.runTaskAsync(() -> {
             try {
                 ui.prefetched = DominionDOO.selectByTownId(TownManager.requireTown(townName).getId());
             } catch (Exception e) {
-                Notification.error(sender, e);
+                runForSender(sender, () -> Notification.error(sender, e));
                 return;
             }
-            cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
-                    () -> ui.displayByPreference(sender, townName, pageStr));
+            try {
+                ui.prefetchedWorldNames = WorldMapManager.getWorldNames();
+            } catch (Exception ignored) {
+                // Location labels retain a UUID fallback.
+            }
+            try {
+                ui.prefetchedServerNames = MultiServerManager.instance.getServerNames();
+            } catch (Exception ignored) {
+                // Server labels retain an ID fallback.
+            }
+            runForSender(sender, () -> ui.displayByPreference(sender, townName, pageStr));
         });
     }
 
     private List<DominionDOO> prefetched;
+    private Map<Integer, Map<UUID, String>> prefetchedWorldNames = Map.of();
+    private Map<Integer, String> prefetchedServerNames = Map.of();
+
+    private static void runForSender(@NotNull CommandSender sender, @NotNull Runnable task) {
+        if (sender instanceof Player player) {
+            Scheduler.runEntityTask(task, player);
+        } else {
+            Scheduler.runTask(task);
+        }
+    }
 
     private List<DominionDOO> outposts(Integer townId) throws Exception {
         return prefetched != null ? prefetched : DominionDOO.selectByTownId(townId);
@@ -71,9 +97,32 @@ public class TownOutposts extends AbstractUI {
         }.needPermission(defaultPermission);
     }
 
-    private static String worldLabel(DominionDOO dominion) {
-        World world = Bukkit.getWorld(dominion.getWorldUid());
-        return world != null ? world.getName() : "#" + dominion.getWorldUid().toString().substring(0, 8);
+    private String worldLabel(DominionDOO dominion) {
+        if (isLocal(dominion)) {
+            World world = Bukkit.getWorld(dominion.getWorldUid());
+            if (world != null) {
+                return world.getName();
+            }
+        }
+        String mappedName = prefetchedWorldNames
+                .getOrDefault(dominion.getServerId(), Map.of())
+                .get(dominion.getWorldUid());
+        return mappedName != null
+                ? mappedName
+                : "#" + dominion.getWorldUid().toString().substring(0, 8);
+    }
+
+    private String serverLabel(DominionDOO dominion) {
+        String name = prefetchedServerNames.get(dominion.getServerId());
+        if (name == null && isLocal(dominion)) {
+            name = Configuration.multiServer.serverName;
+        }
+        return MultiServerManager.formatServerLabel(dominion.getServerId(), name);
+    }
+
+    private void notifyRemote(Player player, DominionDOO dominion) {
+        Notification.warn(player, TextUserInterface.townOutpostsTuiText.remoteActionHint,
+                dominion.getName(), serverLabel(dominion), worldLabel(dominion));
     }
 
     private static boolean isLocal(DominionDOO dominion) {
@@ -87,7 +136,8 @@ public class TownOutposts extends AbstractUI {
         public String button = "OUTPOSTS";
         public String outpostLine = "§b{0} §7- {1} ({2}, server {3})";
         public String contributorTag = " §7by §e{0}";
-        public String remoteHint = "§8(on another server)";
+        public String remoteHint = "REMOTE LOCATION";
+        public String remoteActionHint = "Outpost {0} is on server {1}, world {2}. Switch to that server to manage it, or use TELEPORT to travel there.";
         public String teleportButton = "TELEPORT";
     }
 
@@ -113,7 +163,8 @@ public class TownOutposts extends AbstractUI {
                 Line line = Line.create();
                 // manage entry only with real authority — this page is
                 // publicly browsable via the town list
-                if (isLocal(outpost) && cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, outpost)) {
+                boolean local = isLocal(outpost);
+                if (local && cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, outpost)) {
                     line.append(new FunctionalButton(outpost.getName()) {
                         @Override
                         public void function() {
@@ -124,20 +175,24 @@ public class TownOutposts extends AbstractUI {
                     line.append(outpost.getName());
                 }
                 line.append(formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
-                        "", worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId()));
+                        "", worldLabel(outpost), outpost.getClaimKind(), serverLabel(outpost)));
                 line.append(contributorTag(outpost));
-                if (!isLocal(outpost)) {
-                    line.append(TextUserInterface.townOutpostsTuiText.remoteHint);
-                } else {
-                    // same-server only: TeleportManager enforces the
-                    // town-cascade TELEPORT flag, cooldown and delay
-                    line.append(new FunctionalButton(TextUserInterface.townOutpostsTuiText.teleportButton) {
+                if (!local) {
+                    line.append(new FunctionalButton(TextUserInterface.townOutpostsTuiText.remoteHint) {
                         @Override
                         public void function() {
-                            cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
+                            notifyRemote(player, outpost);
                         }
                     }.needPermission(defaultPermission).build());
                 }
+                // TeleportManager handles both local and cross-server travel,
+                // and enforces the town-cascade TELEPORT flag before moving.
+                line.append(new FunctionalButton(TextUserInterface.townOutpostsTuiText.teleportButton) {
+                    @Override
+                    public void function() {
+                        cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
+                    }
+                }.needPermission(defaultPermission).build());
                 view.add(line);
             }
             view.showOn(player, page);
@@ -173,6 +228,18 @@ public class TownOutposts extends AbstractUI {
                         "§b▶ Right Click: teleport (this server)"
                 )
         );
+        public ButtonConfiguration remoteOutpostItemButton = ButtonConfiguration.createMaterial(
+                'i', Material.ENDER_EYE, "§6⛏ §e{0}",
+                List.of(
+                        "§7World: §b{0}",
+                        "§7Kind: §b{1}",
+                        "§7Server: §b{2}",
+                        "§7Contributor: §e{3}",
+                        "",
+                        "§e▶ Left Click: show location / management server",
+                        "§b▶ Right Click: cross-server teleport"
+                )
+        );
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
                 '<', Material.RED_STAINED_GLASS_PANE, "§c« Back",
                 List.of("§e▶ Click to go back"));
@@ -188,22 +255,31 @@ public class TownOutposts extends AbstractUI {
 
             for (DominionDOO outpost : outposts(town.getId())) {
                 boolean local = isLocal(outpost);
-                ChestButton btn = new ChestButton(ChestUserInterface.townOutpostsCui.outpostItemButton) {
+                ButtonConfiguration itemConfiguration = local
+                        ? ChestUserInterface.townOutpostsCui.outpostItemButton
+                        : ChestUserInterface.townOutpostsCui.remoteOutpostItemButton;
+                ChestButton btn = new ChestButton(itemConfiguration) {
                     @Override
                     public void onClick(ClickType type) {
-                        if (type.isLeftClick() && local
+                        if (!local) {
+                            if (type.isRightClick()) {
+                                cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
+                            } else {
+                                notifyRemote(player, outpost);
+                            }
+                        } else if (type.isLeftClick()
                                 && cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, outpost)) {
                             DominionManage.show(player, outpost.getName(), "1");
-                        } else if (type.isRightClick() && local) {
-                            // same-server only; TeleportManager enforces the
-                            // town-cascade TELEPORT flag, cooldown and delay
+                        } else if (type.isRightClick()) {
+                            // TeleportManager enforces the town-cascade
+                            // TELEPORT flag, cooldown and delay.
                             cn.lunadeer.dominion.managers.TeleportManager.teleportToDominion(player, outpost);
                         }
                     }
                 };
                 btn = btn.setDisplayNameArgs(outpost.getName());
                 btn = btn.setLoreArgs(worldLabel(outpost), outpost.getClaimKind(),
-                        String.valueOf(outpost.getServerId()),
+                        serverLabel(outpost),
                         CacheManager.instance.getPlayerName(outpost.getOwner()));
                 view = view.addItem(btn);
             }
@@ -228,7 +304,7 @@ public class TownOutposts extends AbstractUI {
         TownDOO town = TownManager.requireTown(args[0]);
         for (DominionDOO outpost : outposts(town.getId())) {
             Notification.info(sender, formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
-                    outpost.getName(), worldLabel(outpost), outpost.getClaimKind(), outpost.getServerId())
+                    outpost.getName(), worldLabel(outpost), outpost.getClaimKind(), serverLabel(outpost))
                     + contributorTag(outpost));
         }
     }

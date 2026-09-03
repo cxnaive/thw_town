@@ -21,6 +21,7 @@ dominion-list-tui-text:
   remote-owned-section: Your dominions on other servers.
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
   town-managed-section: Town outposts you manage (all servers).
+  remote-manage-hint: 屬地 {0} 位於伺服器 {1}。管理需要先切換到該伺服器；前往屬地請使用 TP。
   town-tag: ' [{0}]'
   title: 你的領地列表
   button: 領地列表
@@ -29,13 +30,15 @@ dominion-list-tui-text:
   admin-section: 以下為你可管理的領地
   server-section: 以下為你在伺服器 {0} 的領地
   legacy-tag: ' (legacy - create or join a town!)'
-  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu); your land will attach as town outposts.
+  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu), then use /town attach to contribute selected land.
 dominion-manage-tui-text:
   release-description: Return contributed land to its contributor (mayor; OP arbitration).
   release-button: RETURN
   trusts-description: Manage per-player trust grants of this town outpost.
   title: 管理領地 {0}
   button: 管理領地
+  teleport-button: 傳送
+  teleport-description: 傳送到此領地。
   set-tp-button: 設定傳送點
   set-tp-description: 將你目前所在位置設定為領地傳送點
 set-size-tui-text:
@@ -181,6 +184,8 @@ town-info-tui-text:
   invite-description: Invite a player to join.
   leave-button: LEAVE
   leave-description: Leave this town (land stays).
+  rename-button: 重新命名小鎮
+  rename-description: 修改小鎮名稱（僅鎮長）。
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
 town-level-tasks-tui-text:
@@ -227,8 +232,10 @@ town-bank-tui-text:
   withdraw-hint: Enter the amount to withdraw.
   invalid-amount: 'Invalid amount: {0}'
 town-outposts-tui-text:
-  title: Outposts of {0}
-  button: OUTPOSTS
-  outpost-line: §b{0} §7- {1} ({2}, server {3})
-  remote-hint: §8(on another server)
-  teleport-button: TELEPORT
+  title: '{0} 的屬地'
+  button: 屬地
+  outpost-line: §b{0} §7- {1} ({2}，伺服器 {3})
+  contributor-tag: ' §7貢獻者：§e{0}'
+  remote-hint: 查看遠端位置
+  remote-action-hint: 屬地 {0} 位於伺服器 {1}、世界 {2}。管理需要先切換到對應伺服器；需要前往時請點擊「傳送」。
+  teleport-button: 傳送

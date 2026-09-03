@@ -46,6 +46,7 @@ public class TeleportManager implements Listener {
         public String delay = "Will teleport in {0} seconds, don't move...";
         public String unfinishedCancelled = "Cancelled previous unfinished teleportation.";
         public String cancelMove = "Cancelled teleportation due to movement.";
+        public String multiServerDisabled = "Cross-server teleportation is disabled on this server.";
     }
 
     public TeleportManager(JavaPlugin plugin) {
@@ -124,6 +125,11 @@ public class TeleportManager implements Listener {
         if (!checkPrivilegeFlag(dominion, Flags.TELEPORT, player, null)) {
             return;
         }
+        boolean remote = dominion.getServerId() != Configuration.multiServer.serverId;
+        if (remote && !Configuration.multiServer.enable) {
+            Notification.warn(player, Language.teleportManagerText.multiServerDisabled);
+            return;
+        }
         boolean needCooldown = Configuration.getPlayerLimitation(player).teleportation.cooldown > 0;
         int delaySec = Configuration.getPlayerLimitation(player).teleportation.delay;
         if (player.hasPermission(adminPermission) && Configuration.adminBypass) {
@@ -155,7 +161,6 @@ public class TeleportManager implements Listener {
             if (dominion.getServerId() == Configuration.multiServer.serverId) {
                 Scheduler.runEntityTask(() -> doTeleportSafely(player, dominion), player);
             } else {
-                if (!Configuration.multiServer.enable) return;
                 try {
                     FieldString cacheUuid = new FieldString("uuid", player.getUniqueId().toString());
                     FieldInteger cacheDomId = new FieldInteger("dom_id", dominion.getId());
@@ -163,7 +168,12 @@ public class TeleportManager implements Listener {
                             .values(cacheUuid, cacheDomId)
                             .onConflict("uuid").doUpdate()
                             .execute();
-                    MultiServerManager.instance.connectToServer(player, MultiServerManager.instance.getServerName(dominion.getServerId()));
+                    String targetServer = MultiServerManager.instance.getServerName(dominion.getServerId());
+                    // Plugin messages touch player connection state; on
+                    // Folia dispatch the handoff on the player's entity
+                    // scheduler after the async database write.
+                    Scheduler.runEntityTask(
+                            () -> MultiServerManager.instance.connectToServer(player, targetServer), player);
                 } catch (Exception e) {
                     Notification.error(player, e);
                 }

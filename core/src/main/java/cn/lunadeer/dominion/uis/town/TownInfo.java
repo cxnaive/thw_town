@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter;
 import cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter;
+import cn.lunadeer.dominion.inputters.town.TownRenameInputter;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.MainMenu;
@@ -114,6 +115,8 @@ public class TownInfo extends AbstractUI {
         public String inviteDescription = "Invite a player to join.";
         public String leaveButton = "LEAVE";
         public String leaveDescription = "Leave this town (land stays).";
+        public String renameButton = "RENAME TOWN";
+        public String renameDescription = "Rename this town (mayor only).";
         public String disbandButton = "DISBAND";
         public String disbandDescription = "Disband this town (confirmation required).";
     }
@@ -128,6 +131,7 @@ public class TownInfo extends AbstractUI {
             boolean memberOrAdmin = role != null || bypass;
             boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
             boolean canDisband = role == TownMemberDOO.TownRole.MAYOR || bypass;
+            boolean canRename = role == TownMemberDOO.TownRole.MAYOR || bypass;
 
             ListView view = ListView.create(10, button(player, town.getName()));
             view.title(formatString(TextUserInterface.townInfoTuiText.title, town.getName()));
@@ -215,6 +219,12 @@ public class TownInfo extends AbstractUI {
                                 .needPermission(defaultPermission).build())
                         .append(TextUserInterface.townInfoTuiText.disbandDescription));
             }
+            if (canRename) {
+                view.add(Line.create()
+                        .append(TownRenameInputter.createTuiButtonOn(player, town.getId())
+                                .needPermission(defaultPermission).build())
+                        .append(TextUserInterface.townInfoTuiText.renameDescription));
+            }
             if (role != null && (role != TownMemberDOO.TownRole.MAYOR || bypass)) {
                 view.add(Line.create()
                         .append(new FunctionalButton(TextUserInterface.townInfoTuiText.leaveButton) {
@@ -285,6 +295,9 @@ public class TownInfo extends AbstractUI {
         public ButtonConfiguration disbandButton = ButtonConfiguration.createMaterial(
                 'i', Material.TNT, "§4Disband",
                 List.of("§7Disband this town.", "§4▶ Click to confirm"));
+        public ButtonConfiguration renameButton = ButtonConfiguration.createMaterial(
+                'i', Material.NAME_TAG, "§eRename Town",
+                List.of("§7Change this town's shared name.", "§7Mayor only.", "§e▶ Click to enter a name"));
         public ButtonConfiguration upgradeButton = ButtonConfiguration.createMaterial(
                 'i', Material.ENCHANTED_BOOK, "§6Upgrade Permission Mode",
                 List.of("§7Reset all town-managed outpost permissions.",
@@ -304,6 +317,7 @@ public class TownInfo extends AbstractUI {
             boolean memberOrAdmin = role != null || bypass;
             boolean manager = TownManager.isManager(town, player.getUniqueId()) || bypass;
             boolean canDisband = role == TownMemberDOO.TownRole.MAYOR || bypass;
+            boolean canRename = role == TownMemberDOO.TownRole.MAYOR || bypass;
 
             ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
             view.setTitle(formatString(ChestUserInterface.townInfoCui.title, town.getName()));
@@ -346,6 +360,10 @@ public class TownInfo extends AbstractUI {
             if (canDisband) {
                 view = view.addItem(nav(player, ChestUserInterface.townInfoCui.disbandButton,
                         () -> TownDisbandConfirmInputter.createOn(player, town.getName()), true));
+            }
+            if (canRename) {
+                view = view.addItem(nav(player, ChestUserInterface.townInfoCui.renameButton,
+                        () -> TownRenameInputter.createOn(player, town.getId()), true));
             }
             if (!town.isTemplatePermissionMode()
                     && (role == TownMemberDOO.TownRole.MAYOR || bypass)) {

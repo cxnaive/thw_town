@@ -210,6 +210,7 @@ public class Language extends ConfigurationFile {
     public static CreateGroupInputter.CreateGroupInputterText createGroupInputterText = new CreateGroupInputter.CreateGroupInputterText();
     public static RenameDominionInputter.RenameDominionInputterText renameDominionInputterText = new RenameDominionInputter.RenameDominionInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter.TownDisbandConfirmInputterText townDisbandConfirmInputterText = new cn.lunadeer.dominion.inputters.town.TownDisbandConfirmInputter.TownDisbandConfirmInputterText();
+    public static cn.lunadeer.dominion.inputters.town.TownRenameInputter.TownRenameInputterText townRenameInputterText = new cn.lunadeer.dominion.inputters.town.TownRenameInputter.TownRenameInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownOutpostAdminInputter.TownOutpostAdminInputterText townOutpostAdminInputterText = new cn.lunadeer.dominion.inputters.town.TownOutpostAdminInputter.TownOutpostAdminInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter.TownOutpostCreateInputterText townOutpostCreateInputterText = new cn.lunadeer.dominion.inputters.town.TownOutpostCreateInputter.TownOutpostCreateInputterText();
     public static cn.lunadeer.dominion.inputters.town.TownCreateInputter.TownCreateInputterText townCreateInputterText = new cn.lunadeer.dominion.inputters.town.TownCreateInputter.TownCreateInputterText();

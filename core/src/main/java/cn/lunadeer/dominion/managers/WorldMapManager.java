@@ -13,8 +13,10 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Maintains the world_map table and self-heals world UID drift.
@@ -42,6 +44,38 @@ import java.util.Map;
  * this select-then-write path.
  */
 public class WorldMapManager {
+
+    /**
+     * Return the stable world names known by every backend server, keyed by
+     * server id and world UID. This is used by cross-server views where a
+     * remote Bukkit World instance is not available locally.
+     */
+    public static Map<Integer, Map<UUID, String>> getWorldNames() throws Exception {
+        Map<Integer, Map<UUID, String>> result = new HashMap<>();
+        List<Map<String, Field<?>>> rows = Select.select(
+                new FieldInteger("server_id"),
+                new FieldString("name"),
+                new FieldString("uid")
+        ).from("world_map").execute();
+        for (Map<String, Field<?>> row : rows) {
+            Object serverValue = row.get("server_id").getValue();
+            Object nameValue = row.get("name").getValue();
+            Object uidValue = row.get("uid").getValue();
+            if (!(serverValue instanceof Integer serverId)
+                    || !(nameValue instanceof String name)
+                    || !(uidValue instanceof String uid)) {
+                continue;
+            }
+            try {
+                result.computeIfAbsent(serverId, ignored -> new HashMap<>())
+                        .put(UUID.fromString(uid), name);
+            } catch (IllegalArgumentException ignored) {
+                // An invalid legacy UID cannot match a Dominion UUID; keep
+                // the UI's UUID fallback instead of failing the whole view.
+            }
+        }
+        return result;
+    }
 
     /**
      * Tables carrying a (world_uid, server_id) pair that must be healed on

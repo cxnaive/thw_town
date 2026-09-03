@@ -290,6 +290,7 @@ database-manager-text:
 teleport-manager-text:
   cooling-down: '{0} 秒後に再度テレポートできます。'
   disabled: あなたの権限グループではテレポートが無効になっています。
+  multi-server-disabled: このサーバーではサーバー間テレポートが無効です。
   delay: '{0} 秒後にテレポートします。動かないでください...'
   unfinished-cancelled: 未完了のテレポートがキャンセルされました。
   cancel-move: 移動によりテレポートがキャンセルされました。
@@ -617,6 +618,9 @@ town-manager-text:
   town-name-should-not-empty: Town name should not be empty.
   town-name-invalid: Town name should not contain space, dot, section sign, ampersand, tilde or comma.
   town-name-exist: Town name {0} already exists.
+  town-name-unchanged: The town is already named {0}.
+  only-mayor-can-rename: Only the mayor of {0} can rename the town.
+  rename-success: Town {0} renamed to {1}.
   town-not-exist: Town {0} does not exist.
   already-in-town: You are already a member of town {0}.
   not-in-town: You are not a member of town {0}.
@@ -627,7 +631,7 @@ town-manager-text:
   create-success-founding: Town {0} created with a founding outpost.
   disband-success: Town {0} disbanded. {1} outpost(s) dissolved and archived.
   disband-success-return: Town {0} disbanded. {1} outpost(s) returned to contributors, {2} dissolved.
-  join-success: You joined town {0}. {1} outpost(s) attached to the town.
+  join-success: You joined town {0}. Your personal dominions were not attached automatically; use /town attach to select land.
   leave-success: You left town {0}. Your land stays with the town.
   mayor-cannot-leave: The mayor cannot leave; transfer the mayor role or disband the town first.
   kick-success: Kicked {0} from town {1}.
@@ -680,11 +684,13 @@ town-command-text:
   dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: '&b/town create <name> &7- create a town (your land attaches, or a free founding outpost)
+  usage: '&b/town create <name> &7- create a town (existing land stays personal; landless founders receive a free founding outpost)
 
     &b/town invite <player> &7- invite a player (mayor/assistant)
 
     &b/town join <town> [confirm] &7- join an invited town
+
+    &b/town rename <new name> &7- rename your town (mayor only)
 
     &b/town leave &7- leave your town (land stays with the town)
 
@@ -720,8 +726,9 @@ town-command-text:
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
-  join-confirm: 'Joining {0} will attach your {1} dominion(s) to the town: {2}. Run /town join {0} confirm to proceed.'
-  join-confirm-no-land: Joining {0} makes you a resident. Run /town join {0} confirm to proceed.
+  invite-received: 'You have been invited to join {0} (valid for 5 minutes). To accept on THIS server, enter: /town join {0}'
+  join-confirm: 'Joining {0} makes you a resident; your {1} personal dominion(s) stay personal: {2}. Run /town join {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.'
+  join-confirm-no-land: Joining {0} makes you a resident; your personal dominions are not attached automatically. Run /town join {0} confirm to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'
   no-town: You are not in any town.
   no-managed-town: You are not the mayor or an assistant of any town.
@@ -733,20 +740,25 @@ town-command-text:
   need-points: Select two points with the select tool first.
   player-not-found: Player {0} not found.
   member-list: 'Members of {0}: {1}'
-  create-confirm: 'Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.'
+  create-confirm: 'Creating town {0} makes you its mayor; your {1} personal dominion(s) stay personal: {2}. Run /town create {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.'
   release-confirm: Returning contributed outpost {0} gives it back to {1}, and removes its outpost trust and town group mirrors. Run /town release {0} confirm to proceed.
 migration-text:
   town-data-dropped: The source server has town data; towns do NOT follow a server merge — imported dominions become townless.
 town-create-inputter-text:
   button: CREATE TOWN
   hint: Enter the new town name.
-  description: 'Create a town: your land attaches, or a founding outpost is created from your selection.'
+  confirm-hint: Type 'confirm' to create the town without automatically attaching the listed land.
+  description: Create a town. Existing personal land stays personal and can be contributed later with /town attach; landless founders receive a starter outpost.
 town-outpost-admin-inputter-text:
   button: OUTPOST ADMIN
   hint: Enter the player name to appoint, or 'clear' to remove.
   description: Appoint or clear the outpost admin.
 town-outpost-create-inputter-text:
   hint: Enter the new outpost name. The two currently selected points will be used.
+town-rename-inputter-text:
+  button: RENAME TOWN
+  hint: Enter a new town name (spaces are not allowed).
+  description: Rename this town (mayor only).
 town-disband-confirm-inputter-text:
   button: DISBAND
   hint: Type 'confirm' to disband the town.

@@ -101,6 +101,9 @@ public class TownManager {
         public String townNameShouldNotEmpty = "Town name should not be empty.";
         public String townNameInvalid = "Town name should not contain space, dot, section sign, ampersand, tilde or comma.";
         public String townNameExist = "Town name {0} already exists.";
+        public String townNameUnchanged = "The town is already named {0}.";
+        public String onlyMayorCanRename = "Only the mayor of {0} can rename the town.";
+        public String renameSuccess = "Town {0} renamed to {1}.";
         public String townNotExist = "Town {0} does not exist.";
         public String alreadyInTown = "You are already a member of town {0}.";
         public String notInTown = "You are not a member of town {0}.";
@@ -403,6 +406,34 @@ public class TownManager {
         }
     }
 
+    private static void assertTownRenameName(@NotNull TownDOO town, @NotNull String name)
+            throws DominionException, SQLException {
+        if (name.isEmpty()) {
+            throw new DominionException(Language.townManagerText.townNameShouldNotEmpty);
+        }
+        if (name.contains(" ") || name.contains(".")
+                || name.contains("§") || name.contains("&")
+                || name.contains("~") || name.contains(",")) {
+            throw new DominionException(Language.townManagerText.townNameInvalid);
+        }
+        if (name.equals(town.getName())) {
+            throw new DominionException(Language.townManagerText.townNameUnchanged, name);
+        }
+        TownDOO cached = cache().getTown(name);
+        if (cached != null && !cached.getId().equals(town.getId())) {
+            throw new DominionException(Language.townManagerText.townNameExist, cached.getName());
+        }
+        TownDOO selected = TownDOO.select(name);
+        if (selected != null && !selected.getId().equals(town.getId())) {
+            throw new DominionException(Language.townManagerText.townNameExist, selected.getName());
+        }
+        for (TownDOO existing : TownDOO.selectAll()) {
+            if (!existing.getId().equals(town.getId()) && existing.getName().equalsIgnoreCase(name)) {
+                throw new DominionException(Language.townManagerText.townNameExist, existing.getName());
+            }
+        }
+    }
+
     /**
      * max-memberships gate for NEW formal memberships (create or join).
      * TownTrust and existing memberships are unaffected; -1 = unlimited.
@@ -465,6 +496,47 @@ public class TownManager {
         if (!town.getMayorUuid().equals(player.getUniqueId())) {
             throw new DominionException(Language.townManagerText.onlyMayorCanDisband, town.getName());
         }
+    }
+
+    /** Renaming is a town identity change and is restricted to the mayor. */
+    public static void assertCanRename(@NotNull CommandSender sender,
+                                       @NotNull TownDOO town) throws DominionException {
+        if (!(sender instanceof Player player)) return;
+        if (bypassLimit(player)) return;
+        if (!town.getMayorUuid().equals(player.getUniqueId())) {
+            throw new DominionException(Language.townManagerText.onlyMayorCanRename, town.getName());
+        }
+    }
+
+    /**
+     * Rename a town in the shared database. All memberships, groups,
+     * permissions and outposts remain attached by town_id; only the mutable
+     * display/lookup name changes. The local replica is refreshed immediately
+     * and other backends converge through their normal TownCache refresh.
+     */
+    public static @NotNull TownDOO renameTown(@NotNull CommandSender operator,
+                                              @NotNull TownDOO town,
+                                              @NotNull String requestedName) throws Exception {
+        assertCanRename(operator, town);
+        String newName = requestedName.trim();
+        assertTownRenameName(town, newName);
+        String oldName = town.getName();
+        try {
+            town.setName(newName);
+        } catch (SQLException e) {
+            // A concurrent rename on another backend may win between the
+            // validation query and UPDATE; translate a resulting collision
+            // into the normal user-facing duplicate-name error.
+            TownDOO conflicting = TownDOO.select(newName);
+            if (conflicting != null && !conflicting.getId().equals(town.getId())) {
+                throw new DominionException(Language.townManagerText.townNameExist,
+                        conflicting.getName());
+            }
+            throw e;
+        }
+        cache().reloadNow();
+        Notification.info(operator, Language.townManagerText.renameSuccess, oldName, newName);
+        return cache().getTown(town.getId()) != null ? cache().getTown(town.getId()) : town;
     }
 
     /**
@@ -559,11 +631,11 @@ public class TownManager {
     // ------------------------------------------------------------------
 
     /**
-     * Create a town: the founder's every dominion attaches as outpost, or —
-     * when the founder owns nothing — a founding outpost is created at the
-     * given cuboid (required in that case). All validations that can fail
-     * run BEFORE any row is inserted, so a failure never leaves an orphan
-     * town behind.
+     * Create a town. Existing personal dominions remain personal and can be
+     * contributed later; when the founder owns nothing, a founding outpost
+     * is created at the given cuboid (required in that case). All validations
+     * that can fail run BEFORE any row is inserted, so a failure never leaves
+     * an orphan town behind.
      */
     public static @NotNull TownDOO createTown(@NotNull Player founder, @NotNull String name,
                                               @Nullable CuboidDTO foundingCuboid) throws Exception {
@@ -744,7 +816,7 @@ public class TownManager {
         TownMemberDOO.deleteByTown(town.getId());
         TownTrustDOO.deleteByTown(town.getId());
         TownDOO.deleteById(town.getId());
-        cn.lunadeer.dominion.commands.TownCommand.clearInvites(town.getName());
+        cn.lunadeer.dominion.commands.TownCommand.clearInvites(town.getId());
         cache().reloadNow();
         CacheManager.instance.getCache().getDominionCache().load();
         CacheManager.instance.getCache().getMemberCache().load();
@@ -759,9 +831,9 @@ public class TownManager {
     }
 
     /**
-     * Join a town: every dominion the player owns attaches after
-     * confirmation (handled by the command layer). The player becomes a
-     * RESIDENT with source JOINED.
+     * Join a town after confirmation. Personal dominions remain personal;
+     * selected land can be attached separately through /town attach. The
+     * player becomes a RESIDENT with source JOINED.
      */
     public static void joinTown(@NotNull Player player, @NotNull TownDOO town) throws Exception {
         if (cache().getMember(town.getId(), player.getUniqueId()) != null) {

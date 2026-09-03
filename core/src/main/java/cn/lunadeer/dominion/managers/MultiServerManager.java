@@ -15,10 +15,12 @@ import com.google.common.io.ByteStreams;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static cn.lunadeer.dominion.utils.Misc.formatString;
 
@@ -32,7 +34,7 @@ public class MultiServerManager {
 
     public static MultiServerManager instance;
     private final JavaPlugin plugin;
-    private final Map<Integer, String> cachedDerverMap = new HashMap<>();
+    private final Map<Integer, String> cachedDerverMap = new ConcurrentHashMap<>();
 
     public MultiServerManager(JavaPlugin plugin) {
         instance = this;
@@ -86,6 +88,36 @@ public class MultiServerManager {
         }
         cachedDerverMap.put(serverId, (String) res.get(0).get("name").getValue());
         return cachedDerverMap.get(serverId);
+    }
+
+    /** Format an internal backend name for player-facing cross-server UI. */
+    public static @NotNull String formatServerLabel(int serverId, @Nullable String internalName) {
+        String displayName = internalName == null ? null
+                : Configuration.multiServer.serverDisplayNames.getOrDefault(internalName, internalName);
+        return displayName == null || displayName.isBlank()
+                ? "#" + serverId
+                : displayName + " (#" + serverId + ")";
+    }
+
+    /**
+     * Load all known backend server names in one query for cross-server UI
+     * pages. The per-id accessor remains available for command paths.
+     */
+    public Map<Integer, String> getServerNames() throws Exception {
+        List<Map<String, Field<?>>> res = Select.select(
+                new FieldInteger("id"),
+                new FieldString("name")
+        ).from("server_info").execute();
+        Map<Integer, String> names = new HashMap<>();
+        for (Map<String, Field<?>> row : res) {
+            Object idValue = row.get("id").getValue();
+            Object nameValue = row.get("name").getValue();
+            if (idValue instanceof Integer id && nameValue instanceof String name) {
+                names.put(id, name);
+            }
+        }
+        cachedDerverMap.putAll(names);
+        return names;
     }
 
     public Integer getServerId(@NotNull String serverName) throws Exception {

@@ -2,6 +2,7 @@ package cn.lunadeer.dominion.uis.town;
 
 import cn.lunadeer.dominion.cache.CacheManager;
 import cn.lunadeer.dominion.commands.TownCommand;
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
@@ -74,16 +75,19 @@ public class TownMembers extends AbstractUI {
                         Notification.error(sender, Language.townCommandText.playerNotFound, input);
                         return;
                     }
-                    TownCommand.sendInvite(town.getName(), target.getUuid());
+                    TownCommand.sendInvite(town.getId(), target.getUuid());
                     Notification.info(sender, Language.townCommandText.inviteSent,
                             target.getLastKnownName(), town.getName());
                     Player online = cn.lunadeer.dominion.Dominion.instance.getServer().getPlayer(target.getUuid());
                     if (online != null) {
-                        Notification.info(online, Language.townCommandText.inviteSent,
-                                target.getLastKnownName(), town.getName());
+                        Notification.info(online, Language.townCommandText.inviteReceived,
+                                town.getName());
+                    } else if (Configuration.multiServer.enable) {
+                        Notification.warn(sender, Language.townCommandText.inviteNotLocal,
+                                target.getLastKnownName());
                     }
-                    cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
-                            () -> show(sender, townName, "1"));
+                    cn.lunadeer.dominion.utils.scheduler.Scheduler.runEntityTask(
+                            () -> show(player, townName, "1"), player);
                 } catch (Exception e) {
                     Notification.error(sender, e);
                 }

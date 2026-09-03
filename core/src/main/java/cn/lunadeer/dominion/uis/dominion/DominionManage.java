@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.inputters.EditMessageInputter;
 import cn.lunadeer.dominion.inputters.RenameDominionInputter;
 import cn.lunadeer.dominion.inputters.SetMapColorInputter;
+import cn.lunadeer.dominion.managers.TeleportManager;
 import cn.lunadeer.dominion.misc.CommandArguments;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.MainMenu;
@@ -68,6 +69,8 @@ public class DominionManage extends AbstractUI {
     public static class DominionManageTuiText extends ConfigurationPart {
         public String title = "Manage {0}";
         public String button = "MANAGE";
+        public String teleportButton = "TP";
+        public String teleportDescription = "Teleport to this dominion.";
         public String setTpButton = "SET TP";
         public String setTpDescription = "Set your current location as tp location.";
         public String trustsDescription = "Manage per-player trust grants of this town outpost.";
@@ -121,6 +124,14 @@ public class DominionManage extends AbstractUI {
         Line group_list = Line.create()
                 .append(GroupList.button(player, dominion.getName()).build())
                 .append(TextUserInterface.groupListTuiText.description);
+        Line teleport = Line.create()
+                .append(new FunctionalButton(TextUserInterface.dominionManageTuiText.teleportButton) {
+                    @Override
+                    public void function() {
+                        TeleportManager.teleportToDominion(player, dominion);
+                    }
+                }.build())
+                .append(TextUserInterface.dominionManageTuiText.teleportDescription);
         Line set_tp = Line.create()
                 .append(new FunctionalButton(TextUserInterface.dominionManageTuiText.setTpButton) {
                     @Override
@@ -174,6 +185,7 @@ public class DominionManage extends AbstractUI {
             view.add(trusts);
         }
         view.add(group_list)
+                .add(teleport)
                 .add(set_tp)
                 .add(rename)
                 .add(enter_msg)
@@ -298,6 +310,18 @@ public class DominionManage extends AbstractUI {
                         "§5▶ Click to manage groups",
                         "",
                         "§8Create ranks, set titles..."
+                )
+        );
+
+        public ButtonConfiguration teleportButton = ButtonConfiguration.createMaterial(
+                'i', Material.ENDER_EYE,
+                "§b✦ §3Teleport to Dominion",
+                List.of(
+                        "§7Teleport to this dominion.",
+                        "",
+                        "§3▶ Click to teleport",
+                        "",
+                        "§8Respects teleport permissions and cooldown."
                 )
         );
 
@@ -519,6 +543,13 @@ public class DominionManage extends AbstractUI {
             @Override
             public void onClick(ClickType type) {
                 GroupList.show(player, dominion.getName(), "1");
+            }
+        });
+
+        view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.teleportButton) {
+            @Override
+            public void onClick(ClickType type) {
+                TeleportManager.teleportToDominion(player, dominion);
             }
         });
 

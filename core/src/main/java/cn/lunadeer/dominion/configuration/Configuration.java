@@ -144,6 +144,9 @@ public class Configuration extends ConfigurationFile {
                 "DO NOT CHANGE THIS AFTER THERE ARE DATA IN THE DATABASE."
         })
         public int serverId = 1;
+        /** Server-internal name -> player-facing localized name. */
+        @HandleManually
+        public Map<String, String> serverDisplayNames = new LinkedHashMap<>();
     }
 
     @Comments("Language of the plugin, see others in the plugins/Dominion/languages folder.")
@@ -373,6 +376,41 @@ public class Configuration extends ConfigurationFile {
     public static boolean timer = false;
 
     private static final String TOWN_LEVEL_REQUIREMENTS_KEY = "town.level-requirements";
+    private static final String SERVER_DISPLAY_NAMES_KEY = "multi-server.server-display-names";
+
+    @PreProcess(priority = -20)
+    public void prepareServerDisplayNames() {
+        multiServer.serverDisplayNames.clear();
+        if (getYaml().contains(SERVER_DISPLAY_NAMES_KEY)) return;
+
+        getYaml().createSection(SERVER_DISPLAY_NAMES_KEY);
+        getYaml().setComments(SERVER_DISPLAY_NAMES_KEY, List.of(
+                "Player-facing names for backend servers, keyed by multi-server.server-name.",
+                "The database keeps the internal server name; the localized value is only used in UI display.",
+                "The server ID remains shown in parentheses as a stable diagnostic identifier."
+        ));
+        getYaml().set(SERVER_DISPLAY_NAMES_KEY + ".lobby2", "大厅");
+        getYaml().set(SERVER_DISPLAY_NAMES_KEY + ".lobby3", "红石区");
+        getYaml().set(SERVER_DISPLAY_NAMES_KEY + ".lobby4", "建筑区");
+        getYaml().set(SERVER_DISPLAY_NAMES_KEY + ".resource", "资源区");
+    }
+
+    @PostProcess(priority = 0)
+    public void loadServerDisplayNames() {
+        multiServer.serverDisplayNames.clear();
+        org.bukkit.configuration.ConfigurationSection section =
+                getYaml().getConfigurationSection(SERVER_DISPLAY_NAMES_KEY);
+        if (section == null) return;
+
+        for (String key : section.getKeys(false)) {
+            String internalName = key == null ? "" : key.trim();
+            String displayName = section.getString(key);
+            if (internalName.isEmpty() || displayName == null || displayName.isBlank()) {
+                continue;
+            }
+            multiServer.serverDisplayNames.put(internalName, displayName.trim());
+        }
+    }
 
     @PreProcess(priority = -10)
     public void prepareTownLevelRequirements() throws Exception {

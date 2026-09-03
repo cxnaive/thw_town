@@ -21,6 +21,7 @@ dominion-list-tui-text:
   remote-owned-section: Your dominions on other servers.
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
   town-managed-section: Town outposts you manage (all servers).
+  remote-manage-hint: 属地 {0} はサーバー {1} にあります。管理するにはそのサーバーへ移動し、移動には TP を使用してください。
   town-tag: ' [{0}]'
   title: あなたのドミニオン
   button: ドミニオン
@@ -29,13 +30,15 @@ dominion-list-tui-text:
   admin-section: あなたの管理者ドミニオンセクション。
   server-section: サーバー {0} のドミニオンセクション。
   legacy-tag: ' (legacy - create or join a town!)'
-  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu); your land will attach as town outposts.
+  legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu), then use /town attach to contribute selected land.
 dominion-manage-tui-text:
   release-description: Return contributed land to its contributor (mayor; OP arbitration).
   release-button: RETURN
   trusts-description: Manage per-player trust grants of this town outpost.
   title: '{0} を管理'
   button: 管理
+  teleport-button: テレポート
+  teleport-description: このドミニオンへテレポートします。
   set-tp-button: TPを設定
   set-tp-description: 現在の場所をTPの場所として設定します。
 set-size-tui-text:
@@ -179,6 +182,8 @@ town-info-tui-text:
   invite-description: Invite a player to join.
   leave-button: LEAVE
   leave-description: Leave this town (land stays).
+  rename-button: RENAME TOWN
+  rename-description: Rename this town (mayor only).
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
 town-level-tasks-tui-text:
@@ -225,8 +230,10 @@ town-bank-tui-text:
   withdraw-hint: Enter the amount to withdraw.
   invalid-amount: 'Invalid amount: {0}'
 town-outposts-tui-text:
-  title: Outposts of {0}
-  button: OUTPOSTS
-  outpost-line: §b{0} §7- {1} ({2}, server {3})
-  remote-hint: §8(on another server)
-  teleport-button: TELEPORT
+  title: '{0} の属地'
+  button: 属地
+  outpost-line: §b{0} §7- {1} ({2}、サーバー {3})
+  contributor-tag: ' §7寄贈者：§e{0}'
+  remote-hint: 接続先を表示
+  remote-action-hint: 属地 {0} はサーバー {1}、ワールド {2} にあります。管理するにはそのサーバーへ移動し、移動には「テレポート」を使用してください。
+  teleport-button: テレポート

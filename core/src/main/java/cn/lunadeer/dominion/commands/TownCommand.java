@@ -51,6 +51,7 @@ public class TownCommand implements TabExecutor {
         public String usage = "&b/town create <name> &7- create a town\n"
                 + "&b/town invite <player> &7- invite a player (mayor/assistant)\n"
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
+                + "&b/town rename <new name> &7- rename your town (mayor only)\n"
                 + "&b/town leave &7- leave your town (land stays with the town)\n"
                 + "&b/town attach [dominion|all] &7- attach dominions to your town (GUI if no args)\n"
                 + "&b/town group <create|rename|delete|list|info|add|remove> ... &7- manage town groups\n"
@@ -74,11 +75,11 @@ public class TownCommand implements TabExecutor {
         public String noInvite = "You need an invite from the mayor or an assistant of {0} to join.";
         public String noInviteRemote = "You need an invite from the mayor or an assistant of {0} to join. Invites are per-server: if you were invited on another server, switch to it and retry.";
         public String inviteSent = "Invited {0} to join {1} (valid for 5 minutes).";
-        public String inviteReceived = "You have been invited to join {0} (valid for 5 minutes). Run /town join {0} on THIS server to accept.";
+        public String inviteReceived = "You have been invited to join {0} (valid for 5 minutes). To accept on THIS server, enter: /town join {0}";
         public String inviteNotLocal = "{0} is not playing on this server right now. Invites are per-server: they must switch here (or be invited again on their server) before /town join works.";
-        public String joinConfirm = "Joining {0} will attach your {1} dominion(s) to the town: {2}. Run /town join {0} confirm to proceed.";
-        public String joinConfirmNoLand = "Joining {0} makes you a resident. Run /town join {0} confirm to proceed.";
-        public String createConfirm = "Creating town {0} will attach your {1} dominion(s) to it: {2}. Run /town create {0} confirm to proceed.";
+        public String joinConfirm = "Joining {0} makes you a resident; your {1} personal dominion(s) stay personal: {2}. Run /town join {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.";
+        public String joinConfirmNoLand = "Joining {0} makes you a resident; your personal dominions are not attached automatically. Run /town join {0} confirm to proceed.";
+        public String createConfirm = "Creating town {0} makes you its mayor; your {1} personal dominion(s) stay personal: {2}. Run /town create {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.";
         public String attachMemberNote = "Member lists of attached dominions are archived; affected members receive a per-outpost trust grant mapped from their flags and are notified.";
         public String disbandConfirm = "Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with 'confirm' to proceed.";
         public String disbandConfirmContributors = "Contributed land of these players will be dissolved: {0}.";
@@ -115,11 +116,12 @@ public class TownCommand implements TabExecutor {
     }
 
     private static final long INVITE_TTL_MS = 5 * 60 * 1000L;
-    // town name -> (invitee uuid -> expiry)
-    private static final Map<String, Map<UUID, Long>> invites = new ConcurrentHashMap<>();
+    // town id -> (invitee uuid -> expiry). Town names are mutable, including
+    // while a player has a pending invite, so names must never be the key.
+    private static final Map<Integer, Map<UUID, Long>> invites = new ConcurrentHashMap<>();
 
-    public static void sendInvite(@NotNull String townName, @NotNull UUID invitee) {
-        invites.computeIfAbsent(townName.toLowerCase(), k -> new ConcurrentHashMap<>())
+    public static void sendInvite(@NotNull Integer townId, @NotNull UUID invitee) {
+        invites.computeIfAbsent(townId, k -> new ConcurrentHashMap<>())
                 .put(invitee, System.currentTimeMillis() + INVITE_TTL_MS);
     }
 
@@ -133,20 +135,20 @@ public class TownCommand implements TabExecutor {
      * Drop every pending invite of a town (disband): a same-name town
      * created afterwards must not inherit them.
      */
-    public static void clearInvites(@NotNull String townName) {
-        invites.remove(townName.toLowerCase());
+    public static void clearInvites(@NotNull Integer townId) {
+        invites.remove(townId);
     }
 
-    private static boolean hasInvite(@NotNull String townName, @NotNull UUID invitee) {
-        Map<UUID, Long> townInvites = invites.get(townName.toLowerCase());
+    private static boolean hasInvite(@NotNull Integer townId, @NotNull UUID invitee) {
+        Map<UUID, Long> townInvites = invites.get(townId);
         if (townInvites == null) return false;
         pruneExpired(townInvites);
         Long expiry = townInvites.get(invitee);
         return expiry != null && expiry > System.currentTimeMillis();
     }
 
-    private static boolean consumeInvite(@NotNull String townName, @NotNull UUID invitee) {
-        Map<UUID, Long> townInvites = invites.get(townName.toLowerCase());
+    private static boolean consumeInvite(@NotNull Integer townId, @NotNull UUID invitee) {
+        Map<UUID, Long> townInvites = invites.get(townId);
         if (townInvites == null) return false;
         pruneExpired(townInvites);
         Long expiry = townInvites.remove(invitee);
@@ -182,6 +184,7 @@ public class TownCommand implements TabExecutor {
         try {
             switch (args[0].toLowerCase()) {
                 case "create" -> handleCreate(sender, args);
+                case "rename" -> handleRename(sender, args);
                 case "disband" -> handleDisband(sender, args);
                 case "invite" -> handleInvite(sender, args);
                 case "join" -> handleJoin(sender, args);
@@ -218,9 +221,8 @@ public class TownCommand implements TabExecutor {
     private void handleCreate(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
         String name = requireArg(args, 1);
-        // same informed-consent gate as /town join: attaching every owned
-        // dominion is a one-way merge of each land's member overlay, so the
-        // founder must see the list before it happens
+        // Show the founder which personal dominions are available for a
+        // later manual attachment; creating the town does not attach them.
         List<DominionDOO> attachable = new ArrayList<>();
         for (DominionDOO dominion : TownManager.ownedDominions(player.getUniqueId())) {
             if (!dominion.isTownOutpost()) {
@@ -241,6 +243,24 @@ public class TownCommand implements TabExecutor {
         TownManager.createTown(player, name, null);
     }
 
+    private void handleRename(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
+        TownDOO town;
+        String newName;
+        if (args.length == 2) {
+            town = resolveOwnTown(sender);
+            newName = requireArg(args, 1);
+        } else if (args.length == 3 && sender.isOp()) {
+            // OP arbitration for a town they do not belong to:
+            // /town rename <current-name> <new-name>
+            town = TownManager.requireTown(requireArg(args, 1));
+            newName = requireArg(args, 2);
+        } else {
+            Notification.info(sender, Language.townCommandText.usage);
+            return;
+        }
+        TownManager.renameTown(sender, town, newName);
+    }
+
     /**
      * Shared by the command and the main-menu create-town inputter:
      * players with no land must provide a founding cuboid (selection, or
@@ -254,8 +274,8 @@ public class TownCommand implements TabExecutor {
             }
         }
         if (!attachable.isEmpty()) {
-            // the menu inputter path has no 'confirm' argument — gate the
-            // attach behind a second inputter exactly like /town disband
+            // the menu inputter path has no 'confirm' argument — gate town
+            // creation behind a second inputter exactly like /town disband
             Notification.warn(player, Language.townCommandText.createConfirm,
                     name, attachable.size(), outpostNames(attachable));
             Notification.warn(player, Language.townCommandText.attachMemberNote);
@@ -330,7 +350,7 @@ public class TownCommand implements TabExecutor {
         TownDOO town = resolveManagedTown(sender);
         TownManager.assertManager(player, town);
         PlayerDTO target = requirePlayerDto(args, 1);
-        sendInvite(town.getName(), target.getUuid());
+        sendInvite(town.getId(), target.getUuid());
         Notification.info(sender, Language.townCommandText.inviteSent, target.getLastKnownName(), town.getName());
         Player online = Dominion.instance.getServer().getPlayer(target.getUuid());
         if (online != null) {
@@ -362,7 +382,7 @@ public class TownCommand implements TabExecutor {
         // invite is consumed, so a failed join never burns it
         TownManager.assertCanJoinNewTown(player);
         boolean bypass = Others.bypassLimit(player);
-        if (!bypass && !hasInvite(town.getName(), player.getUniqueId())) {
+        if (!bypass && !hasInvite(town.getId(), player.getUniqueId())) {
             throw new cn.lunadeer.dominion.misc.DominionException(
                         Configuration.multiServer.enable
                                 ? Language.townCommandText.noInviteRemote
@@ -379,7 +399,7 @@ public class TownCommand implements TabExecutor {
             }
             return;
         }
-        if (!bypass && !consumeInvite(town.getName(), player.getUniqueId())) {
+        if (!bypass && !consumeInvite(town.getId(), player.getUniqueId())) {
             throw new cn.lunadeer.dominion.misc.DominionException(
                         Configuration.multiServer.enable
                                 ? Language.townCommandText.noInviteRemote
@@ -822,7 +842,7 @@ public class TownCommand implements TabExecutor {
     }
 
     // ------------------------------------------------------------------
-    private static final List<String> SUB_COMMANDS = List.of("create", "disband", "invite", "join", "leave",
+    private static final List<String> SUB_COMMANDS = List.of("create", "rename", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
             "admin", "upgrade", "release", "level", "group", "info", "list");
     private static final List<String> GROUP_SUB_COMMANDS = List.of(
@@ -844,6 +864,11 @@ public class TownCommand implements TabExecutor {
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
+                case "rename" -> {
+                    // For OP arbitration the first argument is the current
+                    // town name; ordinary mayors type the new name freely.
+                    if (sender.isOp()) filter(townNames(), args[1], suggestions);
+                }
                 case "attach" -> {
                     if (sender instanceof Player player) {
                         List<String> options = new ArrayList<>(List.of("all"));

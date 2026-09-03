@@ -1,10 +1,13 @@
 package cn.lunadeer.dominion.uis.town;
 
+import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
+import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.managers.WorldMapManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -17,7 +20,9 @@ import cn.lunadeer.dominion.utils.stui.ListView;
 import cn.lunadeer.dominion.utils.stui.components.Line;
 import cn.lunadeer.dominion.utils.stui.components.buttons.FunctionalButton;
 import cn.lunadeer.dominion.utils.stui.components.buttons.ListViewButton;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -40,6 +45,8 @@ public class TownAttachSelector extends AbstractUI {
     private static final Map<UUID, Set<Integer>> selections = new ConcurrentHashMap<>();
 
     private List<DominionDOO> prefetchedAttachable = List.of();
+    private Map<Integer, Map<UUID, String>> prefetchedWorldNames = Map.of();
+    private Map<Integer, String> prefetchedServerNames = Map.of();
 
     public static void show(CommandSender sender, String townName, String pageStr) {
         TownAttachSelector ui = new TownAttachSelector();
@@ -52,6 +59,17 @@ public class TownAttachSelector extends AbstractUI {
             ui.prefetchedAttachable = DominionDOO.selectByOwner(player.getUniqueId()).stream()
                     .filter(d -> !d.isTownOutpost())
                     .toList();
+            try {
+                ui.prefetchedWorldNames = WorldMapManager.getWorldNames();
+            } catch (Exception ignored) {
+                // World labels have a UUID fallback; a missing mapping must
+                // not prevent the player from selecting an attachable land.
+            }
+            try {
+                ui.prefetchedServerNames = MultiServerManager.instance.getServerNames();
+            } catch (Exception ignored) {
+                // Server labels have an ID fallback for the same reason.
+            }
         }, () -> ui.displayByPreference(player, townName, pageStr));
     }
 
@@ -72,6 +90,36 @@ public class TownAttachSelector extends AbstractUI {
                 show(sender, townName, pageStr);
             }
         }.needPermission(defaultPermission);
+    }
+
+    private String worldLabel(DominionDOO dominion) {
+        if (dominion.getServerId() == Configuration.multiServer.serverId) {
+            World world = Bukkit.getWorld(dominion.getWorldUid());
+            if (world != null) {
+                return world.getName();
+            }
+        }
+        String mappedName = prefetchedWorldNames
+                .getOrDefault(dominion.getServerId(), Map.of())
+                .get(dominion.getWorldUid());
+        return mappedName != null
+                ? mappedName
+                : "#" + dominion.getWorldUid().toString().substring(0, 8);
+    }
+
+    private String serverLabel(DominionDOO dominion) {
+        String name = prefetchedServerNames.get(dominion.getServerId());
+        if (name == null && dominion.getServerId() == Configuration.multiServer.serverId) {
+            name = Configuration.multiServer.serverName;
+        }
+        return MultiServerManager.formatServerLabel(dominion.getServerId(), name);
+    }
+
+    private String locationLabel(DominionDOO dominion) {
+        String world = worldLabel(dominion);
+        return dominion.getServerId() == Configuration.multiServer.serverId
+                ? world
+                : world + " @ " + serverLabel(dominion);
     }
 
     // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ TUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -121,7 +169,7 @@ public class TownAttachSelector extends AbstractUI {
                         .append(formatString(TextUserInterface.townAttachSelectorTuiText.dominionLine,
                                 mark, dominion.getName(),
                                 dominion.getClaimKind(),
-                                dominion.getWorld().getName()));
+                                locationLabel(dominion)));
 
                 line.append(new FunctionalButton(TextUserInterface.townAttachSelectorTuiText.toggleButton) {
                     @Override
@@ -245,7 +293,7 @@ public class TownAttachSelector extends AbstractUI {
                 btn = btn.setDisplayNameArgs(dominion.getName());
                 btn = btn.setLoreArgs(
                         dominion.getClaimKind(),
-                        dominion.getWorld().getName());
+                        locationLabel(dominion));
                 view = view.addItem(btn);
             }
 

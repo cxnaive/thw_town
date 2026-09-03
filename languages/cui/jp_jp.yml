@@ -462,6 +462,7 @@ dominion-list-cui:
     - §7Contributor: §e{2}
     - ''
     - '§b▶ Left Click: manage (this server)'
+    - '§b▶ Right Click: teleport (all servers)'
     - ''
     - '§7Status: §3Town outpost you manage'
     material: BEACON
@@ -556,6 +557,16 @@ dominion-manage-cui:
     - ''
     - §8ランクの作成、タイトルの設定...
     material: CHEST
+  teleport-button:
+    symbol: i
+    name: §b✦ §3ドミニオンへテレポート
+    lore:
+    - §7このドミニオンへテレポートします。
+    - ''
+    - §3▶ クリックしてテレポート
+    - ''
+    - §8テレポート権限とクールダウンに従います。
+    material: ENDER_EYE
   set-tp-button:
     symbol: i
     name: §9🎯 §bテレポイントを設定
@@ -1505,6 +1516,14 @@ town-info-cui:
     - §7Leave this town (land stays).
     - §c▶ Click to leave
     material: OAK_DOOR
+  rename-button:
+    symbol: i
+    name: §eRename Town
+    lore:
+    - §7Change this town's shared name.
+    - §7Mayor only.
+    - §e▶ Click to enter a name
+    material: NAME_TAG
   disband-button:
     symbol: i
     name: §4Disband
@@ -1775,6 +1794,18 @@ town-outposts-cui:
     - '§a▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (this server)'
     material: FILLED_MAP
+  remote-outpost-item-button:
+    symbol: i
+    name: §6⛏ §e{0}
+    lore:
+    - '§7ワールド：§b{0}'
+    - '§7種類：§b{1}'
+    - '§7サーバー：§b{2}'
+    - §7寄贈者：§e{3}
+    - ''
+    - §e▶ 左クリック：場所と管理先を表示
+    - §b▶ 右クリック：サーバー間テレポート
+    material: ENDER_EYE
   back-button:
     symbol: <
     name: §c« Back

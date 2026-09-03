@@ -249,6 +249,7 @@ database-manager-text:
 teleport-manager-text:
   cooling-down: 请等待 {0} 秒后再尝试传送。
   disabled: 你所在的权限组禁止使用传送功能，请联系服务器管理员。
+  multi-server-disabled: 本服务器未启用跨服传送功能。
   delay: 将在 {0} 秒后传送 请勿移动...
   unfinished-cancelled: 上一个未完成的传送已被取消。
   cancel-move: 传送取消（不要乱动）！
@@ -622,11 +623,13 @@ town-manager-text:
   confirm-transfer: §6§l5秒内再次点击确认转让镇长给 {0}。此操作不可撤销！
   set-role-notify: 你在小镇 {1} 的角色已变为 {0}。
   set-role-success: 已将 {0} 在小镇 {2} 的角色设为 {1}。
-  disband-enclave-dissolved: 你的领地 {0} 已随城镇 {1} 一并解散。
   only-mayor-can-transfer: 只有 {0} 的现任镇长可以转让镇长。
   town-name-should-not-empty: 城镇名称不能为空。
   town-name-invalid: 镇名不能包含空格、点、§、&、~ 或逗号。
   town-name-exist: 城镇名称 {0} 已存在。
+  town-name-unchanged: 小镇当前已经叫做 {0}。
+  only-mayor-can-rename: 只有 {0} 的镇长可以修改小镇名称。
+  rename-success: 小镇 {0} 已重命名为 {1}。
   town-not-exist: 城镇 {0} 不存在。
   already-in-town: 你已经是城镇 {0} 的成员。
   not-in-town: 你不是城镇 {0} 的成员。
@@ -637,7 +640,7 @@ town-manager-text:
   disband-success: 小镇 {0} 已解散，{1} 块前哨已解散并归档。
   disband-success-return: 小镇 {0} 已解散：{1} 块前哨已归还贡献者，{2} 块已解散。
   disband-enclave-dissolved: 你的领地 {0} 已随小镇 {1} 一同解散。
-  join-success: 你已加入小镇 {0}。
+  join-success: 你已加入小镇 {0}。个人领地没有自动挂靠；可使用 /town attach 选择要贡献的领地。
   attach-hint: 你有 {0} 块领地可以挂靠到小镇。使用 /town attach 选择。
   town-group-name-invalid: 小镇组名只能包含小写字母、数字、下划线和连字符。
   town-group-name-too-long: 小镇组内部名不能超过 32 个字符。
@@ -709,11 +712,13 @@ town-command-text:
   dominion-not-exist: 领地 {0} 不存在。
   disband-confirm-contributors: 以下玩家贡献的领地将被解散：{0}。
   only-player: 该命令只能由玩家执行。
-  usage: '&b/town create <名称> &7- 创建城镇（你的领地自动挂靠，或获得免费建国前哨）
+  usage: '&b/town create <名称> &7- 创建城镇（现有领地保持个人状态；无领地时获得免费建国属地）
 
     &b/town invite <玩家> &7- 邀请玩家（镇长/助理）
 
     &b/town join <城镇> [confirm] &7- 加入被邀请的城镇
+
+    &b/town rename <新名称> &7- 修改本镇名称（仅镇长）
 
     &b/town leave &7- 离开城镇（领地留在城镇）
 
@@ -756,11 +761,11 @@ town-command-text:
   no-invite: 需要 {0} 的镇长或助理邀请才能加入。
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
   no-invite-remote: 你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。
-  invite-received: 你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】执行 /town join {0} 接受邀请。
+  invite-received: 你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】输入以下命令接受邀请：/town join {0}
   invite-not-local: '{0} 当前不在本服务器。邀请按服务器隔离：对方需要切换到本服务器（或在其所在服重新邀请）后才能加入。'
-  join-confirm: 加入 {0} 将把你的 {1} 块领地挂靠给它：{2}。请执行 /town join {0} confirm 确认。
-  join-confirm-no-land: 加入 {0} 后你将成为居民。请执行 /town join {0} confirm 确认。
-  create-confirm: 创建小镇 {0} 将把你的 {1} 块领地挂靠给它：{2}。请执行 /town create {0} confirm 确认。
+  join-confirm: 加入 {0} 后你将成为居民；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town join {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
+  join-confirm-no-land: 加入 {0} 后你将成为居民；个人领地不会自动挂靠。请执行 /town join {0} confirm 确认。
+  create-confirm: 创建小镇 {0} 后你将成为镇长；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town create {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
   attach-member-note: 被挂靠领地的成员列表将归档保存；原成员会按原旗子获得该属地的 Trust 授权，并会收到通知。
   disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
   no-town: 你不属于任何城镇。
@@ -801,14 +806,18 @@ migration-text:
 town-create-inputter-text:
   button: 创建小镇
   hint: 请输入新小镇的名称。
-  confirm-hint: 输入 confirm 确认创建小镇并挂靠上述领地。
-  description: 创建小镇：你的领地将挂靠，或以你为中心圈出一块建国属地（新手地）。
+  confirm-hint: 输入 confirm 确认创建小镇；上述个人领地不会自动挂靠。
+  description: 创建小镇。现有个人领地保持不变，可之后使用 /town attach 选择贡献；无领地时会获得建国属地。
 town-outpost-admin-inputter-text:
   button: 次级管理员
   hint: 输入玩家名任命，输入 clear 移除。
   description: 任命或清除此前哨的次级管理员。
 town-outpost-create-inputter-text:
   hint: 请输入新镇属地名称，将使用当前选中的两个点。
+town-rename-inputter-text:
+  button: 重命名小镇
+  hint: 请输入新的小镇名称（不允许空格）。
+  description: 修改小镇名称（仅镇长）。
 town-disband-confirm-inputter-text:
   button: 解散小镇
   hint: 输入 confirm 确认解散小镇。
