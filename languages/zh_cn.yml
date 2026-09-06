@@ -706,6 +706,8 @@ town-level-manager-text:
   dropped-refund: 你的背包空间不足，返还的 {0} 个物品已掉落在脚下。
   netherite-ingot: 下界合金锭
   sculk-catalyst: 幽匿催发体
+  echo-shard: 回响碎片
+  heavy-core: 沉重核心
 town-command-text:
   disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
   disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。
@@ -760,9 +762,9 @@ town-command-text:
   unknown-sub-command: 未知的城镇命令：{0}
   no-invite: 需要 {0} 的镇长或助理邀请才能加入。
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
-  no-invite-remote: 你需要 {0} 的镇长或助理的邀请才能加入。邀请按服务器隔离：如果你是在其他服务器被邀请的，请切换到该服务器再执行。
-  invite-received: 你被邀请加入 {0}（5 分钟内有效）。请在【本服务器】输入以下命令接受邀请：/town join {0}
-  invite-not-local: '{0} 当前不在本服务器。邀请按服务器隔离：对方需要切换到本服务器（或在其所在服重新邀请）后才能加入。'
+  no-invite-remote: 需要 {0} 的镇长或助理邀请才能加入。
+  invite-received: 你被邀请加入 {0}（5 分钟内有效）。可在任意子服执行 /town join {0} confirm 接受邀请。
+  invite-not-local: '邀请已保存给 {0}，对方上线后会收到提示。'
   join-confirm: 加入 {0} 后你将成为居民；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town join {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
   join-confirm-no-land: 加入 {0} 后你将成为居民；个人领地不会自动挂靠。请执行 /town join {0} confirm 确认。
   create-confirm: 创建小镇 {0} 后你将成为镇长；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town create {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。

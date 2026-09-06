@@ -13,6 +13,7 @@ import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.TownLevelManager;
+import cn.lunadeer.dominion.managers.TownInviteManager;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
@@ -28,9 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static cn.lunadeer.dominion.misc.Converts.getSelectedPoints;
 import static cn.lunadeer.dominion.misc.Converts.toPlayer;
@@ -42,7 +41,8 @@ import static cn.lunadeer.dominion.misc.Converts.toPlayer;
  * names (create, leave, ...) would collide with dominion's.
  * <p>
  * join requires a pending invite from the town's mayor/assistant (plan
- * §7.1 threat model); invites are in-memory and expire after 5 minutes.
+ * §7.1 threat model); invitations are shared through the database and
+ * expire after 5 minutes, so they can be accepted on any backend.
  */
 public class TownCommand implements TabExecutor {
 
@@ -73,10 +73,10 @@ public class TownCommand implements TabExecutor {
                 + "&b/town list &7- list towns";
         public String unknownSubCommand = "Unknown town command: {0}";
         public String noInvite = "You need an invite from the mayor or an assistant of {0} to join.";
-        public String noInviteRemote = "You need an invite from the mayor or an assistant of {0} to join. Invites are per-server: if you were invited on another server, switch to it and retry.";
+        public String noInviteRemote = "You need an invite from the mayor or an assistant of {0} to join.";
         public String inviteSent = "Invited {0} to join {1} (valid for 5 minutes).";
-        public String inviteReceived = "You have been invited to join {0} (valid for 5 minutes). To accept on THIS server, enter: /town join {0}";
-        public String inviteNotLocal = "{0} is not playing on this server right now. Invites are per-server: they must switch here (or be invited again on their server) before /town join works.";
+        public String inviteReceived = "You have been invited to join {0} (valid for 5 minutes). Run /town join {0} confirm on any server to accept.";
+        public String inviteNotLocal = "Invitation saved for {0}; they will be notified when online.";
         public String joinConfirm = "Joining {0} makes you a resident; your {1} personal dominion(s) stay personal: {2}. Run /town join {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.";
         public String joinConfirmNoLand = "Joining {0} makes you a resident; your personal dominions are not attached automatically. Run /town join {0} confirm to proceed.";
         public String createConfirm = "Creating town {0} makes you its mayor; your {1} personal dominion(s) stay personal: {2}. Run /town create {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.";
@@ -113,46 +113,6 @@ public class TownCommand implements TabExecutor {
         public String townGroupListEmpty = "Town {0} has no custom groups.";
         public String townGroupInfo = "&6{0} &7(internal name: {1}, members: {2})";
         public String townGroupMembers = "Members: {0}";
-    }
-
-    private static final long INVITE_TTL_MS = 5 * 60 * 1000L;
-    // town id -> (invitee uuid -> expiry). Town names are mutable, including
-    // while a player has a pending invite, so names must never be the key.
-    private static final Map<Integer, Map<UUID, Long>> invites = new ConcurrentHashMap<>();
-
-    public static void sendInvite(@NotNull Integer townId, @NotNull UUID invitee) {
-        invites.computeIfAbsent(townId, k -> new ConcurrentHashMap<>())
-                .put(invitee, System.currentTimeMillis() + INVITE_TTL_MS);
-    }
-
-    /** Drop expired entries so the table cannot grow without bound. */
-    private static void pruneExpired(@NotNull Map<UUID, Long> townInvites) {
-        long now = System.currentTimeMillis();
-        townInvites.entrySet().removeIf(e -> e.getValue() <= now);
-    }
-
-    /**
-     * Drop every pending invite of a town (disband): a same-name town
-     * created afterwards must not inherit them.
-     */
-    public static void clearInvites(@NotNull Integer townId) {
-        invites.remove(townId);
-    }
-
-    private static boolean hasInvite(@NotNull Integer townId, @NotNull UUID invitee) {
-        Map<UUID, Long> townInvites = invites.get(townId);
-        if (townInvites == null) return false;
-        pruneExpired(townInvites);
-        Long expiry = townInvites.get(invitee);
-        return expiry != null && expiry > System.currentTimeMillis();
-    }
-
-    private static boolean consumeInvite(@NotNull Integer townId, @NotNull UUID invitee) {
-        Map<UUID, Long> townInvites = invites.get(townId);
-        if (townInvites == null) return false;
-        pruneExpired(townInvites);
-        Long expiry = townInvites.remove(invitee);
-        return expiry != null && expiry > System.currentTimeMillis();
     }
 
     @Override
@@ -350,23 +310,23 @@ public class TownCommand implements TabExecutor {
         TownDOO town = resolveManagedTown(sender);
         TownManager.assertManager(player, town);
         PlayerDTO target = requirePlayerDto(args, 1);
-        sendInvite(town.getId(), target.getUuid());
+        TownInviteManager.PendingInvite invite = TownInviteManager.sendInvite(
+                town.getId(), target.getUuid(), player.getUniqueId(), town.getName());
         Notification.info(sender, Language.townCommandText.inviteSent, target.getLastKnownName(), town.getName());
-        Player online = Dominion.instance.getServer().getPlayer(target.getUuid());
-        if (online != null) {
-            // the invitee gets their own message — with the per-server
-            // accept instruction baked in
-            Notification.info(online, Language.townCommandText.inviteReceived, town.getName());
-        } else if (Configuration.multiServer.enable) {
-            // invites live in this server's memory: a join attempt on
-            // another backend would find nothing
-            Notification.warn(sender, Language.townCommandText.inviteNotLocal, target.getLastKnownName());
-        }
+        TownInviteManager.notifyIfOnline(invite);
     }
 
     private void handleJoin(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
-        TownDOO town = TownManager.requireTown(requireArg(args, 1));
+        TownDOO town;
+        String townName = requireArg(args, 1);
+        try {
+            town = TownManager.requireTown(townName);
+        } catch (cn.lunadeer.dominion.misc.DominionException missingFromCache) {
+            // Join commands run asynchronously and may safely query the
+            // shared database while another backend's cache is still stale.
+            town = TownManager.requireTownFromSharedDatabase(townName);
+        }
         // validate everything that does not depend on consent BEFORE touching
         // the invite, so a failed attempt never burns it
         if (CacheManager.instance.getTownCache().getMember(town.getId(), player.getUniqueId()) != null) {
@@ -382,11 +342,9 @@ public class TownCommand implements TabExecutor {
         // invite is consumed, so a failed join never burns it
         TownManager.assertCanJoinNewTown(player);
         boolean bypass = Others.bypassLimit(player);
-        if (!bypass && !hasInvite(town.getId(), player.getUniqueId())) {
+        if (!bypass && !TownInviteManager.hasInvite(town.getId(), player.getUniqueId())) {
             throw new cn.lunadeer.dominion.misc.DominionException(
-                        Configuration.multiServer.enable
-                                ? Language.townCommandText.noInviteRemote
-                                : Language.townCommandText.noInvite,
+                        Language.townCommandText.noInvite,
                         town.getName());
         }
         if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
@@ -399,14 +357,7 @@ public class TownCommand implements TabExecutor {
             }
             return;
         }
-        if (!bypass && !consumeInvite(town.getId(), player.getUniqueId())) {
-            throw new cn.lunadeer.dominion.misc.DominionException(
-                        Configuration.multiServer.enable
-                                ? Language.townCommandText.noInviteRemote
-                                : Language.townCommandText.noInvite,
-                        town.getName());
-        }
-        TownManager.joinTown(player, town);
+        TownManager.joinTown(player, town, !bypass);
     }
 
     private void handleLeave(@NotNull CommandSender sender) throws Exception {

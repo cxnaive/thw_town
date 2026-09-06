@@ -275,6 +275,25 @@ public class TownManager {
         return town;
     }
 
+    /**
+     * Resolve an active town from the shared database when the local cache is
+     * behind another backend. Callers must already be off the server thread.
+     */
+    public static @NotNull TownDOO requireTownFromSharedDatabase(@NotNull String name)
+            throws DominionException {
+        try {
+            TownDOO town = TownDOO.selectAll().stream()
+                    .filter(candidate -> candidate.getStatus() == TownDOO.TownStatus.ACTIVE)
+                    .filter(candidate -> candidate.getName().equalsIgnoreCase(name))
+                    .findFirst()
+                    .orElse(null);
+            if (town != null) return town;
+        } catch (SQLException e) {
+            XLogger.error("Failed to resolve town {0} from the shared database: {1}", name, e.getMessage());
+        }
+        throw new DominionException(Language.townManagerText.townNotExist, name);
+    }
+
     public static @NotNull TownGroupDOO requireTownGroup(@NotNull TownDOO town,
                                                          @NotNull String name) throws DominionException {
         TownGroupDOO group = cache().getGroup(town.getId(), name);
@@ -731,6 +750,7 @@ public class TownManager {
                 }
                 TownMemberDOO.deleteByTown(town.getId());
                 TownTrustDOO.deleteByTown(town.getId());
+                TownInviteManager.deleteByTown(town.getId());
                 TownDOO.deleteById(town.getId());
                 cache().reloadNow();
             } catch (Exception rollbackError) {
@@ -815,8 +835,8 @@ public class TownManager {
         }
         TownMemberDOO.deleteByTown(town.getId());
         TownTrustDOO.deleteByTown(town.getId());
+        TownInviteManager.deleteByTown(town.getId());
         TownDOO.deleteById(town.getId());
-        cn.lunadeer.dominion.commands.TownCommand.clearInvites(town.getId());
         cache().reloadNow();
         CacheManager.instance.getCache().getDominionCache().load();
         CacheManager.instance.getCache().getMemberCache().load();
@@ -836,12 +856,66 @@ public class TownManager {
      * player becomes a RESIDENT with source JOINED.
      */
     public static void joinTown(@NotNull Player player, @NotNull TownDOO town) throws Exception {
+        joinTown(player, town, true);
+    }
+
+    /**
+     * Join a town atomically with invitation consumption. The invitation is
+     * deleted and the membership inserted on one connection so concurrent
+     * acceptance cannot consume the same invite twice or lose it on failure.
+     */
+    public static void joinTown(@NotNull Player player, @NotNull TownDOO town,
+                                boolean requireInvite) throws Exception {
         if (cache().getMember(town.getId(), player.getUniqueId()) != null) {
             throw new DominionException(Language.townManagerText.alreadyInTown, town.getName());
         }
         assertCanJoinNewTown(player);
-        TownMemberDOO.insert(town.getId(), player.getUniqueId(),
-                TownMemberDOO.TownRole.RESIDENT, TownMemberDOO.MemberSource.JOINED);
+        try (Connection connection = DatabaseManager.instance.getConnection()) {
+            boolean oldAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement townCheck = connection.prepareStatement(
+                        "SELECT 1 FROM town WHERE id = ? AND status <> 'DISBANDED'")) {
+                    townCheck.setInt(1, town.getId());
+                    try (ResultSet rows = townCheck.executeQuery()) {
+                        if (!rows.next()) {
+                            throw new DominionException(Language.townManagerText.townNotExist, town.getName());
+                        }
+                    }
+                }
+                try (PreparedStatement memberCheck = connection.prepareStatement(
+                        "SELECT 1 FROM town_member WHERE town_id = ? AND player_uuid = ?")) {
+                    memberCheck.setInt(1, town.getId());
+                    memberCheck.setString(2, player.getUniqueId().toString());
+                    try (ResultSet rows = memberCheck.executeQuery()) {
+                        if (rows.next()) {
+                            throw new DominionException(Language.townManagerText.alreadyInTown, town.getName());
+                        }
+                    }
+                }
+                if (requireInvite && !TownInviteManager.consumeInvite(
+                        connection, town.getId(), player.getUniqueId())) {
+                    throw new DominionException(Language.townCommandText.noInvite, town.getName());
+                }
+                try (PreparedStatement insert = connection.prepareStatement(
+                        "INSERT INTO town_member(town_id, player_uuid, role, source, group_id) VALUES (?, ?, 'RESIDENT', 'JOINED', -1)")) {
+                    insert.setInt(1, town.getId());
+                    insert.setString(2, player.getUniqueId().toString());
+                    insert.executeUpdate();
+                }
+                connection.commit();
+            } catch (Exception e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            } finally {
+                connection.setAutoCommit(oldAutoCommit);
+            }
+        }
+        TownInviteManager.clearNotified(player.getUniqueId(), town.getId());
         // join raced with a concurrent disband: attaching now would point
         // this player's land at a dead town and strip their access, so
         // re-verify the town row and roll the membership back

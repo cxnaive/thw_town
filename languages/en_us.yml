@@ -686,6 +686,8 @@ town-level-manager-text:
   dropped-refund: Your inventory was full; {0} returned item(s) were dropped at your feet.
   netherite-ingot: Netherite Ingot
   sculk-catalyst: Sculk Catalyst
+  echo-shard: Echo Shard
+  heavy-core: Heavy Core
 town-command-text:
   disband-confirm-contributors-return: 'Contributed land of these players will be returned to them: {0}.'
   disband-confirm-return: 'Disbanding {0} returns contributed land and dissolves town-native outposts ({1} total): {2}. Re-run with ''confirm'' to proceed.'
@@ -736,7 +738,7 @@ town-command-text:
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).
-  invite-received: 'You have been invited to join {0} (valid for 5 minutes). To accept on THIS server, enter: /town join {0}'
+  invite-received: 'You have been invited to join {0} (valid for 5 minutes). Run /town join {0} confirm on any server to accept.'
   join-confirm: 'Joining {0} makes you a resident; your {1} personal dominion(s) stay personal: {2}. Run /town join {0} confirm to proceed. Use /town attach afterward if you want to contribute selected land.'
   join-confirm-no-land: Joining {0} makes you a resident; your personal dominions are not attached automatically. Run /town join {0} confirm to proceed.
   disband-confirm: 'Disbanding {0} dissolves its {1} outpost(s): {2}. Re-run with ''confirm'' to proceed.'

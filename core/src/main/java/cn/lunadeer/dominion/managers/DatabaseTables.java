@@ -381,6 +381,25 @@ public class DatabaseTables {
                             .notNull().defaultSqlVal("'LEGACY'"))
                     .execute();
         }
+
+        // 5.1.9: pending town invitations are shared runtime state. They
+        // intentionally have no server_id, so an invitation can be accepted
+        // from any backend using the same database. The table is excluded
+        // from backup/restore below because invitations are short-lived.
+        if (!Show.show().tables().execute().contains("town_invite")) {
+            Create.create().table("town_invite")
+                    .column(Column.of(new FieldInteger("town_id")).notNull()
+                            .foreign("town", new FieldInteger("id")))
+                    .column(Column.of(new FieldString("player_uuid")).notNull()
+                            .foreign("player_name", new FieldString("uuid")))
+                    .column(Column.of(new FieldString("inviter_uuid")).notNull())
+                    .column(Column.of(new FieldTimestamp("expires_at")).notNull())
+                    .column(Column.of(new FieldTimestamp("created_at")).notNull()
+                            .defaultSqlVal("CURRENT_TIMESTAMP"))
+                    .execute();
+        }
+        ensureUniqueIndex("idx_town_invite_uk", "town_invite", "town_id, player_uuid");
+        ensureIndex("idx_town_invite_player_expiry", "town_invite", "player_uuid, expires_at");
         // Town progression starts at level 1. Existing towns keep every
         // outpost they already own; the level only gates future additions.
         if (!Show.show().columns().from("town").execute().containsKey("level")) {
@@ -734,6 +753,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_invite",
             "town_level_progress",
             "town_group",
             "town_group_flag",
@@ -751,7 +771,7 @@ public class DatabaseTables {
      * meaningless across a restore).
      */
     private static boolean isExcludedFromBackup(String table) {
-        return table.equals("tp_cache");
+        return table.equals("tp_cache") || table.equals("town_invite");
     }
 
     /**
@@ -767,6 +787,7 @@ public class DatabaseTables {
             "server_info",
             "world_map",
             "town",
+            "town_invite",
             "town_level_progress",
             "town_group",
             "town_group_flag",
@@ -868,6 +889,10 @@ public class DatabaseTables {
                         Notification.warn(sender, Language.databaseManagerText.importTableSkipped, table);
                         continue;
                     }
+                    if (isExcludedFromBackup(table)) {
+                        Notification.warn(sender, Language.databaseManagerText.importTableSkipped, table);
+                        continue;
+                    }
                     if (!existingTables.contains(table)) {
                         Notification.warn(sender, Language.databaseManagerText.importTableSkipped, table);
                         continue;
@@ -942,6 +967,12 @@ public class DatabaseTables {
                     boolean oldAutoCommit = conn.getAutoCommit();
                     conn.setAutoCommit(false);
                     try {
+                        // Invitations are runtime state, never part of a
+                        // restore snapshot. Clear them even when restoring a
+                        // backup that contains town data.
+                        if (existingTables.contains("town_invite")) {
+                            conn.createStatement().execute("DELETE FROM town_invite");
+                        }
                         if (abandoningTownPermissionData) {
                             if (existingTables.contains("town_group_outpost_override")) {
                                 conn.createStatement().execute("DELETE FROM town_group_outpost_override");

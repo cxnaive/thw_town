@@ -1,14 +1,13 @@
 package cn.lunadeer.dominion.uis.town;
 
 import cn.lunadeer.dominion.cache.CacheManager;
-import cn.lunadeer.dominion.commands.TownCommand;
-import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.uis.ChestUserInterface;
 import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownMemberDOO;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.managers.TownInviteManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -75,17 +74,11 @@ public class TownMembers extends AbstractUI {
                         Notification.error(sender, Language.townCommandText.playerNotFound, input);
                         return;
                     }
-                    TownCommand.sendInvite(town.getId(), target.getUuid());
+                    TownInviteManager.PendingInvite invite = TownInviteManager.sendInvite(
+                            town.getId(), target.getUuid(), player.getUniqueId(), town.getName());
                     Notification.info(sender, Language.townCommandText.inviteSent,
                             target.getLastKnownName(), town.getName());
-                    Player online = cn.lunadeer.dominion.Dominion.instance.getServer().getPlayer(target.getUuid());
-                    if (online != null) {
-                        Notification.info(online, Language.townCommandText.inviteReceived,
-                                town.getName());
-                    } else if (Configuration.multiServer.enable) {
-                        Notification.warn(sender, Language.townCommandText.inviteNotLocal,
-                                target.getLastKnownName());
-                    }
+                    TownInviteManager.notifyIfOnline(invite);
                     cn.lunadeer.dominion.utils.scheduler.Scheduler.runEntityTask(
                             () -> show(player, townName, "1"), player);
                 } catch (Exception e) {

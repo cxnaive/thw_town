@@ -254,8 +254,9 @@ default/VIP limitation 完全解耦：
 - 数量：小镇持久化 `level`（默认 1，当前最高 10），1 级使用
   `outpost-max-count` / `outpost-max-count-per-world` 的基础额度 3，之后每级按
   `outpost-count-per-level: 2` 增加，公式为 `3 + (level - 1) * 2`；
-  成员共同任务目前开放至 3 级：1→2 共同提交 9 个下界合金锭，2→3 共同提交
-  32 个幽匿催发体；提交进度持久化且允许全体成员分批贡献，OP 仍可在 1～10
+  成员共同任务默认开放至 5 级：1→2 共同提交 9 个下界合金锭，2→3 共同提交
+  32 个幽匿催发体，3→4 共同提交 64 个回响碎片，4→5 共同提交 8 个沉重核心
+  （沉重核心需要 1.21+）；提交进度持久化且允许全体成员分批贡献，OP 仍可在 1～10
   之间直接设置等级；OP 手动降级时，同一事务内清除高于新等级的任务进度，
   避免已完成进度在降级后让小镇无消耗恢复等级；
   Founding/贡献/新建全部计入，远程新建和挂靠都会校验；已有老镇若超过等级上限，
@@ -481,7 +482,7 @@ town:
 
   outpost-allow-remote: true             # 允许新建远程 Outpost；false 时只能扩建现有
   max-level: 10                          # 系统最高等级；OP 可手动设置
-  progression-max-level: 3              # 当前向成员共同任务开放的最高等级
+  progression-max-level: 5              # 当前向成员共同任务开放的最高等级
   level-requirements:                    # key 是目标等级；支持全体成员分批提交；已有配置不自动覆盖
     2:
       type: item
@@ -491,6 +492,14 @@ town:
       type: item
       material: SCULK_CATALYST
       amount: 32
+    4:
+      type: item
+      material: ECHO_SHARD
+      amount: 64
+    5:
+      type: item
+      material: HEAVY_CORE
+      amount: 8
   outpost-count-per-level: 2             # 每高一级增加的属地上限
   outpost-max-count: 3                   # 1 级全服基础属地上限，-1 无限
   outpost-max-count-per-world: 3         # 1 级单世界基础属地上限，-1 无限

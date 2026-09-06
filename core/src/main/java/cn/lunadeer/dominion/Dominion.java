@@ -5,6 +5,7 @@ import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.events.EventsRegister;
 import cn.lunadeer.dominion.handler.WorldLoadHandler;
+import cn.lunadeer.dominion.handler.TownInviteNotificationHandler;
 import cn.lunadeer.dominion.managers.HooksManager;
 import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TeleportManager;
@@ -83,6 +84,7 @@ public final class Dominion extends JavaPlugin {
         new MultiServerManager(this);
         new TeleportManager(this);
         new CacheManager();
+        new TownInviteNotificationHandler(this);
         new Inputter(this);
         new TextUserInterfaceManager(this);
         new ChestUserInterfaceManager(this);

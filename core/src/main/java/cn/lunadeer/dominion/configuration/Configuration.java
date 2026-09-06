@@ -204,14 +204,14 @@ public class Configuration extends ConfigurationFile {
                 "false: towns can only expand existing outposts (resize)."
         })
         public boolean outpostAllowRemote = true;
-        @Comments("Maximum town level. Promotion rules are reserved for future gameplay; OPs may set it manually.")
+        @Comments("Maximum system town level. OPs may set it manually up to this limit.")
         public int maxLevel = 10;
         @Comments({
                 "Highest level that members may reach through shared town tasks.",
                 "OPs may still set any level up to max-level manually.",
                 "Raise this value when later level tasks are ready to open."
         })
-        public int progressionMaxLevel = 3;
+        public int progressionMaxLevel = 5;
         /** Target-level task definitions are loaded from this section manually. */
         @HandleManually
         public Map<Integer, TownLevelRequirement> levelRequirements = new LinkedHashMap<>();
@@ -292,6 +292,12 @@ public class Configuration extends ConfigurationFile {
         public String disbandPolicy = "dissolve-all";
         @Comments("Enable the TownTrust system.")
         public boolean trustEnabled = true;
+        @Comments({
+                "How often (in seconds) each backend checks the shared database",
+                "for pending town invitations for players currently online.",
+                "Set to 0 to disable periodic polling; login checks remain enabled."
+        })
+        public int inviteNotificationIntervalSeconds = 30;
     }
 
     @Comments({
@@ -434,6 +440,20 @@ public class Configuration extends ConfigurationFile {
         level3.amount = 32;
         ConfigurationManager.writeConfigurationPart(getYaml(), level3,
                 TOWN_LEVEL_REQUIREMENTS_KEY + ".3");
+
+        Town.TownLevelRequirement level4 = new Town.TownLevelRequirement();
+        level4.material = "ECHO_SHARD";
+        level4.amount = 64;
+        ConfigurationManager.writeConfigurationPart(getYaml(), level4,
+                TOWN_LEVEL_REQUIREMENTS_KEY + ".4");
+
+        // Keep this as a material name so the core still loads on 1.20.1.
+        // Servers older than 1.21 skip the unavailable level-5 requirement.
+        Town.TownLevelRequirement level5 = new Town.TownLevelRequirement();
+        level5.material = "HEAVY_CORE";
+        level5.amount = 8;
+        ConfigurationManager.writeConfigurationPart(getYaml(), level5,
+                TOWN_LEVEL_REQUIREMENTS_KEY + ".5");
     }
 
     @PostProcess(priority = 1)
@@ -523,12 +543,17 @@ public class Configuration extends ConfigurationFile {
             town.maxLevel = 10;
         }
         if (town.progressionMaxLevel < 1) {
-            XLogger.warn("Invalid town progression-max-level: {0}; resetting to 3.",
+            XLogger.warn("Invalid town progression-max-level: {0}; resetting to 5.",
                     town.progressionMaxLevel);
-            town.progressionMaxLevel = 3;
+            town.progressionMaxLevel = 5;
         }
         if (town.progressionMaxLevel > town.maxLevel) {
             town.progressionMaxLevel = town.maxLevel;
+        }
+        if (town.inviteNotificationIntervalSeconds < 0) {
+            XLogger.warn("Invalid town invite-notification-interval-seconds: {0}; resetting to 30.",
+                    town.inviteNotificationIntervalSeconds);
+            town.inviteNotificationIntervalSeconds = 30;
         }
         if (town.outpostCountPerLevel < 0) {
             XLogger.warn("Invalid town outpost-count-per-level: {0}; resetting to 2.",

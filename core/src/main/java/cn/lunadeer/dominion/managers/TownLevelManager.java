@@ -42,6 +42,8 @@ public final class TownLevelManager {
         public String droppedRefund = "Your inventory was full; {0} returned item(s) were dropped at your feet.";
         public String netheriteIngot = "Netherite Ingot";
         public String sculkCatalyst = "Sculk Catalyst";
+        public String echoShard = "Echo Shard";
+        public String heavyCore = "Heavy Core";
     }
 
     public enum State {
@@ -532,9 +534,13 @@ public final class TownLevelManager {
 
     public static @NotNull String displayMaterial(@Nullable Material material) {
         if (material == null) return "-";
-        return switch (material) {
-            case NETHERITE_INGOT -> Language.townLevelManagerText.netheriteIngot;
-            case SCULK_CATALYST -> Language.townLevelManagerText.sculkCatalyst;
+        // HEAVY_CORE only exists on 1.21+. Match names to retain the core's
+        // 1.20.1 API compatibility while localizing newer task materials.
+        return switch (material.name()) {
+            case "NETHERITE_INGOT" -> Language.townLevelManagerText.netheriteIngot;
+            case "SCULK_CATALYST" -> Language.townLevelManagerText.sculkCatalyst;
+            case "ECHO_SHARD" -> Language.townLevelManagerText.echoShard;
+            case "HEAVY_CORE" -> Language.townLevelManagerText.heavyCore;
             default -> material.name();
         };
     }
