@@ -8,6 +8,7 @@ multi-server-manager-text:
   get-name-by-id-error: Server ID ({0}) does not exist.
   warn-update-server-name: There is already a server with ID {0} and name {1}, but the current server name is {2}. Updating the name to {2}.
 asserts-text:
+  creation-disabled-in-world: Creating towns or dominions in world {0} is disabled.
   dom-name-should-not-empty: Dominion name should not be empty.
   dom-name-invalid: Dominion name should not contain space, dot, §, &, ~ or ,.
   dom-name-exist: 'Dominion name: {0} already exists.'
@@ -60,6 +61,10 @@ vault-connect-text:
   economy-unavailable: Economy plugin not found, you need to install one Economy plugin to use economy features.
   insufficient-funds: Insufficient money, need {0} {1}, but only have {2} {1}.
 dominion-provider-handler-text:
+  give-force-admin-only: Only OPs or players with dominion.admin may use give force. Use confirm for a normal transfer.
+  give-force-success: 'Force-transferred {0} to {1}; previous town links were removed. Updated {2} dominion(s).'
+  give-result-refresh-failed: 'Transfer committed for {0}, but its current state could not be read; automatic attachment was not attempted. Check the dominion before retrying. Reason: {1}'
+  give-confirm-command: Run /dom give {0} {1} confirm to transfer this personal dominion and its personal sub-dominions. Administrators may use /dom give {0} {1} force to detach town land and transfer it.
   create-success: Create dominion {0} success.
   create-failed: 'Create dominion {0} failed, reason: {1}'
   personal-creation-disabled: Personal dominions can no longer be created. Create or join a town instead (/town create).
@@ -573,7 +578,7 @@ dominion-operate-command-text:
   set-teleport-description: Set the teleport location for a dominion.
   rename-description: Rename a dominion.
   set-map-color-description: Set the map color for a dominion.
-  give-description: Give a dominion to a player.
+  give-description: Give a dominion to a player; confirm for normal transfer, force for administrators.
   tp-description: Teleport to a dominion.
   switch-ui-description: Switch the UI type for the dominion commands.
 dominion-create-command-text:

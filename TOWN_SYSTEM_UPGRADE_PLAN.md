@@ -42,8 +42,8 @@ Phase 1 实现落点（对照 §9）：
   不再给权）；镇成员默认 flags 由每 Outpost 内建组 `@town` 承载；
 - 闸门：个人/子区禁建在 `DominionProviderHandler.createDominion`；
   legacy resize/delete 与镇属扣费（TownBank）在 resize/delete 内路由；
-  镇属领地转让硬禁（含管理员，仲裁走 release）；受让人在镇时
-  被转让地自动挂靠；
+  镇属领地禁止普通转让；管理员可通过 release 返还，或 `dom give ... force`
+  解除关联后转交（含原镇已不存在的遗留属地）；受让人在镇时仍尝试自动挂靠；
 - 偏差说明：
   - 镇原生 Outpost（founding/remote）以 `attached_by IS NULL` 标记
     （出生即镇属，无挂靠事件），dissolve-all 之外的
@@ -169,8 +169,32 @@ Trust 判定从 Phase 1 起即生效（镇属 Outpost 的级联中包含 Trust �
 | 镇属 Outpost resize | 允许并扣费（§4.6）；无镇 legacy 地 resize 仍被拒绝 |
 | 解散 Town | **全部 Outpost 同步解散**（删除保护数据，不碰方块），写入归档供 admin 恢复；Founding 一并解散——任何镇属领地都不转化为个人领地 |
 | 无镇 Outpost 个人转让 | 受让人在镇 → 自动挂靠其镇并通知；受让人无镇 → 保持无镇 |
-| 镇属 Outpost | 个人不可转让（镇财产）；仅管理员 release |
+| 镇属 Outpost | 个人不可转让（镇财产）；管理员可用 `dom give ... force` 解除关联后转交 |
 | `/town release <dominion> [confirm]` | （仅 OP）Outpost → 无镇，返还 contributor，用于仲裁 |
+| `/dom give <dominion> <player> force` | OP / `dominion.admin` 强制转交；原镇不存在也可执行；受让人在镇时尝试自动挂靠，失败则保留个人所有权并提示 |
+
+管理员强制转交补充：
+
+- 普通转交使用 `confirm` 确认，仍禁止直接转交镇属地；`force` 仅限管理员，
+  可处理 Founding、子领地及原镇已不存在的遗留属地。
+- 在同一数据库事务内归档原领地和旧镇成员镜像，清理所选领地的旧镇关联、
+  成员镜像、镇权限组镜像、属地 Trust/override 及已付费记录，再更新所有者；
+  不修改方块、坐标、世界或子服，不删除旧镇及其镇级成员/模板/Trust。
+- 所选领地的个人子领地一并转交，镇属子领地及其下级保留；单独转交子领地时
+  将其提升为顶层领地。不会从缓存复活数据库里已经删除的领地。
+- 转交成功后沿用自动挂靠流程；接收者属于多个镇时按镇长、副镇长、成员的顺序选镇。
+  挂靠仍检查属地上限，失败不撤销已经成功的转交。跨服保护缓存通过现有约 60 秒轮询刷新。
+
+创建禁用世界配置（各子服 `config.yml`，默认空列表）：
+
+```yaml
+town:
+  creation-disabled-worlds: []
+```
+
+填入本子服的实际世界名（不是子服 ID 或显示映射名）。普通玩家在这些世界不能
+建镇、创建属地或通过旧版入口创建个人/子领地，OP / `dominion.admin` 不受此项限制。
+不改变现有领地、挂靠或 resize 规则。启动时自动补充缺失的配置项，无需删除配置文件。
 
 ## 4. 数据迁移与成员并入
 
@@ -234,8 +258,8 @@ Cuboid 创建管线生成 Founding Outpost：
 
 - 免费（`town.founding-cost: 0`）；
 - 尺寸受 `town.founding-max-size` 约束；
-- `claim_kind = FOUNDING`，无 contributor；解散时随镇一并解散，**永不返还**——
-  新人无法把免费 Founding 洗成个人领地再带往他镇（不变量 5）。
+- `claim_kind = FOUNDING`，无 contributor；正常解散时随镇一并解散，不提供玩家返还入口；
+  管理员可使用 `dom give ... force` 单独仲裁转交。
 
 老玩家建镇不另发新地（已有存量）。
 

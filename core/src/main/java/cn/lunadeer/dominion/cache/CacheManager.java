@@ -104,6 +104,11 @@ public class CacheManager {
             // replica caches (list views, tab completion, cross-server
             // lookups) to ~60s instead of a restart.
             Scheduler.runTaskRepeatAsync(() -> {
+                // Another backend can transfer/delete OUR dominions in the
+                // shared database. Refresh the local protection cache too.
+                thisServerCache.getDominionCache().load();
+                thisServerCache.getMemberCache().load();
+                thisServerCache.getGroupCache().load();
                 for (Integer id : otherServerCaches.keySet()) {
                     reloadServerCache(id);
                 }

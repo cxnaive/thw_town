@@ -180,6 +180,7 @@ public class TownCommand implements TabExecutor {
 
     private void handleCreate(@NotNull CommandSender sender, @NotNull String[] args) throws Exception {
         Player player = requirePlayer(sender);
+        cn.lunadeer.dominion.misc.Asserts.assertCreationAllowed(player, player.getWorld());
         String name = requireArg(args, 1);
         // Show the founder which personal dominions are available for a
         // later manual attachment; creating the town does not attach them.
@@ -227,6 +228,7 @@ public class TownCommand implements TabExecutor {
      * the auto square around their location).
      */
     public static void createTownInteractive(@NotNull Player player, @NotNull String name) throws Exception {
+        cn.lunadeer.dominion.misc.Asserts.assertCreationAllowed(player, player.getWorld());
         List<DominionDOO> attachable = new ArrayList<>();
         for (DominionDOO dominion : TownManager.ownedDominions(player.getUniqueId())) {
             if (!dominion.isTownOutpost()) {

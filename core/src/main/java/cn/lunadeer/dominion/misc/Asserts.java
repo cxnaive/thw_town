@@ -45,6 +45,7 @@ public class Asserts {
         public String groupNameExist = "Group name: {0} already exists.";
 
         public String notAllowDomInWorld = "Player {0} is not allowed to create dominions in world {1}.";
+        public String creationDisabledInWorld = "Creating towns or dominions in world {0} is disabled.";
         public String exceedMaxAmount = "Player {0} can not create more dominions (max: {1}).";
         public String exceedMaxAmountOfWorld = "Player {0} can not create more dominions in world {1} (max: {2}).";
 
@@ -103,6 +104,19 @@ public class Asserts {
         }
         if (dominion.getGroups().stream().anyMatch(group -> group.getNamePlain().equals(groupNamePlain))) {
             throw new DominionException(Language.assertsText.groupNameExist, groupNamePlain);
+        }
+    }
+
+    /** World creation policy is independent of legacy default/VIP limitations. */
+    public static void assertCreationAllowed(@NotNull CommandSender operator, @NotNull World world) {
+        assertCreationAllowed(operator, world.getName());
+    }
+
+    static void assertCreationAllowed(@NotNull CommandSender operator, @NotNull String worldName) {
+        if (Others.isAdministrator(operator)) return;
+        if (Configuration.town.creationDisabledWorlds.stream()
+                .anyMatch(name -> name != null && name.trim().equalsIgnoreCase(worldName))) {
+            throw new DominionException(Language.assertsText.creationDisabledInWorld, worldName);
         }
     }
 

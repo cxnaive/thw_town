@@ -43,6 +43,10 @@ public class Others {
         return player.isOp() || player.hasPermission(adminPermission);
     }
 
+    public static boolean isAdministrator(org.bukkit.command.CommandSender sender) {
+        return sender.isOp() || sender.hasPermission(adminPermission);
+    }
+
     /**
      * Recursively retrieves all sub-dominions of the given dominion.
      * This method fetches the direct sub-dominions from the cache and then recursively

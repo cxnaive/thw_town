@@ -8,6 +8,7 @@ multi-server-manager-text:
   get-name-by-id-error: サーバーID ({0}) は存在しません。
   warn-update-server-name: ID {0} と名前 {1} のサーバーが既に存在しますが、現在のサーバー名は {2} です。名前を {2} に更新します。
 asserts-text:
+  creation-disabled-in-world: ワールド {0} ではタウンや領地を作成できません。
   dom-name-should-not-empty: ドミニオン名を空にすることはできません。
   dom-name-invalid: ドミニオン名にはスペース、ドット、§、&、~、または , を含めることはできません。
   dom-name-exist: 'ドミニオン名: {0} は既に存在します。'
@@ -60,6 +61,10 @@ vault-connect-text:
   economy-unavailable: 経済プラグインが見つかりません。経済機能を使用するには、1つの経済プラグインをインストールする必要があります。
   insufficient-funds: 資金が不足しています。 {0} {1} が必要ですが、 {2} {1} しかありません。
 dominion-provider-handler-text:
+  give-force-admin-only: give force は OP または dominion.admin 権限を持つ管理者専用です。通常の譲渡には confirm を使用してください。
+  give-force-success: '{0} を {1} に強制譲渡しました。旧タウンとの関連を解除し、領地 {2} 件を更新しました。'
+  give-result-refresh-failed: '領地 {0} の譲渡は確定しましたが、最新状態の読み取りに失敗したため、自動所属は試行していません。再実行する前に領地の状態を確認してください。理由: {1}'
+  give-confirm-command: /dom give {0} {1} confirm で個人領地とその個人子領地の譲渡を確認できます。管理者は /dom give {0} {1} force でタウンとの関連を解除して強制譲渡できます。
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   auto-attach-failed: 'Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner''s personal dominion.'
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
@@ -571,7 +576,7 @@ dominion-operate-command-text:
   set-teleport-description: ドミニオンのテレポート位置を設定します。
   rename-description: ドミニオンの名前を変更します。
   set-map-color-description: ドミニオンのマップカラーを設定します。
-  give-description: ドミニオンをプレイヤーに譲渡します。
+  give-description: 領地をプレイヤーに譲渡します。通常の確認には confirm、管理者の強制譲渡には force を使用します。
   tp-description: ドミニオンにテレポートします。
   switch-ui-description: ドミニオンコマンドのUIタイプを切り替えます。
 dominion-create-command-text:

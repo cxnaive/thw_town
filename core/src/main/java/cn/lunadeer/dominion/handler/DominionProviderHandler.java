@@ -17,6 +17,7 @@ import cn.lunadeer.dominion.events.dominion.DominionCreateEvent;
 import cn.lunadeer.dominion.events.dominion.DominionDeleteEvent;
 import cn.lunadeer.dominion.events.dominion.modify.*;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.managers.DominionTransferManager;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.providers.DominionProvider;
@@ -82,6 +83,10 @@ public class DominionProviderHandler extends DominionProvider {
         public String sameName = "The new name is the same as the old name.";
 
         public String giveSuccess = "Give dominion {0} to {1} success.";
+        public String giveForceAdminOnly = "Only OPs or players with dominion.admin may use give force. Use confirm for a normal transfer.";
+        public String giveForceSuccess = "Force-transferred {0} to {1}; previous town links were removed. Updated {2} dominion(s).";
+        public String giveResultRefreshFailed = "Transfer committed for {0}, but its current state could not be read; automatic attachment was not attempted. Check the dominion before retrying. Reason: {1}";
+        public String giveConfirmCommand = "Run /dom give {0} {1} confirm to transfer this personal dominion and its personal sub-dominions. Administrators may use /dom give {0} {1} force to detach town land and transfer it.";
         public String giveFailed = "Give dominion {0} to other failed, reason: {1}";
         public String giveConfirm = "Use command '{0}' to confirm give the dominion {1} to {2}, this operation cannot be undone.";
         public String alreadyBelong = "The dominion {0} already belongs to {1}.";
@@ -110,6 +115,10 @@ public class DominionProviderHandler extends DominionProvider {
         instance = this;
     }
 
+    public static DominionProviderHandler getInstance() {
+        return (DominionProviderHandler) instance;
+    }
+
     @Override
     public CompletableFuture<DominionDTO> createDominion(@NotNull CommandSender operator,
                                                          @NotNull String name, @NotNull UUID owner,
@@ -124,6 +133,7 @@ public class DominionProviderHandler extends DominionProvider {
                 // Town era gates (plan §5.3/§12.2): personal and sub dominion
                 // creation is frozen; towns expand through TownManager, which
                 // creates outposts directly and never passes through here.
+                assertCreationAllowed(event.getOperator(), event.getWorld());
                 if (event.getOperator() instanceof Player gatePlayer && !Others.bypassLimit(gatePlayer)) {
                     if (parent == null && !Configuration.landSystem.allowNewPersonalDominion) {
                         throw new DominionException(Language.dominionProviderHandlerText.personalCreationDisabled);
@@ -391,119 +401,142 @@ public class DominionProviderHandler extends DominionProvider {
                                                            @NotNull DominionDTO dominion,
                                                            @NotNull PlayerDTO newOwner,
                                                            boolean force) {
+        // Preserve the provider API's existing confirmation semantics.
+        return transferDominion(operator, dominion, newOwner, force, false);
+    }
+
+    public CompletableFuture<DominionDTO> transferDominion(@NotNull CommandSender operator,
+                                                           @NotNull DominionDTO dominion,
+                                                           @NotNull PlayerDTO newOwner,
+                                                           boolean confirmed, boolean adminForce) {
+        if (adminForce && !Others.isAdministrator(operator)) {
+            Notification.error(operator, Language.dominionProviderHandlerText.giveForceAdminOnly);
+            return CompletableFuture.completedFuture(null);
+        }
         DominionTransferEvent event = new DominionTransferEvent(operator, dominion, newOwner);
-        event.setForce(force);
+        event.setForce(confirmed);
         if (!event.call())
             return CompletableFuture.completedFuture(null);
         return event.getFutureToComplete().completeAsync(() -> {
+            List<Integer> transferredIds = new ArrayList<>();
             try {
-                DominionDOO giveDoo = (DominionDOO) event.getDominion();
-                // town property is never transferable; admin arbitration goes
-                // through /dom town release instead.
-                if (giveDoo.isTownOutpost()) {
-                    throw new DominionException(Language.dominionProviderHandlerText.townOutpostNoTransfer, giveDoo.getName());
-                }
-                assertDominionOwner(event.getOperator(), event.getDominion());
-                if (dominion.getParentDomId() != -1) {
-                    throw new DominionException(Language.dominionProviderHandlerText.cannotGiveSub, event.getDominion().getName());
-                }
-                Player newOwnerBukkit = toPlayer(event.getNewOwner().getUuid());
-                if (newOwnerBukkit.getUniqueId().equals(event.getOldOwner().getUuid())) {
-                    throw new DominionException(Language.dominionProviderHandlerText.alreadyBelong,
-                            event.getDominion().getName(), newOwnerBukkit.getName());
-                }
-                // the receiver's self-serve amount cap applies only to
-                // player-to-player gives; an admin forcing the transfer
-                // (or the console) is arbitration, not self-service
-                boolean operatorBypasses = !(event.getOperator() instanceof Player opPlayer)
-                        || Others.bypassLimit(opPlayer);
-                if (!operatorBypasses) {
-                    assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid(), false);
-                }
-                List<DominionDTO> sub_dominions = getSubDominionsRecursive(event.getDominion());
-                if (!event.isForce()) {
-                    if (!sub_dominions.isEmpty()) {
-                        Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.listSubDoms,
-                                event.getDominion().getName(), String.join(", ", sub_dominions.stream().map(DominionDTO::getName).toList()));
+                UUID newOwnerUuid = event.getNewOwner().getUuid();
+                String newOwnerName = event.getNewOwner().getLastKnownName();
+                if (adminForce) {
+                    transferredIds.addAll(DominionTransferManager.forceTransfer(
+                            event.getOperator(), event.getDominion().getId(), newOwnerUuid));
+                    Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveForceSuccess,
+                            event.getDominion().getName(), newOwnerName, transferredIds.size());
+                } else {
+                    DominionDOO giveDoo = (DominionDOO) event.getDominion();
+                    if (giveDoo.isTownOutpost()) {
+                        throw new DominionException(Language.dominionProviderHandlerText.townOutpostNoTransfer, giveDoo.getName());
                     }
-                    Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.giveConfirm,
-                            DominionOperateCommand.give.getUsage(), event.getDominion().getName(), newOwnerBukkit.getName());
-                    return null;
-                }
-                for (DominionDTO sub_dominion : sub_dominions) {
-                    // a sub that is already a town outpost (cross-town
-                    // enclave, §4.3) keeps its contributor record — rewriting
-                    // it would misdirect return-contributed restitution
-                    if (((DominionDOO) sub_dominion).isTownOutpost()) {
-                        continue;
+                    assertDominionOwner(event.getOperator(), event.getDominion());
+                    if (dominion.getParentDomId() != -1) {
+                        throw new DominionException(Language.dominionProviderHandlerText.cannotGiveSub, event.getDominion().getName());
                     }
-                    sub_dominion.setOwner(newOwnerBukkit.getUniqueId());
+                    Player newOwnerBukkit = toPlayer(newOwnerUuid);
+                    if (newOwnerUuid.equals(event.getDominion().getOwner())) {
+                        throw new DominionException(Language.dominionProviderHandlerText.alreadyBelong,
+                                event.getDominion().getName(), newOwnerName);
+                    }
+                    boolean operatorBypasses = !(event.getOperator() instanceof Player opPlayer)
+                            || Others.bypassLimit(opPlayer);
+                    if (!operatorBypasses) {
+                        assertPlayerDominionAmount(newOwnerBukkit, event.getDominion().getWorldUid(), false);
+                    }
+                    List<DominionDTO> subDominions = getSubDominionsRecursive(event.getDominion());
+                    if (!event.isForce()) {
+                        if (!subDominions.isEmpty()) {
+                            Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.listSubDoms,
+                                    event.getDominion().getName(), String.join(", ", subDominions.stream().map(DominionDTO::getName).toList()));
+                        }
+                        Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.giveConfirmCommand,
+                                event.getDominion().getName(), newOwnerName);
+                        return null;
+                    }
+                    for (DominionDTO sub : subDominions) {
+                        if (((DominionDOO) sub).isTownOutpost()) continue;
+                        sub.setOwner(newOwnerUuid);
+                        transferredIds.add(sub.getId());
+                        Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveSuccess,
+                                sub.getName(), newOwnerName);
+                    }
+                    event.setDominion(event.getDominion().setOwner(newOwnerUuid));
+                    transferredIds.add(event.getDominion().getId());
                     Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveSuccess,
-                            sub_dominion.getName(), newOwnerBukkit.getName());
+                            event.getDominion().getName(), newOwnerName);
                 }
-                event.setDominion(event.getDominion().setOwner(newOwnerBukkit.getUniqueId()));
-                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.giveSuccess,
-                        event.getDominion().getName(), newOwnerBukkit.getName());
-                // Town era (operation matrix): a townless outpost transferred
-                // to a town member attaches to their town automatically.
-                List<TownMemberDOO> memberships = new ArrayList<>(CacheManager.instance.getTownCache()
-                        .getMembershipsOf(newOwnerBukkit.getUniqueId()));
-                if (!memberships.isEmpty()) {
-                    // multi-town: prefer the town the new owner actually
-                    // leads (mayor over assistant over resident), matching
-                    // TownCommand resolution
-                    memberships.sort(java.util.Comparator.comparingInt(m -> switch (m.getRole()) {
-                        case MAYOR -> 0;
-                        case ASSISTANT -> 1;
-                        case RESIDENT -> 2;
-                    }));
-                    TownDOO town = CacheManager.instance.getTownCache().getTown(memberships.get(0).getTownId());
-                    if (town != null) {
-                        UUID attachOperator = event.getOperator() instanceof Player p
-                                ? p.getUniqueId() : newOwnerBukkit.getUniqueId();
-                        List<DominionDOO> attachCandidates = new ArrayList<>();
-                        for (DominionDTO sub : sub_dominions) {
-                            if (!((DominionDOO) sub).isTownOutpost()) {
-                                attachCandidates.add((DominionDOO) sub);
-                            }
-                        }
-                        attachCandidates.add((DominionDOO) event.getDominion());
-                        try {
-                            List<Integer> attached = TownManager.attachOwnedOutposts(town, attachCandidates,
-                                    attachOperator, newOwnerBukkit.getUniqueId());
-                            if (!attached.contains(event.getDominion().getId())) {
-                                throw new DominionException(Language.townManagerText.outpostAttachUnavailable,
-                                        event.getDominion().getName());
-                            }
-                            // merged members/trusts are written directly; make
-                            // them visible immediately instead of within the
-                            // 4s throttle window
-                            CacheManager.instance.getTownCache().reloadNow();
-                            Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
-                                    event.getDominion().getName(), town.getName());
-                            Notification.info(newOwnerBukkit, Language.dominionProviderHandlerText.autoAttachedToTown,
-                                    event.getDominion().getName(), town.getName());
-                        } catch (Exception attachError) {
-                            // Ownership transfer has already committed one row
-                            // at a time before this optional town attachment.
-                            // Report the real partial outcome instead of lying
-                            // that the transfer itself failed.
-                            Notification.warn(event.getOperator(),
-                                    Language.dominionProviderHandlerText.autoAttachFailed,
-                                    event.getDominion().getName(), town.getName(), attachError.getMessage());
-                            Notification.warn(newOwnerBukkit,
-                                    Language.dominionProviderHandlerText.autoAttachFailed,
-                                    event.getDominion().getName(), town.getName(), attachError.getMessage());
-                        }
-                    }
-                }
-                return event.getDominion();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.dominionProviderHandlerText.giveFailed,
                         event.getDominion().getName(), e.getMessage());
                 return null;
             }
+            // Ownership has committed. Attachment failures must not report the
+            // already-successful transfer as failed.
+            if (adminForce) {
+                try {
+                    DominionDOO current = DominionDOO.select(event.getDominion().getId());
+                    if (current == null) throw new java.sql.SQLException("Dominion no longer exists.");
+                    event.setDominion(current);
+                } catch (Exception refreshError) {
+                    Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.giveResultRefreshFailed,
+                            event.getDominion().getName(), refreshError.getMessage());
+                    return null;
+                }
+            }
+            attachTransferredDominions(event, transferredIds);
+            return event.getDominion();
         });
+    }
+
+    private void attachTransferredDominions(DominionTransferEvent event, List<Integer> transferredIds) {
+        String townName = "-";
+        try {
+            UUID newOwner = event.getNewOwner().getUuid();
+            List<TownMemberDOO> memberships = new ArrayList<>(TownMemberDOO.selectByPlayer(newOwner));
+            memberships.sort(java.util.Comparator.comparingInt(m -> switch (m.getRole()) {
+                case MAYOR -> 0;
+                case ASSISTANT -> 1;
+                case RESIDENT -> 2;
+            }));
+            TownDOO town = null;
+            for (TownMemberDOO member : memberships) {
+                TownDOO candidate = TownDOO.select(member.getTownId());
+                if (candidate != null && candidate.getStatus() == TownDOO.TownStatus.ACTIVE) {
+                    town = candidate;
+                    break;
+                }
+            }
+            if (town == null) return;
+            townName = town.getName();
+            List<DominionDOO> candidates = new ArrayList<>();
+            for (int id : transferredIds) {
+                DominionDOO current = DominionDOO.select(id);
+                if (current != null && !current.isTownOutpost() && current.getOwner().equals(newOwner)) {
+                    candidates.add(current);
+                }
+            }
+            UUID attachOperator = event.getOperator() instanceof Player p ? p.getUniqueId() : newOwner;
+            List<Integer> attached = TownManager.attachOwnedOutposts(town, candidates, attachOperator, newOwner);
+            if (!attached.contains(event.getDominion().getId())) {
+                throw new DominionException(Language.townManagerText.outpostAttachUnavailable, event.getDominion().getName());
+            }
+            DominionDOO updated = DominionDOO.select(event.getDominion().getId());
+            if (updated != null) event.setDominion(updated);
+            Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
+                    event.getDominion().getName(), townName);
+            Player online = org.bukkit.Bukkit.getPlayer(newOwner);
+            if (online != null) Notification.info(online, Language.dominionProviderHandlerText.autoAttachedToTown,
+                    event.getDominion().getName(), townName);
+        } catch (Exception attachError) {
+            Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.autoAttachFailed,
+                    event.getDominion().getName(), townName, attachError.getMessage());
+            Player online = org.bukkit.Bukkit.getPlayer(event.getNewOwner().getUuid());
+            if (online != null) Notification.warn(online, Language.dominionProviderHandlerText.autoAttachFailed,
+                    event.getDominion().getName(), townName, attachError.getMessage());
+        }
     }
 
     @Override

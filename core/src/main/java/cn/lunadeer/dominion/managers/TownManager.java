@@ -45,6 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionIntersect;
+import static cn.lunadeer.dominion.misc.Asserts.assertCreationAllowed;
 import static cn.lunadeer.dominion.misc.Asserts.assertDominionName;
 import static cn.lunadeer.dominion.misc.Asserts.assertTownOutpostSize;
 import static cn.lunadeer.dominion.misc.Others.bypassLimit;
@@ -658,6 +659,8 @@ public class TownManager {
      */
     public static @NotNull TownDOO createTown(@NotNull Player founder, @NotNull String name,
                                               @Nullable CuboidDTO foundingCuboid) throws Exception {
+        World foundingWorld = founder.getWorld();
+        assertCreationAllowed(founder, foundingWorld);
         assertTownName(name);
         assertCanJoinNewTown(founder);
 
@@ -675,7 +678,7 @@ public class TownManager {
             // answers to town knobs (foundingSize, foundingCost), and
             // expansion afterwards follows normal town-outpost resize.
             foundingToCreate = new DominionDOO(founder.getUniqueId(), uniqueDominionName(name),
-                    founder.getWorld().getUID(), foundingCuboid, -1);
+                    foundingWorld.getUID(), foundingCuboid, -1);
             assertDominionIntersect(founder, foundingToCreate, foundingCuboid);
             double cost = Configuration.town.foundingCost;
             if (cost > 0 && !bypassLimit(founder)
@@ -710,7 +713,7 @@ public class TownManager {
                 cn.lunadeer.dominion.events.dominion.DominionCreateEvent createEvent =
                         new cn.lunadeer.dominion.events.dominion.DominionCreateEvent(
                                 founder, foundingCreated.getName(), founder.getUniqueId(),
-                                founder.getWorld(), foundingCuboid, null);
+                                foundingWorld, foundingCuboid, null);
                 createEvent.setSkipEconomy(true);
                 callLifecycleEvent(createEvent);
                 // like the provider pipeline, complete the future so
@@ -1219,6 +1222,7 @@ public class TownManager {
                                                            @NotNull String dominionName, @NotNull World world,
                                                            @NotNull CuboidDTO cuboid) throws Exception {
         assertManager(operator, town);
+        assertCreationAllowed(operator, world);
         if (!Configuration.town.outpostAllowRemote) {
             throw new DominionException(Language.townManagerText.outpostRemoteDisabled);
         }

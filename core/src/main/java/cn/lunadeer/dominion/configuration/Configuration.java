@@ -204,6 +204,12 @@ public class Configuration extends ConfigurationFile {
                 "false: towns can only expand existing outposts (resize)."
         })
         public boolean outpostAllowRemote = true;
+        @Comments({
+                "World names on THIS backend where non-admins cannot create towns or dominions.",
+                "Applies to town founding, remote outposts and legacy personal/sub-dominion creation.",
+                "Empty by default. OPs and dominion.admin bypass this list; existing land is retained."
+        })
+        public List<String> creationDisabledWorlds = new ArrayList<>();
         @Comments("Maximum system town level. OPs may set it manually up to this limit.")
         public int maxLevel = 10;
         @Comments({

@@ -12,6 +12,7 @@ import cn.lunadeer.dominion.handler.DominionProviderHandler;
 import cn.lunadeer.dominion.managers.TeleportManager;
 import cn.lunadeer.dominion.misc.CommandArguments;
 import cn.lunadeer.dominion.misc.DominionException;
+import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.providers.DominionProvider;
 import cn.lunadeer.dominion.uis.MainMenu;
 import cn.lunadeer.dominion.utils.Notification;
@@ -41,7 +42,7 @@ public class DominionOperateCommand {
         public String setTeleportDescription = "Set the teleport location for a dominion.";
         public String renameDescription = "Rename a dominion.";
         public String setMapColorDescription = "Set the map color for a dominion.";
-        public String giveDescription = "Give a dominion to a player.";
+        public String giveDescription = "Give a dominion to a player; confirm for normal transfer, force for administrators.";
         public String tpDescription = "Teleport to a dominion.";
         public String switchUiDescription = "Switch the UI type for the dominion commands.";
     }
@@ -131,15 +132,19 @@ public class DominionOperateCommand {
     public static SecondaryCommand give = new SecondaryCommand("give", List.of(
             new CommandArguments.RequiredDominionArgument(),
             new CommandArguments.RequiredPlayerArgument(),
-            new Option(List.of("force"), "")
+            new Option(List.of("confirm", "force"), "")
     ), Language.dominionOperateCommandText.giveDescription) {
         @Override
         public void executeHandler(CommandSender sender) {
             try {
+                boolean force = getArgumentValue(2).equalsIgnoreCase("force");
+                if (force && !Others.isAdministrator(sender)) {
+                    throw new DominionException(Language.dominionProviderHandlerText.giveForceAdminOnly);
+                }
                 DominionDTO dominion = toDominionDTO(getArgumentValue(0));
                 PlayerDTO player = toPlayerDTO(getArgumentValue(1));
-                boolean force = getArgumentValue(2).equals("force");
-                DominionProviderHandler.getInstance().transferDominion(sender, dominion, player, force);
+                boolean confirmed = force || getArgumentValue(2).equalsIgnoreCase("confirm");
+                DominionProviderHandler.getInstance().transferDominion(sender, dominion, player, confirmed, force);
             } catch (Exception e) {
                 Notification.error(sender, e);
             }

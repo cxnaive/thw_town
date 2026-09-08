@@ -8,6 +8,7 @@ multi-server-manager-text:
   get-name-by-id-error: 伺服器 ID({0})不存在。
   warn-update-server-name: 資料庫中 ID 為 {0}、名稱為「{1}」的伺服器，現行設定為「{2}」，已更新資料庫名稱為「{2}」。
 asserts-text:
+  creation-disabled-in-world: 世界 {0} 禁止建立小鎮或領地。
   dom-name-should-not-empty: 領地名稱不可空白。
   dom-name-invalid: 領地名稱不可包含空格、句點、§、&、~ 或逗號。
   dom-name-exist: 已有相同領地名稱：{0}。
@@ -60,6 +61,10 @@ vault-connect-text:
   economy-unavailable: 未偵測到經濟插件，請安裝至少一個經濟插件以啟用經濟功能。
   insufficient-funds: 餘額不足，需要 {0}{1}，但你僅有 {2}{1}。
 dominion-provider-handler-text:
+  give-force-admin-only: 只有 OP 或擁有 dominion.admin 權限的管理員可使用 give force；一般轉交請使用 confirm。
+  give-force-success: 已將 {0} 強制轉交給 {1}，舊小鎮關聯已解除，共處理 {2} 塊領地。
+  give-result-refresh-failed: 領地 {0} 的轉交已提交，但讀取最新狀態失敗，尚未嘗試自動掛靠；請先查看領地狀態，不要直接重複轉交。原因：{1}
+  give-confirm-command: 請執行 /dom give {0} {1} confirm 確認轉交個人領地及其個人子領地。管理員可使用 /dom give {0} {1} force 解除鎮屬地關聯並強制轉交。
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   auto-attach-failed: 領地 {0} 已成功轉讓，但無法自動掛靠至城鎮 {1}：{2}。它將保留為新主人的個人領地。
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
@@ -571,7 +576,7 @@ dominion-operate-command-text:
   set-teleport-description: 設定領地傳送點
   rename-description: 重新命名領地
   set-map-color-description: 設定領地地圖顏色
-  give-description: 將領地轉讓給玩家
+  give-description: 將領地轉交給玩家；confirm 確認一般轉交，force 為管理員強制轉交。
   tp-description: 傳送至領地
   switch-ui-description: 切換領地指令的介面模式
 dominion-create-command-text:

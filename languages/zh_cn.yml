@@ -8,6 +8,7 @@ multi-server-manager-text:
   get-name-by-id-error: 服务器ID（{0}）不存在。
   warn-update-server-name: 数据库中服务器ID {0} 的名称（{1}）与配置文件中的名称（{2}）不一致，已更新数据库。
 asserts-text:
+  creation-disabled-in-world: 世界 {0} 禁止创建小镇或领地。
   dom-name-should-not-empty: 领地名称不能为空
   dom-name-invalid: 领地名称不能包含空格、点、§、&、~ 或逗号。
   dom-name-exist: 已存在领地名称：{0}
@@ -60,6 +61,10 @@ vault-connect-text:
   economy-unavailable: 缺少经济插件，请至少安装一个经济插件以使用经济功能。
   insufficient-funds: 余额不足，需要 {0} {1}，但是你只有 {2} {1}
 dominion-provider-handler-text:
+  give-force-admin-only: 只有 OP 或拥有 dominion.admin 权限的管理员可使用 give force；普通转交请使用 confirm。
+  give-force-success: 已将 {0} 强制转交给 {1}，旧小镇关联已解除，共处理 {2} 块领地。
+  give-result-refresh-failed: 领地 {0} 的转交已提交，但读取最新状态失败，尚未尝试自动挂靠；请先查看领地状态，不要直接重复转交。原因：{1}
+  give-confirm-command: 请执行 /dom give {0} {1} confirm 确认转交个人领地及其个人子领地。管理员可使用 /dom give {0} {1} force 解除镇属地关联并强制转交。
   create-success: 成功创建领地 {0}
   create-failed: 创建领地 {0} 失败，原因：{1}
   personal-creation-disabled: 个人领地已不可新建。请创建或加入城镇（/town create）。
@@ -576,7 +581,7 @@ dominion-operate-command-text:
   set-teleport-description: 设置领地的传送位置。
   rename-description: 重命名领地。
   set-map-color-description: 设置领地的地图颜色。
-  give-description: 将领地转让给玩家。
+  give-description: 将领地转交给玩家；confirm 确认普通转交，force 为管理员强制转交。
   tp-description: 传送到领地。
   switch-ui-description: 切换领地指令的界面类型。
 dominion-create-command-text:

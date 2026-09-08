@@ -37,6 +37,7 @@ public final class TownOutpostCreateInputter {
                 throw new cn.lunadeer.dominion.misc.DominionException(
                         Language.selectPointEventsHandlerText.selectionToolHint, Configuration.selectTool);
             }
+            cn.lunadeer.dominion.misc.Asserts.assertCreationAllowed(player, world);
             cuboid = TownManager.normalizeTownOutpostCuboid(new CuboidDTO(points[0], points[1]));
         } catch (Exception e) {
             Notification.error(player, e);
