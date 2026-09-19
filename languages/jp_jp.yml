@@ -390,6 +390,20 @@ database-manager-text:
   import-database-success: データベースのインポートに成功しました。
   convert-world-failed: 古いワールド {0}({1}) が現在のセーブ内で見つかりません。ワールド名が現在のセーブに存在することを確認してください。
 teleport-manager-text:
+  busy: テレポートを処理中です。しばらくお待ちください。
+  preparing: 安全な移動先を準備しています。移動しないでください...
+  connecting: 移動先のサーバーに接続しています...
+  success: テレポートが完了しました。
+  airborne-success: 空中へのテレポートが完了しました。落下に注意してください。
+  target-missing: 移動先の領地は存在しません。
+  target-changed: 領地または移動先が変更されました。もう一度お試しください。
+  world-unavailable: 移動先のワールドが読み込まれていません。管理者にご連絡ください。
+  permission-denied: この領地へテレポートする権限がありません。
+  no-safe-location: 安全な移動先が見つかりません。領地の管理者にテレポート地点の設定を依頼してください。
+  timed-out: 移動先の準備がタイムアウトしました。移動していません。もう一度お試しください。
+  rejected: サーバーまたは他のプラグインがテレポートを拒否しました。
+  failed: テレポートに失敗しました。再試行するか、管理者にログの確認を依頼してください。
+  unconfirmed: サーバーから結果が返っていません。再実行せずにしばらくお待ちください。
   cooling-down: '{0} 秒後に再度テレポートできます。'
   disabled: あなたの権限グループではテレポートが無効になっています。
   multi-server-disabled: このサーバーではサーバー間テレポートが無効です。

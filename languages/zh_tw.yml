@@ -390,6 +390,20 @@ database-manager-text:
   import-database-success: 資料庫匯入成功
   convert-world-failed: 找不到舊世界 {0}({1})，請確認世界名稱存在於存檔中
 teleport-manager-text:
+  busy: 已有傳送正在處理，請稍候。
+  preparing: 正在準備安全落點，請勿移動...
+  connecting: 正在連線至目標伺服器...
+  success: 傳送完成。
+  airborne-success: 傳送完成，目標為空中落點，請注意下落。
+  target-missing: 目標領地已不存在，傳送取消。
+  target-changed: 目標領地或傳送點已變更，請重新發起傳送。
+  world-unavailable: 目標世界未載入，請聯絡管理員。
+  permission-denied: 你目前沒有傳送至此領地的權限。
+  no-safe-location: 未找到安全落點，請聯絡領地管理員設定傳送點。
+  timed-out: 準備落點逾時，你尚未被移動，請重試。
+  rejected: 伺服器或其他插件拒絕了此次傳送。
+  failed: 傳送失敗，請重試或聯絡管理員查看日誌。
+  unconfirmed: 伺服器尚未確認傳送結果，請等待，暫時不能再次傳送。
   cooling-down: 請等待 {0} 秒後再傳送
   disabled: 你所屬權限組已停用傳送功能
   multi-server-disabled: 本伺服器未啟用跨服傳送功能

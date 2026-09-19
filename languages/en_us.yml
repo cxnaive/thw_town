@@ -392,6 +392,20 @@ database-manager-text:
   import-core-missing: 'Backup is incomplete: missing core table file(s): {0}. Import aborted, nothing was modified.'
   export-tables-summary: Exported {0} table(s).
 teleport-manager-text:
+  busy: A teleport is already in progress. Please wait.
+  preparing: Preparing a safe destination. Please do not move...
+  connecting: Connecting to the destination server...
+  success: Teleport completed.
+  airborne-success: Teleport completed at an airborne position. Be prepared to fall.
+  target-missing: The destination dominion no longer exists.
+  target-changed: The destination changed. Please try again.
+  world-unavailable: The destination world is not loaded. Please contact an administrator.
+  permission-denied: You do not have permission to teleport to this dominion.
+  no-safe-location: No safe landing point was found. Ask a manager to set the dominion teleport point.
+  timed-out: Preparing the destination timed out. You have not been moved; please try again.
+  rejected: The server or another plugin refused the teleport.
+  failed: Teleport failed. Please try again or contact an administrator.
+  unconfirmed: The server has not confirmed the teleport result yet. Please wait before trying again.
   cooling-down: Please wait for {0} seconds before teleporting again.
   disabled: Teleportation is disabled for your permission group.
   multi-server-disabled: Cross-server teleportation is disabled on this server.

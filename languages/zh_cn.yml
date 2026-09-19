@@ -349,12 +349,26 @@ database-manager-text:
   import-core-missing: 备份不完整：缺少核心表文件：{0}。导入已中止，未做任何修改。
   export-tables-summary: 已导出 {0} 张表。
 teleport-manager-text:
+  busy: 已有传送正在处理，请稍候。
+  preparing: 正在准备安全落点，请勿移动...
+  connecting: 正在连接目标区服...
+  success: 传送完成。
+  airborne-success: 传送完成，目标为空中落点，请注意下落。
+  target-missing: 目标领地已不存在，传送取消。
+  target-changed: 目标领地或传送点已变化，请重新发起传送。
+  world-unavailable: 目标世界未加载，请联系管理员。
+  permission-denied: 你目前没有传送到这个领地的权限。
+  no-safe-location: 未找到可用落点，请联系领地管理员设置传送点。
+  timed-out: 准备落点超时，你尚未被移动，请重试。
+  rejected: 服务器或其他插件拒绝了此次传送。
+  failed: 传送失败，请重试或联系管理员查看日志。
+  unconfirmed: 服务器尚未确认传送结果，请等待，暂时不能再次传送。
   cooling-down: 请等待 {0} 秒后再尝试传送。
   disabled: 你所在的权限组禁止使用传送功能，请联系服务器管理员。
   multi-server-disabled: 本服务器未启用跨服传送功能。
   delay: 将在 {0} 秒后传送 请勿移动...
   unfinished-cancelled: 上一个未完成的传送已被取消。
-  cancel-move: 传送取消（不要乱动）！
+  cancel-move: 因移动、切换世界或其他传送，已取消本次传送。
 blue-map-connect-text:
   register-fail: 获取 BlueMap API 失败！
   info-label: <div>{0}</div><div>所有人：{1}</div>

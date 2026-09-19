@@ -824,17 +824,19 @@ public class DominionDOO implements DominionDTO {
     }
 
 
+    /** Stored coordinates, including the "default" marker; never queries terrain. */
+    public @NotNull String getStoredTpLocation() {
+        return tp_location.getValue();
+    }
+
+    /** Coordinates for display/events. An unset point is the geometric center, not a resolved landing. */
     @Override
     public @NotNull Location getTpLocation() {
         if (Objects.equals(tp_location.getValue(), "default")) {
             World w = getWorld();
-            double centerX = (double) (cuboid.x1() + cuboid.x2()) / 2;
-            double centerZ = (double) (cuboid.z1() + cuboid.z2()) / 2;
-            double centerY = (double) (cuboid.y1() + cuboid.y2()) / 2;
-            if (w != null) {
-                int surfaceY = w.getHighestBlockYAt((int) centerX, (int) centerZ) + 1;
-                centerY = Math.min(centerY, surfaceY);
-            }
+            double centerX = ((double) cuboid.x1() + cuboid.x2()) / 2;
+            double centerZ = ((double) cuboid.z1() + cuboid.z2()) / 2;
+            double centerY = ((double) cuboid.y1() + cuboid.y2()) / 2;
             return new Location(w, centerX, centerY, centerZ);
         } else {
             // 0:0:0

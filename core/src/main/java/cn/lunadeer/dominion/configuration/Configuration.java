@@ -152,6 +152,18 @@ public class Configuration extends ConfigurationFile {
     @Comments("Language of the plugin, see others in the plugins/Dominion/languages folder.")
     public static String language = "zh_cn";
 
+    @Comments("Safe teleport preparation limits. Existing player delay/cooldown settings remain in limitations.")
+    public static SafeTeleport safeTeleport = new SafeTeleport();
+
+    public static class SafeTeleport extends ConfigurationPart {
+        @Comments("Horizontal search radius in blocks, clamped to 0..32.")
+        public int searchRadius = 8;
+        @Comments("Maximum landing candidates per request, clamped to 1..65536.")
+        public int maxCandidates = 4096;
+        @Comments("Preparation timeout in seconds, clamped to 2..120. Does not cancel a submitted teleport.")
+        public int prepareTimeoutSeconds = 10;
+    }
+
     @Comments({
             "The land system rules of the town era.",
     })

@@ -114,6 +114,7 @@ public final class Dominion extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        TeleportManager.shutdown();
         HoloManager.instance().removeAll(); // Clean up hologram display entities
         if (DatabaseManager.instance != null)
             DatabaseManager.instance.close();

@@ -37,7 +37,8 @@ public class Move implements Listener {
             } else {
                 to.setZ(dom.getCuboid().z2() + 2);
             }
-            TeleportManager.doTeleportSafely(player, to);
+            event.setCancelled(true);
+            TeleportManager.eject(player, to, dom);
         }
     }
 }

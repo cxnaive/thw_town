@@ -325,6 +325,9 @@ public class DatabaseTables {
                     .column(tp_cache_dom_id)
                     .execute();
         }
+        // Additive, disposable cross-server teleport protocol; no land/member rows are modified.
+        cn.lunadeer.dominion.managers.teleport.TeleportHandoffStore.migrate();
+
         // world_map: stable world-name -> UID anchor per server, used by
         // WorldMapManager to heal dominion world_uid drift when a world is
         // regenerated under the same name. No primary key: the ORM only
