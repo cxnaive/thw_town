@@ -192,6 +192,7 @@ public class Language extends ConfigurationFile {
     public static cn.lunadeer.dominion.managers.TownLevelManager.TownLevelManagerText townLevelManagerText = new cn.lunadeer.dominion.managers.TownLevelManager.TownLevelManagerText();
     public static TownCommand.TownCommandText townCommandText = new TownCommand.TownCommandText();
     public static TownRoleText townRoleText = new TownRoleText();
+    public static cn.lunadeer.dominion.uis.town.TownGuideText townGuideText = new cn.lunadeer.dominion.uis.town.TownGuideText();
 
     public static Asserts.AssertsText assertsText = new Asserts.AssertsText();
     public static Converts.ConvertsText convertsText = new Converts.ConvertsText();

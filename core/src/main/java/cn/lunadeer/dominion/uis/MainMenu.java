@@ -11,6 +11,7 @@ import cn.lunadeer.dominion.inputters.CreateDominionInputter;
 import cn.lunadeer.dominion.misc.CommandArguments;
 import cn.lunadeer.dominion.uis.dominion.DominionList;
 import cn.lunadeer.dominion.uis.template.TemplateList;
+import cn.lunadeer.dominion.uis.town.TownGuide;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.command.CommandManager;
 import cn.lunadeer.dominion.utils.command.SecondaryCommand;
@@ -159,6 +160,8 @@ public class MainMenu extends AbstractUI {
         view.navigator(Line.create().append(TextUserInterface.menuTuiText.button).append(switchToCui.build()));
         view.add(create);
         view.add(myTown);
+        view.add(Line.create().append(TownGuide.button(player, TownGuide.Topic.CONTENTS, null,
+                () -> show(player, args[0])).build()).append(Language.townGuideText.description));
         view.add(townList);
         view.add(list);
         if (Configuration.groupTitle.enable) view.add(title);
@@ -445,6 +448,7 @@ public class MainMenu extends AbstractUI {
                 }
         );
 
+        TownGuide.addHelpButton(view, player, TownGuide.Topic.CONTENTS, null, () -> show(player, args[0]));
         view.open();
     }
 

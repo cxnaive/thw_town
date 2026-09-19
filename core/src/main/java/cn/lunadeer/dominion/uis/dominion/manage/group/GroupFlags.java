@@ -13,6 +13,7 @@ import cn.lunadeer.dominion.inputters.RenameGroupInputter;
 import cn.lunadeer.dominion.misc.CommandArguments;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.MainMenu;
+import cn.lunadeer.dominion.uis.town.TownGuide;
 import cn.lunadeer.dominion.uis.dominion.DominionList;
 import cn.lunadeer.dominion.uis.dominion.DominionManage;
 import cn.lunadeer.dominion.utils.Notification;
@@ -122,6 +123,11 @@ public class GroupFlags extends AbstractUI {
         }
 
         boolean templateManaged = isTemplateManaged(dominion, group);
+        if (cn.lunadeer.dominion.managers.TownManager.isTownManagedGroup(group, dominion)) {
+            view.add(Line.create().append(TownGuide.button(player, TownGuide.Topic.TEMPLATES,
+                    ((cn.lunadeer.dominion.doos.DominionDOO) dominion).getTownId(),
+                    () -> show(player, dominion.getName(), args[1], args[2])).build()));
+        }
         if (templateManaged) {
             for (PriFlag flag : cn.lunadeer.dominion.managers.TownPermissionManager
                     .getManageableTemplateFlags()) {
@@ -343,6 +349,11 @@ public class GroupFlags extends AbstractUI {
             });
         }
 
+        if (cn.lunadeer.dominion.managers.TownManager.isTownManagedGroup(group, dominion)) {
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.TEMPLATES,
+                    ((cn.lunadeer.dominion.doos.DominionDOO) dominion).getTownId(),
+                    () -> show(player, dominion.getName(), args[1], args[2]));
+        }
         view.open();
     }
 

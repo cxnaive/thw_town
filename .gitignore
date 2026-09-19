@@ -125,3 +125,6 @@ runs/
 version.properties
 
 bin/
+
+validation/server/automation/node_modules/
+validation/server/automation/cache/

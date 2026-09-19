@@ -1,0 +1,23 @@
+{
+  "mojang": {
+    "version": "1.21.11",
+    "filename": "mojang_1.21.11.jar",
+    "url": "https://piston-data.mojang.com/v1/objects/64bb6d763bed0a9f1d632ec347938594144943ed/server.jar",
+    "algorithm": "sha256",
+    "hash": "f83b8e093865806f931c7e34aae41b177d4c076335263dd124c75d6d65dd1726"
+  },
+  "folia": {
+    "version": "1.21.11-build14",
+    "filename": "folia-1.21.11-14.jar",
+    "url": "https://fill-data.papermc.io/v1/objects/f52c408490a0225611e67907a3ca19f7e6da2c6bc899e715d5f46844e7103c39/folia-1.21.11-14.jar",
+    "algorithm": "sha256",
+    "hash": "f52c408490a0225611e67907a3ca19f7e6da2c6bc899e715d5f46844e7103c39"
+  },
+  "leaf": {
+    "version": "1.21.11-build178",
+    "filename": "leaf-1.21.11-178.jar",
+    "url": "https://github.com/Winds-Studio/Leaf/releases/download/ver-1.21.11/leaf-1.21.11-178.jar",
+    "algorithm": "sha256",
+    "hash": "b01c2f6037f97a4e1cd1d23dc6574ebb4839de12395b62aa465fac63db263627"
+  }
+}

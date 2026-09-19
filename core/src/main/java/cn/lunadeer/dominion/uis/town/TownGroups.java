@@ -143,7 +143,9 @@ public class TownGroups extends AbstractUI {
         ListView view = ListView.create(10, button(player, town.getName()));
         view.title(formatString(TextUserInterface.townGroupsTuiText.title, town.getName()));
         view.navigator(Line.create().append(TownInfo.button(player, town.getName()).build())
-                .append(TextUserInterface.townGroupsTuiText.button));
+                .append(TextUserInterface.townGroupsTuiText.button)
+                .append(TownGuide.button(player, TownGuide.Topic.ROLES, town.getId(),
+                        () -> show(player, town.getName(), args[1])).build()));
         if (manager) {
             view.add(Line.create().append(new FunctionalButton(TextUserInterface.townGroupsTuiText.createButton) {
                 @Override
@@ -219,6 +221,8 @@ public class TownGroups extends AbstractUI {
             }.setDisplayNameArgs(group.getDisplayName())
                     .setLoreArgs(group.getName(), memberCount(town, group)));
         }
+        TownGuide.addHelpButton(view, player, TownGuide.Topic.ROLES, town.getId(),
+                () -> show(player, town.getName(), args[1]));
         view.open();
     }
 

@@ -176,6 +176,10 @@ public final class TownTrustEditor {
                 }
             });
         }
+        TownGuide.addHelpButton(view, player, TownGuide.Topic.TRUST, context.town().getId(), () -> {
+            if (context.isOutpost()) showOutpost(player, context.outpost(), context.target(), context.returnPage());
+            else showTown(player, context.town(), context.target(), context.returnPage());
+        });
         view.open();
     }
 

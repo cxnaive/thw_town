@@ -95,7 +95,9 @@ public class TownLevelTasks extends AbstractUI {
             view.title(formatString(TextUserInterface.townLevelTasksTuiText.title, town.getName()));
             view.navigator(Line.create()
                     .append(TownInfo.button(player, town.getName()).build())
-                    .append(TextUserInterface.townLevelTasksTuiText.button));
+                    .append(TextUserInterface.townLevelTasksTuiText.button)
+                    .append(TownGuide.button(player, TownGuide.Topic.LEVELS, town.getId(),
+                            () -> show(player, town.getName(), args[1])).build()));
             view.add(Line.create().append(formatString(TextUserInterface.townLevelTasksTuiText.levelLine,
                     task.currentLevel(), task.systemMaxLevel())));
             view.add(Line.create().append(formatString(TextUserInterface.townLevelTasksTuiText.openLevelLine,
@@ -219,6 +221,8 @@ public class TownLevelTasks extends AbstractUI {
                             TownInfo.show(player, town.getName(), "1");
                         }
                     });
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.LEVELS, town.getId(),
+                    () -> show(player, town.getName(), args[1]));
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);

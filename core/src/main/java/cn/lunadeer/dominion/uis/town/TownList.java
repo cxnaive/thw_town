@@ -65,7 +65,9 @@ public class TownList extends AbstractUI {
         view.title(TextUserInterface.townListTuiText.title);
         view.navigator(Line.create()
                 .append(MainMenu.button(player).build())
-                .append(TextUserInterface.townListTuiText.button));
+                .append(TextUserInterface.townListTuiText.button)
+                .append(TownGuide.button(player, TownGuide.Topic.CONTENTS, null,
+                        () -> show(player, args[0])).build()));
         for (TownDOO town : CacheManager.instance.getTownCache().getAllTowns()) {
             Line line = Line.create()
                     .append(TownInfo.button(player, town.getName()).build())
@@ -141,6 +143,8 @@ public class TownList extends AbstractUI {
                         MainMenu.show(player, "1");
                     }
                 });
+        TownGuide.addHelpButton(view, player, TownGuide.Topic.CONTENTS, null,
+                () -> show(player, args[0]));
         view.open();
     }
 

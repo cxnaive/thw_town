@@ -150,7 +150,7 @@ public class Configuration extends ConfigurationFile {
     }
 
     @Comments("Language of the plugin, see others in the plugins/Dominion/languages folder.")
-    public static String language = "en_us";
+    public static String language = "zh_cn";
 
     @Comments({
             "The land system rules of the town era.",

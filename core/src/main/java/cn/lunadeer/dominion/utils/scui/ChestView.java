@@ -201,6 +201,16 @@ public class ChestView {
         return this;
     }
 
+    /** Place an auxiliary action in the first unused border slot, preserving custom layouts. */
+    public void setButtonInEmptySlot(@NotNull ChestButton button) {
+        for (int slot = 0; slot < layout.length(); slot++) {
+            if (layout.charAt(slot) == '#' && !buttons.containsKey(slot)) {
+                setButton(slot, button);
+                return;
+            }
+        }
+    }
+
     /**
      * Opens the chest view for the player. If the current inventory already has the custom tag,
      * it refreshes the view; otherwise, it creates a new inventory.

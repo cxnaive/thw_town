@@ -157,7 +157,9 @@ public class TownOutposts extends AbstractUI {
             view.title(formatString(TextUserInterface.townOutpostsTuiText.title, town.getName()));
             view.navigator(Line.create()
                     .append(TownInfo.button(player, town.getName()).build())
-                    .append(TextUserInterface.townOutpostsTuiText.button));
+                    .append(TextUserInterface.townOutpostsTuiText.button)
+                    .append(TownGuide.button(player, TownGuide.Topic.LAND, town.getId(),
+                            () -> show(player, town.getName(), args[1])).build()));
 
             for (DominionDOO outpost : outposts(town.getId())) {
                 Line line = Line.create();
@@ -290,6 +292,8 @@ public class TownOutposts extends AbstractUI {
                             TownInfo.show(player, town.getName(), "1");
                         }
                     });
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.LAND, town.getId(),
+                    () -> show(player, town.getName(), args[1]));
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);

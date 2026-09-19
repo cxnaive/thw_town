@@ -118,7 +118,9 @@ public class TownTemplateFlags extends AbstractUI {
         view.title(formatString(TextUserInterface.townTemplateFlagsTuiText.title, groupName));
         view.navigator(Line.create().append(TownInfo.button(player, town.getName()).build())
                 .append(TownGroups.button(player, town.getName()).build())
-                .append(TextUserInterface.townTemplateFlagsTuiText.button));
+                .append(TextUserInterface.townTemplateFlagsTuiText.button)
+                .append(TownGuide.button(player, TownGuide.Topic.TEMPLATES, town.getId(),
+                        () -> show(player, town.getName(), groupName, args[2])).build()));
         view.add(Line.create().append(TextUserInterface.townTemplateFlagsTuiText.modeHint));
         for (PriFlag flag : TownPermissionManager.getManageableTemplateFlags()) {
             boolean current = value(flag);
@@ -183,6 +185,8 @@ public class TownTemplateFlags extends AbstractUI {
                 }
             });
         }
+        TownGuide.addHelpButton(view, player, TownGuide.Topic.TEMPLATES, town.getId(),
+                () -> show(player, town.getName(), groupName, args[2]));
         view.open();
     }
 

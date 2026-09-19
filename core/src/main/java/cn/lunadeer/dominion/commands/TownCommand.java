@@ -48,7 +48,8 @@ public class TownCommand implements TabExecutor {
 
     public static class TownCommandText extends ConfigurationPart {
         public String onlyPlayer = "This command can only be executed by a player.";
-        public String usage = "&b/town create <name> &7- create a town\n"
+        public String usage = "&b/town help [chapter] [page] &7- read the in-game handbook\n"
+                + "&b/town create <name> &7- create a town\n"
                 + "&b/town invite <player> &7- invite a player (mayor/assistant)\n"
                 + "&b/town join <town> [confirm] &7- join an invited town\n"
                 + "&b/town rename <new name> &7- rename your town (mayor only)\n"
@@ -143,6 +144,8 @@ public class TownCommand implements TabExecutor {
     private void dispatch(@NotNull CommandSender sender, @NotNull String[] args) {
         try {
             switch (args[0].toLowerCase()) {
+                case "help", "guide" -> cn.lunadeer.dominion.uis.town.TownGuide.show(sender,
+                        args.length > 1 ? args[1] : "contents", args.length > 2 ? args[2] : "1");
                 case "create" -> handleCreate(sender, args);
                 case "rename" -> handleRename(sender, args);
                 case "disband" -> handleDisband(sender, args);
@@ -797,7 +800,7 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
     private static final List<String> SUB_COMMANDS = List.of("create", "rename", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
-            "admin", "upgrade", "release", "level", "group", "info", "list");
+            "admin", "upgrade", "release", "level", "group", "info", "list", "help", "guide");
     private static final List<String> GROUP_SUB_COMMANDS = List.of(
             "create", "rename", "delete", "list", "info", "add", "remove");
 
@@ -816,6 +819,7 @@ public class TownCommand implements TabExecutor {
             filter(visible, args[0], suggestions);
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
+                case "help", "guide" -> filter(cn.lunadeer.dominion.uis.town.TownGuide.topics(), args[1], suggestions);
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
                 case "rename" -> {
                     // For OP arbitration the first argument is the current

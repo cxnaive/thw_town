@@ -101,7 +101,9 @@ public class OutpostTrusts extends AbstractUI {
             view.title(formatString(TextUserInterface.outpostTrustsTuiText.title, outpost.getName()));
             view.navigator(Line.create()
                     .append(TownTrusts.button(player, town.getName()).build())
-                    .append(outpost.getName()));
+                    .append(outpost.getName())
+                    .append(TownGuide.button(player, TownGuide.Topic.TRUST, town.getId(),
+                            () -> show(player, outpost.getName(), args[1])).build()));
 
             if (editor) {
                 view.add(Line.create().append(new FunctionalButton(TextUserInterface.outpostTrustsTuiText.addButton) {
@@ -262,6 +264,8 @@ public class OutpostTrusts extends AbstractUI {
                             TownTrusts.show(player, town.getName(), "1");
                         }
                     });
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.TRUST, town.getId(),
+                    () -> show(player, outpost.getName(), args[1]));
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);

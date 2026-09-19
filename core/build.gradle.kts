@@ -36,4 +36,5 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("dominion.languageDirectory", rootProject.file("languages").absolutePath)
 }

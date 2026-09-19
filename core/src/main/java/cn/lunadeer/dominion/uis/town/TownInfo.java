@@ -138,7 +138,9 @@ public class TownInfo extends AbstractUI {
             view.navigator(Line.create()
                     .append(MainMenu.button(player).build())
                     .append(TownList.button(player).build())
-                    .append(TextUserInterface.townInfoTuiText.button));
+                    .append(TextUserInterface.townInfoTuiText.button)
+                    .append(TownGuide.button(player, TownGuide.Topic.CONTENTS, town.getId(),
+                            () -> show(player, town.getName(), args[1])).build()));
 
             view.add(Line.create().append(formatString(TextUserInterface.townInfoTuiText.mayorLine,
                     CacheManager.instance.getPlayerName(town.getMayorUuid()))));
@@ -383,6 +385,8 @@ public class TownInfo extends AbstractUI {
                             TownList.show(player, "1");
                         }
                     });
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.CONTENTS, town.getId(),
+                    () -> show(player, town.getName(), args[1]));
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);

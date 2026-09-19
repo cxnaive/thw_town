@@ -164,6 +164,11 @@ public class DominionManage extends AbstractUI {
                         .append(MainMenu.button(player).build())
                         .append(DominionList.button(player).build())
                         .append(dominion.getName()));
+        if (outpostDoo != null) {
+            view.add(Line.create().append(cn.lunadeer.dominion.uis.town.TownGuide.button(player,
+                    cn.lunadeer.dominion.uis.town.TownGuide.Topic.LAND, outpostDoo.getTownId(),
+                    () -> show(player, dominion.getName(), args[1])).build()));
+        }
         // resize of a town outpost is mayor/assistant-only (charged to
         // the town bank) — hide the entry for outpost admins (§13.6)
         if (town == null || townManager) {
@@ -658,6 +663,11 @@ public class DominionManage extends AbstractUI {
             }
         }
 
+        if (outpostDoo != null) {
+            cn.lunadeer.dominion.uis.town.TownGuide.addHelpButton(view, player,
+                    cn.lunadeer.dominion.uis.town.TownGuide.Topic.LAND, outpostDoo.getTownId(),
+                    () -> show(player, dominion.getName(), args[1]));
+        }
         view.open();
     }
 

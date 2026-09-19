@@ -112,7 +112,9 @@ public class TownTrusts extends AbstractUI {
             view.title(formatString(TextUserInterface.townTrustsTuiText.title, town.getName()));
             view.navigator(Line.create()
                     .append(TownInfo.button(player, town.getName()).build())
-                    .append(TextUserInterface.townTrustsTuiText.button));
+                    .append(TextUserInterface.townTrustsTuiText.button)
+                    .append(TownGuide.button(player, TownGuide.Topic.TRUST, town.getId(),
+                            () -> show(player, town.getName(), args[1])).build()));
 
             if (manager) {
                 view.add(Line.create().append(new FunctionalButton(TextUserInterface.townTrustsTuiText.addButton) {
@@ -307,6 +309,8 @@ public class TownTrusts extends AbstractUI {
                             TownInfo.show(player, town.getName(), "1");
                         }
                     });
+            TownGuide.addHelpButton(view, player, TownGuide.Topic.TRUST, town.getId(),
+                    () -> show(player, town.getName(), args[1]));
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);

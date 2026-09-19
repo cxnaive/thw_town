@@ -1,0 +1,15 @@
+{
+  "name": "dominion-guide-validation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "download": "node download.mjs", "validate": "node run.mjs" },
+  "dependencies": {
+    "minecraft-protocol": "1.68.0",
+    "minecraft-data": "3.109.0",
+    "prismarine-nbt": "2.7.0",
+    "mineflayer": "4.39.0",
+    "yaml": "2.8.1"
+  }
+}
