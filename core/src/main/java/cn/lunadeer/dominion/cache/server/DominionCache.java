@@ -16,24 +16,30 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DominionCache extends Cache {
     private final Integer serverId;
 
-    private volatile ConcurrentHashMap<Integer, DominionDTO> idDominions;            // Dominion ID -> DominionDTO
-    private volatile ConcurrentHashMap<Integer, CopyOnWriteArrayList<Integer>> dominionChildrenMap;  // Dominion ID -> Children Dominion ID
-    private volatile ConcurrentHashMap<String, Integer> dominionNameToId;            // Dominion name -> Dominion ID
-    private volatile ConcurrentHashMap<UUID, CopyOnWriteArrayList<Integer>> playerOwnDominions;          // Player UUID -> Dominion ID
-    private volatile ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> playerDominionNodes;  // Player UUID -> DominionNode
-    private volatile ConcurrentHashMap<Integer, DominionNode> dominionNodeMap;        // Dominion ID -> DominionNode
+    // One publication point for data, ownership, hierarchy and spatial index.
+    private record Snapshot(Map<Integer, DominionDTO> dominions,
+                            Map<Integer, CopyOnWriteArrayList<Integer>> children,
+                            Map<String, Integer> names,
+                            Map<UUID, CopyOnWriteArrayList<Integer>> owners,
+                            Map<UUID, CopyOnWriteArrayList<DominionNode>> playerNodes,
+                            Map<Integer, DominionNode> rootNodes,
+                            DominionNodeSectored sectors) {
+        static Snapshot empty() {
+            return new Snapshot(Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), new DominionNodeSectored());
+        }
+    }
 
-    // dominion nodes sectored by location, for fast location-based dominion lookup
-    private final DominionNodeSectored dominionNodeSectored = new DominionNodeSectored();
+    private volatile Snapshot snapshot = Snapshot.empty();
 
     public DominionCache(Integer serverId) {
         this.serverId = serverId;
@@ -47,7 +53,7 @@ public class DominionCache extends Cache {
      * @throws DominionException if the dominion ID is not found
      */
     public @Nullable DominionDTO getDominion(@NotNull Integer id) {
-        ConcurrentHashMap<Integer, DominionDTO> currentIdDominions = idDominions;
+        Map<Integer, DominionDTO> currentIdDominions = snapshot.dominions();
         return currentIdDominions != null ? currentIdDominions.get(id) : null;
     }
 
@@ -59,7 +65,8 @@ public class DominionCache extends Cache {
      * @throws DominionException if the dominion name is not found
      */
     public @Nullable DominionDTO getDominion(String name) {
-        ConcurrentHashMap<String, Integer> currentDominionNameToId = dominionNameToId;
+        Snapshot current = snapshot;
+        Map<String, Integer> currentDominionNameToId = current.names();
         if (currentDominionNameToId == null) return null;
 
         Integer id = currentDominionNameToId.get(name);
@@ -68,7 +75,7 @@ public class DominionCache extends Cache {
         } catch (Exception e) {
             return null;
         }
-        return getDominion(id);
+        return current.dominions().get(id);
     }
 
     /**
@@ -78,7 +85,11 @@ public class DominionCache extends Cache {
      * @return the DominionDTO associated with the given location, or null if not found
      */
     public @Nullable DominionDTO getDominion(@NotNull Location location) {
-        return dominionNodeSectored.getDominionByLocation(location);
+        return snapshot.sectors().getDominionByLocation(location);
+    }
+
+    @Nullable DominionDTO getDominion(UUID world, int x, int y, int z) {
+        return snapshot.sectors().getDominionByPosition(world, x, y, z);
     }
 
     /**
@@ -88,7 +99,7 @@ public class DominionCache extends Cache {
      * @return a list of DominionNode objects managed by the player
      */
     public @NotNull CopyOnWriteArrayList<DominionNode> getPlayerDominionNodes(UUID player) {
-        ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> currentPlayerDominionNodes = playerDominionNodes;
+        Map<UUID, CopyOnWriteArrayList<DominionNode>> currentPlayerDominionNodes = snapshot.playerNodes();
         return currentPlayerDominionNodes != null ? currentPlayerDominionNodes.getOrDefault(player, new CopyOnWriteArrayList<>()) : new CopyOnWriteArrayList<>();
     }
 
@@ -98,7 +109,7 @@ public class DominionCache extends Cache {
      * @return a list of all DominionNode objects
      */
     public @NotNull List<DominionNode> getAllDominionNodes() {
-        ConcurrentHashMap<Integer, DominionNode> currentDominionNodeMap = dominionNodeMap;
+        Map<Integer, DominionNode> currentDominionNodeMap = snapshot.rootNodes();
         return currentDominionNodeMap != null ? new ArrayList<>(currentDominionNodeMap.values()) : new ArrayList<>();
     }
 
@@ -109,9 +120,10 @@ public class DominionCache extends Cache {
      * @return a list of DominionDTO objects representing the children of the given dominion
      */
     public @NotNull List<DominionDTO> getChildrenOf(Integer id) {
-        ConcurrentHashMap<Integer, CopyOnWriteArrayList<Integer>> currentDominionChildrenMap = dominionChildrenMap;
+        Snapshot current = snapshot;
+        Map<Integer, CopyOnWriteArrayList<Integer>> currentDominionChildrenMap = current.children();
         if (currentDominionChildrenMap != null && currentDominionChildrenMap.containsKey(id)) {
-            return currentDominionChildrenMap.get(id).stream().map(this::getDominion).filter(Objects::nonNull).toList();
+            return currentDominionChildrenMap.get(id).stream().map(current.dominions()::get).filter(Objects::nonNull).toList();
         } else {
             return new ArrayList<>();
         }
@@ -123,7 +135,7 @@ public class DominionCache extends Cache {
      * @return a list of all dominion names
      */
     public List<String> getAllDominionNames() {
-        ConcurrentHashMap<String, Integer> currentDominionNameToId = dominionNameToId;
+        Map<String, Integer> currentDominionNameToId = snapshot.names();
         return currentDominionNameToId != null ? new ArrayList<>(currentDominionNameToId.keySet()) : new ArrayList<>();
     }
 
@@ -134,13 +146,14 @@ public class DominionCache extends Cache {
      * @return a list of DominionDTOs owned by the player
      */
     public CopyOnWriteArrayList<DominionDTO> getPlayerOwnDominionDTOs(UUID player) {
-        ConcurrentHashMap<UUID, CopyOnWriteArrayList<Integer>> currentPlayerOwnDominions = playerOwnDominions;
+        Snapshot current = snapshot;
+        Map<UUID, CopyOnWriteArrayList<Integer>> currentPlayerOwnDominions = current.owners();
         if (currentPlayerOwnDominions == null) return new CopyOnWriteArrayList<>();
 
         CopyOnWriteArrayList<Integer> dominionIds = currentPlayerOwnDominions.getOrDefault(player, new CopyOnWriteArrayList<>());
         CopyOnWriteArrayList<DominionDTO> dominions = new CopyOnWriteArrayList<>();
         for (Integer id : dominionIds) {
-            DominionDTO dominion = getDominion(id);
+            DominionDTO dominion = current.dominions().get(id);
             if (dominion != null) {
                 dominions.add(dominion);
             }
@@ -205,114 +218,63 @@ public class DominionCache extends Cache {
     }
 
     public @NotNull List<DominionDTO> getAllDominions() {
-        ConcurrentHashMap<Integer, DominionDTO> currentIdDominions = idDominions;
+        Map<Integer, DominionDTO> currentIdDominions = snapshot.dominions();
         return currentIdDominions != null ? new ArrayList<>(currentIdDominions.values()) : new ArrayList<>();
     }
 
     @Override
-    void loadExecution() throws Exception {
-        // Create temporary maps to avoid race conditions
-        ConcurrentHashMap<Integer, DominionDTO> tempIdDominions = new ConcurrentHashMap<>();
-        ConcurrentHashMap<Integer, CopyOnWriteArrayList<Integer>> tempDominionChildrenMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<String, Integer> tempDominionNameToId = new ConcurrentHashMap<>();
-        ConcurrentHashMap<UUID, CopyOnWriteArrayList<Integer>> tempPlayerOwnDominions = new ConcurrentHashMap<>();
-        ConcurrentHashMap<Integer, DominionNode> tempDominionNodeMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempPlayerDominionNodes = new ConcurrentHashMap<>();
+    synchronized void loadExecution() throws Exception {
+        // Serialize the DB read too: a slow older reload cannot overwrite a newer one.
+        replaceAll(new ArrayList<>(DominionDOO.selectAll(serverId)));
+    }
 
-        CopyOnWriteArrayList<DominionDTO> dominions = new CopyOnWriteArrayList<>(DominionDOO.selectAll(serverId));
-
-        dominions.forEach(dominion -> tempIdDominions.put(dominion.getId(), dominion));
-
-        // build other caches
-        dominions.forEach(dominion -> {
-            tempDominionNameToId.put(dominion.getName(), dominion.getId());
-            tempPlayerOwnDominions.computeIfAbsent(dominion.getOwner(), k -> new CopyOnWriteArrayList<>()).add(dominion.getId());
-            tempDominionChildrenMap.computeIfAbsent(dominion.getParentDomId(), k -> new CopyOnWriteArrayList<>()).add(dominion.getId());
-        });
-
-        // Build tree synchronously using temporary cache
-        CopyOnWriteArrayList<DominionNode> nodeTree = DominionNode.BuildNodeTree(-1, dominions);
-        parseNodeTree(tempPlayerDominionNodes, tempDominionNodeMap, nodeTree, tempIdDominions);
-
-        // Atomically replace all cache data
-        synchronized (this) {
-            idDominions = tempIdDominions;
-            dominionChildrenMap = tempDominionChildrenMap;
-            dominionNameToId = tempDominionNameToId;
-            playerOwnDominions = tempPlayerOwnDominions;
-            dominionNodeMap = tempDominionNodeMap;
-            playerDominionNodes = tempPlayerDominionNodes;
-            dominionNodeSectored.buildAsync(nodeTree);
+    /** Build entirely off to the side; existing readers keep a valid old tree until publication. */
+    synchronized void replaceAll(List<? extends DominionDTO> dominions) {
+        Map<Integer, DominionDTO> byId = new HashMap<>();
+        ConcurrentHashMap<Integer, CopyOnWriteArrayList<Integer>> children = new ConcurrentHashMap<>();
+        Map<String, Integer> names = new HashMap<>();
+        Map<UUID, CopyOnWriteArrayList<Integer>> owners = new HashMap<>();
+        ConcurrentHashMap<Integer, DominionNode> rootNodes = new ConcurrentHashMap<>();
+        ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> playerNodes = new ConcurrentHashMap<>();
+        for (DominionDTO dominion : dominions) {
+            byId.put(dominion.getId(), dominion);
+            names.put(dominion.getName(), dominion.getId());
+            owners.computeIfAbsent(dominion.getOwner(), key -> new CopyOnWriteArrayList<>()).add(dominion.getId());
+            children.computeIfAbsent(dominion.getParentDomId(), key -> new CopyOnWriteArrayList<>()).add(dominion.getId());
         }
+        CopyOnWriteArrayList<DominionNode> tree = DominionNode.BuildNodeTree(-1, new CopyOnWriteArrayList<>(dominions));
+        parseNodeTree(playerNodes, rootNodes, tree, byId);
+        DominionNodeSectored sectors = new DominionNodeSectored();
+        sectors.build(tree);
+        snapshot = new Snapshot(Map.copyOf(byId), Map.copyOf(children), Map.copyOf(names), Map.copyOf(owners),
+                Map.copyOf(playerNodes), Map.copyOf(rootNodes), sectors);
     }
 
     @Override
-    void loadExecution(Integer idToLoad) throws Exception {
+    synchronized void loadExecution(Integer idToLoad) throws Exception {
         DominionDTO dominion = DominionDOO.select(idToLoad);
         if (dominion == null) {
+            // Deletion may also reparent children, so fetch their current rows.
+            loadExecution();
             return;
         }
-        DominionDTO oldData = idDominions.put(dominion.getId(), dominion);
-        // remove old data
-        if (oldData != null) {
-            dominionNameToId.entrySet().removeIf(entry -> entry.getValue().equals(oldData.getId()));
-            playerOwnDominions.computeIfAbsent(oldData.getOwner(), k -> new CopyOnWriteArrayList<>()).remove(oldData.getId());
-            dominionChildrenMap.computeIfAbsent(oldData.getParentDomId(), k -> new CopyOnWriteArrayList<>()).remove(oldData.getId());
-        }
-        // update data
-        dominionNameToId.put(dominion.getName(), dominion.getId());
-        playerOwnDominions.computeIfAbsent(dominion.getOwner(), k -> new CopyOnWriteArrayList<>()).add(dominion.getId());
-        dominionChildrenMap.computeIfAbsent(dominion.getParentDomId(), k -> new CopyOnWriteArrayList<>()).add(dominion.getId());
-        // update node tree
-        rebuildTreeAsync();
+        Map<Integer, DominionDTO> updated = new HashMap<>(snapshot.dominions());
+        updated.remove(idToLoad);
+        if (serverId.equals(dominion.getServerId())) updated.put(idToLoad, dominion);
+        replaceAll(new ArrayList<>(updated.values()));
     }
 
     @Override
-    void deleteExecution(Integer idToDelete) throws Exception {
-        DominionDTO dominionToDelete = idDominions.remove(idToDelete);
-        if (dominionToDelete == null) {
-            return;
-        }
-        // remove children map
-        dominionChildrenMap.remove(idToDelete);
-        if (dominionChildrenMap.containsKey(dominionToDelete.getParentDomId())) {
-            dominionChildrenMap.get(dominionToDelete.getParentDomId()).remove(idToDelete);
-        }
-        // remove name map
-        dominionNameToId.entrySet().removeIf(entry -> entry.getValue().equals(idToDelete));
-        if (playerOwnDominions.containsKey(dominionToDelete.getOwner())) {
-            // remove player dominion map
-            playerOwnDominions.get(dominionToDelete.getOwner()).remove(idToDelete);
-        }
-        // update node tree
-        dominionNodeMap.remove(idToDelete);
-        rebuildTreeAsync();
+    synchronized void deleteExecution(Integer idToDelete) throws Exception {
+        loadExecution(); // Includes cascades and preserved/reparented branches.
     }
 
     public void dominionNameUpdate(String oldName, String newName, Integer id) {
-        if (dominionNameToId != null) {
-            dominionNameToId.remove(oldName);
-            dominionNameToId.put(newName, id);
-        }
+        load(id); // A rename uses the same publication path as every other update.
     }
 
-    private CompletableFuture<Void> rebuildTreeAsync() {
-        return CompletableFuture.runAsync(() -> {
-            synchronized (this) {
-                ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempPlayerDominionNodes = new ConcurrentHashMap<>();
-                ConcurrentHashMap<Integer, DominionNode> tempDominionNodeMap = new ConcurrentHashMap<>();
 
-                CopyOnWriteArrayList<DominionNode> nodeTree = DominionNode.BuildNodeTree(-1, new CopyOnWriteArrayList<>(idDominions.values()));
-                parseNodeTree(tempPlayerDominionNodes, tempDominionNodeMap, nodeTree, idDominions);
-
-                playerDominionNodes = tempPlayerDominionNodes;
-                dominionNodeMap = tempDominionNodeMap;
-                dominionNodeSectored.buildAsync(nodeTree);
-            }
-        });
-    }
-
-    private static void parseNodeTree(ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempPlayerDominionNodes, ConcurrentHashMap<Integer, DominionNode> tempDominionNodeMap, CopyOnWriteArrayList<DominionNode> nodeTree, ConcurrentHashMap<Integer, DominionDTO> idDominions) {
+    private static void parseNodeTree(ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempPlayerDominionNodes, ConcurrentHashMap<Integer, DominionNode> tempDominionNodeMap, CopyOnWriteArrayList<DominionNode> nodeTree, Map<Integer, DominionDTO> idDominions) {
         nodeTree.forEach(node -> {
             Integer dominionId = node.getDominionId();
             DominionDTO dominionDTO = idDominions.get(dominionId);
@@ -324,7 +286,7 @@ public class DominionCache extends Cache {
     }
 
     public Integer count() {
-        ConcurrentHashMap<Integer, DominionDTO> currentIdDominions = idDominions;
+        Map<Integer, DominionDTO> currentIdDominions = snapshot.dominions();
         return currentIdDominions != null ? currentIdDominions.size() : 0;
     }
 

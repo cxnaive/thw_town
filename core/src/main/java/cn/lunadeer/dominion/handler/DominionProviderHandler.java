@@ -6,7 +6,6 @@ import cn.lunadeer.dominion.api.dtos.PlayerDTO;
 import cn.lunadeer.dominion.api.dtos.flag.EnvFlag;
 import cn.lunadeer.dominion.api.dtos.flag.PriFlag;
 import cn.lunadeer.dominion.cache.CacheManager;
-import cn.lunadeer.dominion.commands.DominionOperateCommand;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.configuration.Language;
 import cn.lunadeer.dominion.configuration.Limitation;
@@ -18,6 +17,8 @@ import cn.lunadeer.dominion.events.dominion.DominionDeleteEvent;
 import cn.lunadeer.dominion.events.dominion.modify.*;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.DominionTransferManager;
+import cn.lunadeer.dominion.managers.TownOutpostDeleteManager;
+import cn.lunadeer.dominion.managers.PersonalDominionDeleteManager;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.misc.Others;
 import cn.lunadeer.dominion.providers.DominionProvider;
@@ -59,9 +60,17 @@ public class DominionProviderHandler extends DominionProvider {
         public String legacyResizeDisabled = "Resizing legacy dominions is disabled on this server.";
         public String legacyDeleteDisabled = "Deleting dominions is disabled on this server.";
         public String townOutpostNoDelete = "Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.";
+        public String outpostDeleteDenied = "Only the town's mayor, assistants or server administrators may delete an outpost.";
+        public String outpostDeleteChanged = "The outpost was deleted or changed towns. Reopen its management page before trying again.";
+        public String outpostDeleteConfirm = "Delete only outpost {0}? Its protection and permissions will be removed without a refund; blocks, child dominions and the town remain. Run /dom delete {0} confirm to proceed.";
+        public String outpostDeleteSuccess = "Deleted and archived outpost {0}. Its protection was removed without a refund; blocks, child dominions and the town remain.";
+        public String personalDeleteConfirm = "Run /dom delete {0} confirm to delete the following personal dominions: {1}. Town-owned branches and all their children will be preserved.";
+        public String personalDeletePreserved = "Preserved town-owned branches and all their children: {0}.";
+        public String deleteRefundFailed = "Dominion {0} was deleted, but its refund failed: {1}. Ask an administrator to check the payment; do not repeat deletion.";
         public String townOutpostNoTransfer = "Dominion {0} is town property and cannot be transferred.";
         public String autoAttachedToTown = "Dominion {0} was attached to town {1} because its new owner is a town member.";
         public String autoAttachFailed = "Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner's personal dominion.";
+        public String autoAttachRefreshFailed = "Dominion {0} was transferred and attached to town {1}, but refreshing its state or notification failed: {2}. Do not repeat the transfer.";
 
         public String expandSuccess = "Expand dominion {0} success.";
         public String expandFailed = "Expand dominion {0} failed, reason: {1}";
@@ -326,45 +335,44 @@ public class DominionProviderHandler extends DominionProvider {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 DominionDOO delDoo = (DominionDOO) event.getDominion();
-                TownDOO delTown = null;
-                if (delDoo.isTownOutpost()) {
-                    // town property: personal deletion is impossible; admins
-                    // may force-delete without a refund; regular lifecycle
-                    // paths are town disband or admin release.
-                    delTown = TownManager.requireTown(delDoo.getTownId());
-                    boolean privileged = !(event.getOperator() instanceof Player p) || Others.bypassLimit(p);
-                    if (!privileged) {
-                        throw new DominionException(Language.dominionProviderHandlerText.townOutpostNoDelete, delDoo.getName());
+                DominionDOO latest = DominionDOO.select(delDoo.getId());
+                if (latest == null) throw new DominionException(Language.dominionProviderHandlerText.outpostDeleteChanged);
+                if (delDoo.isTownOutpost() || latest.isTownOutpost()) {
+                    if (!Objects.equals(delDoo.getTownId(), latest.getTownId())) {
+                        throw new DominionException(Language.dominionProviderHandlerText.outpostDeleteChanged);
                     }
-                } else if (event.getOperator() instanceof Player p
-                        && !Others.bypassLimit(p)
-                        && !Configuration.landSystem.legacyAllowDelete) {
-                    throw new DominionException(Language.dominionProviderHandlerText.legacyDeleteDisabled);
+                    DominionDOO result = TownOutpostDeleteManager.delete(event.getOperator(), delDoo, event.isForce());
+                    Notification.info(event.getOperator(), event.isForce()
+                                    ? Language.dominionProviderHandlerText.outpostDeleteSuccess
+                                    : Language.dominionProviderHandlerText.outpostDeleteConfirm,
+                            result.getName());
+                    return event.isForce() ? result : null;
                 }
-                assertDominionOwner(event.getOperator(), event.getDominion());
-                // check subs
-                List<DominionDTO> sub_dominions = getSubDominionsRecursive(event.getDominion());
+                PersonalDominionDeleteManager.Result result = PersonalDominionDeleteManager.delete(
+                        event.getOperator(), delDoo.getId(), event.isForce());
                 if (!event.isForce()) {
-                    if (!sub_dominions.isEmpty()) {
-                        Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.listSubDoms, event.getDominion().getName(), String.join(", ", sub_dominions.stream().map(DominionDTO::getName).toList()));
-                    }
-                    Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.deleteConfirm, DominionOperateCommand.delete.getUsage(), event.getDominion().getName());
+                    Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.personalDeleteConfirm,
+                            result.root().getName(), String.join(", ", result.deleted().stream().map(DominionDOO::getName).toList()));
+                    if (!result.preserved().isEmpty()) Notification.info(event.getOperator(),
+                            Language.dominionProviderHandlerText.personalDeletePreserved,
+                            String.join(", ", result.preserved().stream().map(DominionDOO::getName).toList()));
                     return null;
                 }
-                for (DominionDTO sub_dominion : sub_dominions) {
-                    DominionDOO.deleteById(sub_dominion.getId());
-                    Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, sub_dominion.getName());
-                    if (!event.isSkipEconomy())
-                        assertEconomy(event.getOperator(), sub_dominion.getCuboid(), CuboidDTO.ZERO, true);
-                }
-                DominionDOO.deleteById(event.getDominion().getId());
-                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, event.getDominion().getName());
-                if (!event.isSkipEconomy()) {
-                    if (delTown == null) {
-                        assertEconomy(event.getOperator(), event.getDominion().getCuboid(), CuboidDTO.ZERO, event.getDominion().getParentDomId() != -1);
+                for (DominionDOO deleted : result.deleted()) {
+                    Notification.info(event.getOperator(), Language.dominionProviderHandlerText.deleteSuccess, deleted.getName());
+                    if (!event.isSkipEconomy()) {
+                        try {
+                            assertEconomy(event.getOperator(), deleted.getCuboid(), CuboidDTO.ZERO, deleted.getParentDomId() != -1);
+                        } catch (Exception refundError) {
+                            Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.deleteRefundFailed,
+                                    deleted.getName(), refundError.getMessage());
+                        }
                     }
                 }
-                return event.getDominion();
+                if (!result.preserved().isEmpty()) Notification.info(event.getOperator(),
+                        Language.dominionProviderHandlerText.personalDeletePreserved,
+                        String.join(", ", result.preserved().stream().map(DominionDOO::getName).toList()));
+                return result.root();
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.dominionProviderHandlerText.deleteFailed, event.getDominion().getName(), e.getMessage());
                 return null;
@@ -493,6 +501,7 @@ public class DominionProviderHandler extends DominionProvider {
 
     private void attachTransferredDominions(DominionTransferEvent event, List<Integer> transferredIds) {
         String townName = "-";
+        boolean attachmentCommitted = false;
         try {
             UUID newOwner = event.getNewOwner().getUuid();
             List<TownMemberDOO> memberships = new ArrayList<>(TownMemberDOO.selectByPlayer(newOwner));
@@ -523,6 +532,7 @@ public class DominionProviderHandler extends DominionProvider {
             if (!attached.contains(event.getDominion().getId())) {
                 throw new DominionException(Language.townManagerText.outpostAttachUnavailable, event.getDominion().getName());
             }
+            attachmentCommitted = true;
             DominionDOO updated = DominionDOO.select(event.getDominion().getId());
             if (updated != null) event.setDominion(updated);
             Notification.info(event.getOperator(), Language.dominionProviderHandlerText.autoAttachedToTown,
@@ -531,10 +541,13 @@ public class DominionProviderHandler extends DominionProvider {
             if (online != null) Notification.info(online, Language.dominionProviderHandlerText.autoAttachedToTown,
                     event.getDominion().getName(), townName);
         } catch (Exception attachError) {
-            Notification.warn(event.getOperator(), Language.dominionProviderHandlerText.autoAttachFailed,
+            String message = attachmentCommitted
+                    ? Language.dominionProviderHandlerText.autoAttachRefreshFailed
+                    : Language.dominionProviderHandlerText.autoAttachFailed;
+            Notification.warn(event.getOperator(), message,
                     event.getDominion().getName(), townName, attachError.getMessage());
             Player online = org.bukkit.Bukkit.getPlayer(event.getNewOwner().getUuid());
-            if (online != null) Notification.warn(online, Language.dominionProviderHandlerText.autoAttachFailed,
+            if (online != null) Notification.warn(online, message,
                     event.getDominion().getName(), townName, attachError.getMessage());
         }
     }

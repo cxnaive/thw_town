@@ -173,6 +173,21 @@ public class DominionDOO implements DominionDTO {
         return parse(res.get(0));
     }
 
+    /** Current row on the lifecycle transaction's connection; never opens another connection. */
+    public static @Nullable DominionDOO selectForUpdate(Connection connection, int id) throws SQLException {
+        if (connection.getAutoCommit()) throw new SQLException("A land transaction is required.");
+        boolean sqlite = connection.getMetaData().getDatabaseProductName().equalsIgnoreCase("SQLite");
+        // SQLite callers already hold the write lock through their town UPDATE.
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT * FROM dominion WHERE id = ?" + (sqlite ? "" : " FOR UPDATE"))) {
+            statement.setInt(1, id);
+            try (ResultSet rows = statement.executeQuery()) {
+                List<Map<String, Field<?>>> values = Field.getFromResultSet(fields(), rows);
+                return values.isEmpty() ? null : parse(values.get(0));
+            }
+        }
+    }
+
     public static @NotNull List<DominionDOO> selectByTownId(Integer townId) throws SQLException {
         List<Map<String, Field<?>>> res = Select.select(fields())
                 .from("dominion")

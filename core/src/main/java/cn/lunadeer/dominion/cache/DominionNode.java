@@ -7,32 +7,40 @@ import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static cn.lunadeer.dominion.misc.Others.isInDominion;
 
 /**
  * The DominionNode class represents a node in the dominion tree structure.
  * <p>
- * DominionNode not store the dominion data, only the id of the dominion.
+ * Nodes built for an index retain that index's data; lookup never mixes generations.
  */
 public class DominionNode {
     private final Integer dominionId;
+    private final DominionDTO snapshotDominion;
     private CopyOnWriteArrayList<DominionNode> children = new CopyOnWriteArrayList<>();
 
     public DominionNode(Integer dominionId) {
         this.dominionId = dominionId;
+        this.snapshotDominion = null;
+    }
+
+    public DominionNode(DominionDTO dominion) {
+        this.dominionId = dominion.getId();
+        this.snapshotDominion = dominion;
     }
 
     /**
      * Gets the DominionDTO associated with this node.
      * <p>
-     * This method will fetch the DominionDTO from the cache.
+     * Snapshot nodes retain their DTO. The ID constructor supports legacy callers.
      *
      * @return the DominionDTO associated with this node
      */
     public @NotNull DominionDTO getDominion() {
+        if (snapshotDominion != null) return snapshotDominion;
         DominionDTO dominion = CacheManager.instance.getDominion(dominionId);
         if (dominion == null) {
             throw new DominionException(Language.convertsText.unknownDominion, dominionId);
@@ -89,7 +97,7 @@ public class DominionNode {
 
         if (children != null) {
             for (DominionDTO dominion : children) {
-                DominionNode node = new DominionNode(dominion.getId());
+                DominionNode node = new DominionNode(dominion);
                 node.children = buildTree(dominion.getId(), parentToChildrenMap);
                 dominionTree.add(node);
             }
@@ -106,12 +114,18 @@ public class DominionNode {
      * @return the DominionNode that contains the location, or null if not found
      */
     public static DominionNode getDominionNodeByLocation(@NotNull CopyOnWriteArrayList<DominionNode> nodes, @NotNull Location loc) {
+        return getDominionNodeByPosition(nodes, loc.getWorld().getUID(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    }
+
+    public static DominionNode getDominionNodeByPosition(@NotNull CopyOnWriteArrayList<DominionNode> nodes,
+                                                         UUID world, int x, int y, int z) {
         for (DominionNode node : nodes) {
-            if (isInDominion(node.getDominion(), loc)) {
+            DominionDTO dominion = node.getDominion();
+            if (world.equals(dominion.getWorldUid()) && dominion.getCuboid().contain(x, y, z)) {
                 if (node.children.isEmpty()) {
                     return node;
                 } else {
-                    DominionNode childDominion = getDominionNodeByLocation(node.children, loc);
+                    DominionNode childDominion = getDominionNodeByPosition(node.children, world, x, y, z);
                     return Objects.requireNonNullElse(childDominion, node);
                 }
             }

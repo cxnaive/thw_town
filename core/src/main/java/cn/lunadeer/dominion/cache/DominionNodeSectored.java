@@ -3,7 +3,6 @@ package cn.lunadeer.dominion.cache;
 import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.configuration.Configuration;
 import cn.lunadeer.dominion.utils.AutoTimer;
-import cn.lunadeer.dominion.utils.XLogger;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -12,9 +11,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ForkJoinPool;
 
-import static cn.lunadeer.dominion.cache.DominionNode.getDominionNodeByLocation;
+import static cn.lunadeer.dominion.cache.DominionNode.getDominionNodeByPosition;
 
 /**
  * The DominionNodeSectored class manages the dominion nodes in different sectors of the world
@@ -54,11 +52,15 @@ public class DominionNodeSectored {
      * @return the DominionDTO if found, otherwise null
      */
     public DominionDTO getDominionByLocation(@NotNull Location loc) {
+        return getDominionByPosition(loc.getWorld().getUID(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    }
+
+    public DominionDTO getDominionByPosition(UUID world, int x, int y, int z) {
         try (AutoTimer ignored = new AutoTimer(Configuration.timer)) {
-            CopyOnWriteArrayList<DominionNode> nodes = getNodes(loc);
+            CopyOnWriteArrayList<DominionNode> nodes = getNodes(world, x, z);
             if (nodes == null) return null;
             if (nodes.isEmpty()) return null;
-            DominionNode dominionNode = getDominionNodeByLocation(nodes, loc);
+            DominionNode dominionNode = getDominionNodeByPosition(nodes, world, x, y, z);
             return dominionNode == null ? null : dominionNode.getDominion();
         }
     }
@@ -108,48 +110,34 @@ public class DominionNodeSectored {
         return current.sectorD.get(world);
     }
 
-    /**
-     * Initializes the dominion nodes asynchronously with thread-safe operations.
-     * This method returns immediately and performs the build operation in the background.
-     *
-     * @param nodes the list of DominionNodes to initialize
-     * @return CompletableFuture that completes when the build operation is finished
-     */
-    public CompletableFuture<Void> buildAsync(CopyOnWriteArrayList<DominionNode> nodes) {
-        return CompletableFuture.runAsync(() -> {
-            try (AutoTimer ignored = new AutoTimer(Configuration.timer)) {
-                // Create temporary maps to avoid race conditions
-                ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempSectorA = new ConcurrentHashMap<>();
-                ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempSectorB = new ConcurrentHashMap<>();
-                ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempSectorC = new ConcurrentHashMap<>();
-                ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> tempSectorD = new ConcurrentHashMap<>();
-
-                // calculate the section origin point
-                int max_x = nodes.parallelStream().mapToInt(n -> n.getDominion().getCuboid().x2()).max().orElse(0);
-                int min_x = nodes.parallelStream().mapToInt(n -> n.getDominion().getCuboid().x1()).min().orElse(0);
-                int max_z = nodes.parallelStream().mapToInt(n -> n.getDominion().getCuboid().z2()).max().orElse(0);
-                int min_z = nodes.parallelStream().mapToInt(n -> n.getDominion().getCuboid().z1()).min().orElse(0);
-                int tempOriginX = (max_x + min_x) / 2;
-                int tempOriginZ = (max_z + min_z) / 2;
-                XLogger.debug("Cache init section origin: {0}, {1}", tempOriginX, tempOriginZ);
-
-                // Process nodes in parallel for better performance
-                nodes.parallelStream().forEach(n -> {
-                    DominionDTO d = n.getDominion();
-                    // Ensure world sectors exist
-                    tempSectorA.computeIfAbsent(d.getWorldUid(), k -> new CopyOnWriteArrayList<>());
-                    tempSectorB.computeIfAbsent(d.getWorldUid(), k -> new CopyOnWriteArrayList<>());
-                    tempSectorC.computeIfAbsent(d.getWorldUid(), k -> new CopyOnWriteArrayList<>());
-                    tempSectorD.computeIfAbsent(d.getWorldUid(), k -> new CopyOnWriteArrayList<>());
-
-                    // Place dominions into appropriate sectors
-                    placeDominionInSectors(n, d, tempOriginX, tempOriginZ, tempSectorA, tempSectorB, tempSectorC, tempSectorD);
-                });
-
-                // Atomically publish a new immutable snapshot
-                snapshot = new Snapshot(tempSectorA, tempSectorB, tempSectorC, tempSectorD, tempOriginX, tempOriginZ);
+    /** Build before publishing the owning cache snapshot. No background generation may overtake it. */
+    public synchronized void build(CopyOnWriteArrayList<DominionNode> nodes) {
+        try (AutoTimer ignored = new AutoTimer(Configuration.timer)) {
+            ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> a = new ConcurrentHashMap<>();
+            ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> b = new ConcurrentHashMap<>();
+            ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> c = new ConcurrentHashMap<>();
+            ConcurrentHashMap<UUID, CopyOnWriteArrayList<DominionNode>> d = new ConcurrentHashMap<>();
+            int maxX = nodes.stream().mapToInt(n -> n.getDominion().getCuboid().x2()).max().orElse(0);
+            int minX = nodes.stream().mapToInt(n -> n.getDominion().getCuboid().x1()).min().orElse(0);
+            int maxZ = nodes.stream().mapToInt(n -> n.getDominion().getCuboid().z2()).max().orElse(0);
+            int minZ = nodes.stream().mapToInt(n -> n.getDominion().getCuboid().z1()).min().orElse(0);
+            int originX = (int) (((long) maxX + minX) / 2);
+            int originZ = (int) (((long) maxZ + minZ) / 2);
+            for (DominionNode node : nodes) {
+                UUID world = node.getDominion().getWorldUid();
+                a.computeIfAbsent(world, key -> new CopyOnWriteArrayList<>());
+                b.computeIfAbsent(world, key -> new CopyOnWriteArrayList<>());
+                c.computeIfAbsent(world, key -> new CopyOnWriteArrayList<>());
+                d.computeIfAbsent(world, key -> new CopyOnWriteArrayList<>());
+                placeDominionInSectors(node, node.getDominion(), originX, originZ, a, b, c, d);
             }
-        }, ForkJoinPool.commonPool());
+            snapshot = new Snapshot(a, b, c, d, originX, originZ);
+        }
+    }
+
+    /** Compatibility entry; internal cache publication uses build directly. */
+    public CompletableFuture<Void> buildAsync(CopyOnWriteArrayList<DominionNode> nodes) {
+        return CompletableFuture.runAsync(() -> build(nodes));
     }
 
     /**

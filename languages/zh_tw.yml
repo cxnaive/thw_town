@@ -61,12 +61,20 @@ vault-connect-text:
   economy-unavailable: 未偵測到經濟插件，請安裝至少一個經濟插件以啟用經濟功能。
   insufficient-funds: 餘額不足，需要 {0}{1}，但你僅有 {2}{1}。
 dominion-provider-handler-text:
+  personal-delete-confirm: '執行 /dom delete {0} confirm 確認刪除以下個人領地：{1}。鎮屬領地及其整條下級分支都會保留。'
+  personal-delete-preserved: '已保留以下鎮屬領地及其整條下級分支：{0}。'
+  delete-refund-failed: '領地 {0} 已刪除，但退款失敗：{1}。請聯絡管理員核對款項，不要重複刪除。'
+  outpost-delete-denied: '只有該鎮的鎮長、副鎮長或伺服器管理員可以刪除鎮屬領地。'
+  outpost-delete-changed: '該屬地已被刪除或歸屬已變更，請重新開啟管理介面後操作。'
+  outpost-delete-confirm: '確認只刪除屬地 {0}？刪除後失去領地保護並清除該地權限，不退款；方塊、下級領地及小鎮保留。執行 /dom delete {0} confirm 確認。'
+  outpost-delete-success: '已刪除並歸檔屬地 {0}。該地保護已解除，不退款；方塊、下級領地及小鎮均保留。'
   give-force-admin-only: 只有 OP 或擁有 dominion.admin 權限的管理員可使用 give force；一般轉交請使用 confirm。
   give-force-success: 已將 {0} 強制轉交給 {1}，舊小鎮關聯已解除，共處理 {2} 塊領地。
   give-result-refresh-failed: 領地 {0} 的轉交已提交，但讀取最新狀態失敗，尚未嘗試自動掛靠；請先查看領地狀態，不要直接重複轉交。原因：{1}
   give-confirm-command: 請執行 /dom give {0} {1} confirm 確認轉交個人領地及其個人子領地。管理員可使用 /dom give {0} {1} force 解除鎮屬地關聯並強制轉交。
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   auto-attach-failed: 領地 {0} 已成功轉讓，但無法自動掛靠至城鎮 {1}：{2}。它將保留為新主人的個人領地。
+  auto-attach-refresh-failed: 領地 {0} 已成功轉交並掛靠至城鎮 {1}，但重新整理狀態或傳送通知失敗：{2}。請勿重複轉交。
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
   town-outpost-no-delete: Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.
   legacy-delete-disabled: Deleting dominions is disabled on this server.

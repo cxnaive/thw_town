@@ -132,6 +132,10 @@ public final class TownInviteManager {
             statement.setInt(1, townId);
             statement.executeUpdate();
         }
+        clearNotifiedTown(townId);
+    }
+
+    static void clearNotifiedTown(int townId) {
         notified.values().forEach(byTown -> byTown.remove(townId));
     }
 

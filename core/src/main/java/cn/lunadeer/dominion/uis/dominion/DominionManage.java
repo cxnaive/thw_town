@@ -77,6 +77,9 @@ public class DominionManage extends AbstractUI {
         public String releaseButton = "RELEASE";
         public String releaseDescription = "Return contributed land to its contributor (mayor; OP arbitration).";
         public String releaseConfirm = "§cClick again within 5 seconds to release {0}. Town groups, mirror members and outpost trust will be removed.";
+        public String deleteOutpostButton = "DELETE OUTPOST";
+        public String deleteOutpostDescription = "Delete only this outpost (mayor/assistant). Removes protection; no refund.";
+        public String deleteOutpostConfirm = "§cClick again within 5 seconds to delete outpost {0}. Protection and permissions will be removed without a refund. Blocks, child dominions and the town remain.";
     }
 
     public static ListViewButton button(CommandSender sender, String dominionName) {
@@ -93,9 +96,7 @@ public class DominionManage extends AbstractUI {
         DominionDTO dominion = toDominionDTO(args[0]);
         assertDominionAdmin(player, dominion);
         int page = toIntegrity(args[1], 1);
-        // town era: on a town outpost the member overlay is gone (trust
-        // instead) and delete/transfer do not exist; management buttons
-        // render by town role instead of failing after the click (§13.3)
+        // Town outposts use town roles; deletion is mayor/assistant-only.
         cn.lunadeer.dominion.doos.TownDOO town = null;
         cn.lunadeer.dominion.doos.DominionDOO outpostDoo = null;
         if (dominion instanceof cn.lunadeer.dominion.doos.DominionDOO doo && doo.isTownOutpost()) {
@@ -212,6 +213,17 @@ public class DominionManage extends AbstractUI {
                     }.needPermission(defaultPermission).build())
                     .append(TextUserInterface.dominionManageTuiText.releaseDescription);
             view.add(release);
+        }
+        if (outpostDoo != null
+                && cn.lunadeer.dominion.managers.TownManager.canDeleteOutpost(player, outpostDoo)) {
+            view.add(Line.create()
+                    .append(new FunctionalButton(TextUserInterface.dominionManageTuiText.deleteOutpostButton) {
+                        @Override
+                        public void function() {
+                            confirmDeleteOutpost(player, (cn.lunadeer.dominion.doos.DominionDOO) dominion);
+                        }
+                    }.needPermission(defaultPermission).build())
+                    .append(TextUserInterface.dominionManageTuiText.deleteOutpostDescription));
         }
         view.showOn(player, page);
     }
@@ -449,6 +461,13 @@ public class DominionManage extends AbstractUI {
                         "§c▶ Click to release"
                 )
         );
+
+        public ButtonConfiguration deleteOutpostButton = ButtonConfiguration.createMaterial(
+                'i', Material.RED_DYE, "§cDelete Outpost",
+                List.of("§7Mayor/assistant: delete only this outpost.",
+                        "§cRemoves protection and permissions; no refund.",
+                        "§7Blocks, child dominions and the town remain.",
+                        "§c▶ Click twice to confirm"));
     }
 
     @Override
@@ -599,7 +618,7 @@ public class DominionManage extends AbstractUI {
             }
         });
 
-        if (townFinal == null) {
+        if (outpostDoo == null) {
             view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.deleteButton) {
                 @Override
                 public void onClick(ClickType type) {
@@ -608,9 +627,16 @@ public class DominionManage extends AbstractUI {
                 }
             });
         } else {
-            // town outposts cannot be deleted/transferred (§3); managers
-            // get the outpost-admin appointment; mayors may return contributed
-            // land, while OPs retain release arbitration
+            // Managers may delete one outpost; only the mayor may return
+            // contributed land. Server administrators may arbitrate.
+            if (cn.lunadeer.dominion.managers.TownManager.canDeleteOutpost(player, outpostDoo)) {
+                view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.deleteOutpostButton) {
+                    @Override
+                    public void onClick(ClickType type) {
+                        confirmDeleteOutpost(player, (cn.lunadeer.dominion.doos.DominionDOO) dominion);
+                    }
+                });
+            }
             if (townManagerFinal) {
                 view.addItem(new ChestButton(ChestUserInterface.dominionManageCui.outpostAdminButton) {
                     @Override
@@ -644,6 +670,18 @@ public class DominionManage extends AbstractUI {
                         () -> DominionList.show(player, "1")),
                 formatString(TextUserInterface.dominionManageTuiText.releaseConfirm,
                         outpost.getName()));
+    }
+
+    private static void confirmDeleteOutpost(Player player, cn.lunadeer.dominion.doos.DominionDOO outpost) {
+        cn.lunadeer.dominion.utils.PendingConfirmation.requestConfirm(
+                player, "outpost-delete:" + outpost.getId() + ":" + outpost.getTownId(),
+                () -> cn.lunadeer.dominion.handler.DominionProviderHandler.getInstance()
+                        .deleteDominion(player, outpost, true, true)
+                        .thenAccept(deleted -> {
+                            if (deleted != null) cn.lunadeer.dominion.utils.scheduler.Scheduler.runTask(
+                                    () -> DominionList.show(player, "1"));
+                        }),
+                formatString(TextUserInterface.dominionManageTuiText.deleteOutpostConfirm, outpost.getName()));
     }
 
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ CUI ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

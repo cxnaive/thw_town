@@ -32,6 +32,9 @@ dominion-list-tui-text:
   legacy-tag: ' (legacy - create or join a town!)'
   legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu), then use /town attach to contribute selected land.
 dominion-manage-tui-text:
+  delete-outpost-button: 'DELETE OUTPOST'
+  delete-outpost-description: 'Delete only this outpost (mayor/assistant). Removes protection; no refund.'
+  delete-outpost-confirm: '§cClick again within 5 seconds to delete outpost {0}. Protection and permissions will be removed without a refund. Blocks, child dominions and the town remain.'
   release-description: Return contributed land to its contributor (mayor; OP arbitration).
   release-button: RETURN
   release-confirm: §cClick again within 5 seconds to return contributed land {0}. Town groups, mirror members and outpost trust will be removed.

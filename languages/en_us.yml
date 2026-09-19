@@ -61,6 +61,13 @@ vault-connect-text:
   economy-unavailable: Economy plugin not found, you need to install one Economy plugin to use economy features.
   insufficient-funds: Insufficient money, need {0} {1}, but only have {2} {1}.
 dominion-provider-handler-text:
+  personal-delete-confirm: 'Run /dom delete {0} confirm to delete the following personal dominions: {1}. Town-owned branches and all their children will be preserved.'
+  personal-delete-preserved: 'Preserved town-owned branches and all their children: {0}.'
+  delete-refund-failed: 'Dominion {0} was deleted, but its refund failed: {1}. Ask an administrator to check the payment; do not repeat deletion.'
+  outpost-delete-denied: 'Only the town''s mayor, assistants or server administrators may delete an outpost.'
+  outpost-delete-changed: 'The outpost was deleted or changed towns. Reopen its management page before trying again.'
+  outpost-delete-confirm: 'Delete only outpost {0}? Its protection and permissions will be removed without a refund; blocks, child dominions and the town remain. Run /dom delete {0} confirm to proceed.'
+  outpost-delete-success: 'Deleted and archived outpost {0}. Its protection was removed without a refund; blocks, child dominions and the town remain.'
   give-force-admin-only: Only OPs or players with dominion.admin may use give force. Use confirm for a normal transfer.
   give-force-success: 'Force-transferred {0} to {1}; previous town links were removed. Updated {2} dominion(s).'
   give-result-refresh-failed: 'Transfer committed for {0}, but its current state could not be read; automatic attachment was not attempted. Check the dominion before retrying. Reason: {1}'
@@ -75,6 +82,7 @@ dominion-provider-handler-text:
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   auto-attach-failed: 'Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner''s personal dominion.'
+  auto-attach-refresh-failed: 'Dominion {0} was transferred and attached to town {1}, but refreshing its state or notification failed: {2}. Do not repeat the transfer.'
   expand-success: Expand dominion {0} success.
   expand-failed: 'Expand dominion {0} failed, reason: {1}'
   contract-success: Contract dominion {0} success.

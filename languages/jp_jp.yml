@@ -61,12 +61,20 @@ vault-connect-text:
   economy-unavailable: 経済プラグインが見つかりません。経済機能を使用するには、1つの経済プラグインをインストールする必要があります。
   insufficient-funds: 資金が不足しています。 {0} {1} が必要ですが、 {2} {1} しかありません。
 dominion-provider-handler-text:
+  personal-delete-confirm: '/dom delete {0} confirm で次の個人領地の削除を確認してください: {1}。タウン所有の領地とその子領地はすべて保持されます。'
+  personal-delete-preserved: '次のタウン所有の領地とその子領地をすべて保持しました: {0}。'
+  delete-refund-failed: '領地 {0} は削除されましたが、返金に失敗しました: {1}。管理者に支払いの確認を依頼し、削除を繰り返さないでください。'
+  outpost-delete-denied: 'このタウンの町長、副町長、またはサーバー管理者のみが領地を削除できます。'
+  outpost-delete-changed: '領地が削除されたか、所属が変更されました。管理画面を開き直してください。'
+  outpost-delete-confirm: '領地 {0} だけを削除しますか？保護と権限が削除され、返金はありません。ブロック、子領地、タウンは残ります。/dom delete {0} confirm で確認してください。'
+  outpost-delete-success: '領地 {0} を記録して削除しました。保護は解除され、返金はありません。ブロック、子領地、タウンは残ります。'
   give-force-admin-only: give force は OP または dominion.admin 権限を持つ管理者専用です。通常の譲渡には confirm を使用してください。
   give-force-success: '{0} を {1} に強制譲渡しました。旧タウンとの関連を解除し、領地 {2} 件を更新しました。'
   give-result-refresh-failed: '領地 {0} の譲渡は確定しましたが、最新状態の読み取りに失敗したため、自動所属は試行していません。再実行する前に領地の状態を確認してください。理由: {1}'
   give-confirm-command: /dom give {0} {1} confirm で個人領地とその個人子領地の譲渡を確認できます。管理者は /dom give {0} {1} force でタウンとの関連を解除して強制譲渡できます。
   auto-attached-to-town: Dominion {0} was attached to town {1} because its new owner is a town member.
   auto-attach-failed: 'Dominion {0} was transferred successfully, but could not be attached to town {1}: {2}. It remains the new owner''s personal dominion.'
+  auto-attach-refresh-failed: '領地 {0} の譲渡とタウン {1} への所属は完了しましたが、状態更新または通知に失敗しました: {2}。譲渡を再実行しないでください。'
   town-outpost-no-transfer: Dominion {0} is town property and cannot be transferred.
   town-outpost-no-delete: Dominion {0} is town property; it cannot be deleted personally. The town disbands it, or an admin releases it.
   legacy-delete-disabled: Deleting dominions is disabled on this server.

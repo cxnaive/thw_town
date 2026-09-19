@@ -33,6 +33,9 @@ dominion-list-tui-text:
   legacy-tag: （旧系统——请尽快创建或加入小镇）
   legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），再使用 /town attach 选择要贡献的领地。
 dominion-manage-tui-text:
+  delete-outpost-button: '删除属地'
+  delete-outpost-description: '镇长/副镇长可删除此属地；解除保护，不退款。'
+  delete-outpost-confirm: '§c5 秒内再次点击确认删除属地 {0}。将解除保护并清除权限，不退款；方块、下级领地及小镇保留。'
   release-description: 将贡献领地归还给原贡献者（镇长操作，OP 可仲裁）。
   release-button: 归还
   release-confirm: §c5 秒内再次点击确认归还贡献领地 {0}。小镇组、镜像成员和该属地 Trust 都会被删除。

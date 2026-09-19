@@ -20,6 +20,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import static cn.lunadeer.dominion.managers.TownLandJdbc.archive;
+import static cn.lunadeer.dominion.managers.TownLandJdbc.execute;
+
 /** Administrator transfer, including outposts whose town row no longer exists. */
 public final class DominionTransferManager {
     private DominionTransferManager() {}
@@ -82,22 +85,22 @@ public final class DominionTransferManager {
             collectPersonalChildren(connection, dominionId, new HashSet<>(Set.of(dominionId)), targets);
             for (Row target : targets) {
                 archive(connection, "dominion", "dominion_archive", "id", target.id(),
-                        "archived_town_id", target.townId());
+                        "archived_town_id", target.townId(), "ADMIN_FORCE_TRANSFER");
                 if (target.townId() != null) {
                     archive(connection, "dominion_member", "dominion_member_archive", "dom_id", target.id(),
-                            "town_id", target.townId());
+                            "town_id", target.townId(), "ADMIN_FORCE_TRANSFER");
                     execute(connection, "DELETE FROM dominion_member WHERE dom_id = ?", target.id());
                     execute(connection, "DELETE FROM dominion_group WHERE dom_id = ? "
                             + "AND (town_group_id IS NOT NULL OR name = ?)", target.id(), TownManager.TOWN_MEMBER_GROUP_NAME);
                 }
                 execute(connection, "DELETE FROM town_group_outpost_override WHERE dominion_id = ?", target.id());
                 execute(connection, "DELETE FROM town_trust WHERE scope_type = 'OUTPOST' AND scope_id = ?", target.id());
-                // Keep coordinates/server/world intact. The selected sub-dominion
-                // becomes a top-level dominion; ordinary children move with it.
+                // Preserve containment as well as coordinates/server/world.
+                // Promoting a sub to root would overlap its still-existing parent.
                 execute(connection, "UPDATE dominion SET owner = ?, town_id = NULL, attached_by = NULL, "
-                                + "attached_at = NULL, outpost_admin_uuid = NULL, town_paid_value = 0, claim_kind = 'NORMAL', "
-                                + "parent_dom_id = ? WHERE id = ?",
-                        newOwner.toString(), target.id() == dominionId ? -1 : target.parentId(), target.id());
+                                + "attached_at = NULL, outpost_admin_uuid = NULL, town_paid_value = 0, claim_kind = 'NORMAL' "
+                                + "WHERE id = ?",
+                        newOwner.toString(), target.id());
             }
             connection.commit();
             committed = true;
@@ -161,28 +164,4 @@ public final class DominionTransferManager {
         }
     }
 
-    private static void archive(Connection connection, String source, String destination, String key, int id,
-                                String townColumn, Integer townId) throws SQLException {
-        List<String> columns = new ArrayList<>();
-        String quote = connection.getMetaData().getIdentifierQuoteString().trim();
-        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + source + " WHERE 1 = 0");
-             ResultSet rows = statement.executeQuery()) {
-            for (int i = 1; i <= rows.getMetaData().getColumnCount(); i++) {
-                String name = rows.getMetaData().getColumnName(i);
-                columns.add(quote.isEmpty() ? name : quote + name.replace(quote, quote + quote) + quote);
-            }
-        }
-        String joined = String.join(", ", columns);
-        execute(connection, "INSERT INTO " + destination + " (" + joined + ", " + townColumn
-                        + ", archived_at, archive_reason) SELECT " + joined
-                        + ", ?, CURRENT_TIMESTAMP, 'ADMIN_FORCE_TRANSFER' FROM " + source + " WHERE " + key + " = ?",
-                townId == null ? -1 : townId, id);
-    }
-
-    private static void execute(Connection connection, String sql, Object... arguments) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            for (int i = 0; i < arguments.length; i++) statement.setObject(i + 1, arguments[i]);
-            statement.executeUpdate();
-        }
-    }
 }

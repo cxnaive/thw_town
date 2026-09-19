@@ -22,7 +22,6 @@ import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
-import cn.lunadeer.dominion.utils.databse.syntax.Show.Show;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -776,80 +775,49 @@ public class TownManager {
     public static void disbandTown(@NotNull CommandSender operator, @NotNull TownDOO town) throws Exception {
         assertCanDisband(operator, town);
         boolean dissolveAll = !"return-contributed".equals(Configuration.town.disbandPolicy);
-        List<DominionDOO> outposts = outpostsOf(town.getId());
-        int dissolved = 0;
-        int returned = 0;
-        // ids already handled as part of a parent's sub-tree: deleting a
-        // parent FK-cascades its subs, so subs must be archived and
-        // deleted BEFORE their parent or their archive rows are lost
-        java.util.Set<Integer> processed = new java.util.HashSet<>();
-        for (DominionDOO outpost : outposts) {
-            if (!processed.add(outpost.getId())) continue;
-            boolean contributed = outpost.getAttachedBy() != null;
-            if (dissolveAll || !contributed) {
-                // Sub-dominions inside the dissolving outpost: enumerated
-                // from the DATABASE (not the per-server cache) so subs
-                // created on other backends are never cascade-deleted
-                // without an archive row. Contributed subs (attached_by
-                // set) are reparented to root and skipped — the outer loop
-                // returns them to their contributor; everything else
-                // (foreign enclaves, town-native subs) dissolves with the
-                // parent, deepest first.
-                for (DominionDOO sub : outpost.selectSubTreeDeepestFirst()) {
-                    if (sub.isTownOutpost() && sub.getAttachedBy() != null) {
-                        // contributed sub: detach it from the dissolving
-                        // parent but do NOT mark it processed — if it
-                        // belongs to THIS town the outer loop still has to
-                        // handle it per policy (dissolve-all archives and
-                        // deletes it; return-contributed returns it).
-                        // Cross-town enclave subs simply survive at root.
-                        sub.reparentToRoot();
-                        continue;
-                    }
-                    if (!processed.add(sub.getId())) continue;
-                    UUID enclaveOwner = sub.getOwner();
-                    archiveDominion(sub, town.getId(), "DISBANDED_TOWN");
-                    archiveMembers(sub, town.getId(), "DISBANDED_TOWN");
-                    cn.lunadeer.dominion.events.dominion.DominionDeleteEvent subDeleteEvent =
-                            new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, sub);
-                    subDeleteEvent.setSkipEconomy(true);
-                    callLifecycleEvent(subDeleteEvent); // notification only; town disband is not vetoable
-                    DominionDOO.deleteById(sub.getId());
-                    notifyIfOnline(enclaveOwner, Language.townManagerText.disbandEnclaveDissolved,
-                            sub.getName(), town.getName());
+        UUID requiredMayor = operator instanceof Player player && !bypassLimit(player)
+                ? player.getUniqueId() : null;
+        TownDisbandManager.Result result = TownDisbandManager.disband(town.getId(), dissolveAll, requiredMayor);
+        // Never call Bukkit listeners while holding database locks: listeners
+        // may query or mutate through another connection. These are notifications.
+        TownInviteManager.clearNotifiedTown(town.getId());
+        try {
+            TownGroupSyncHandler.reloadCaches();
+            CacheManager.instance.getCache().getDominionCache().load();
+            for (var server : CacheManager.instance.getOtherServerCaches().values()) {
+                server.getDominionCache().load();
+            }
+        } catch (Exception refreshError) {
+            XLogger.warn("Town {0} disband committed, but cache refresh failed: {1}", town.getId(), refreshError.getMessage());
+        }
+        for (DominionDOO outpost : result.deleted()) {
+            try {
+                var event = new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, outpost);
+                event.setSkipEconomy(true);
+                callLifecycleEvent(event); // post-commit notification only
+                if (outpost.getParentDomId() != -1) {
+                    notifyIfOnline(outpost.getOwner(), Language.townManagerText.disbandEnclaveDissolved,
+                            outpost.getName(), town.getName());
                 }
-                archiveDominion(outpost, town.getId(), "DISBANDED_TOWN");
-                archiveMembers(outpost, town.getId(), "DISBANDED_TOWN");
-                cn.lunadeer.dominion.events.dominion.DominionDeleteEvent deleteEvent =
-                        new cn.lunadeer.dominion.events.dominion.DominionDeleteEvent(operator, outpost);
-                deleteEvent.setSkipEconomy(true);
-                callLifecycleEvent(deleteEvent); // notification only
-                DominionDOO.deleteById(outpost.getId());
-                dissolved++;
-            } else {
-                TownGroupSyncHandler.releaseOutpost(outpost.getId());
-                returned++;
-                Player contributor = operator.getServer().getPlayer(outpost.getOwner());
-                if (contributor != null) {
-                    Notification.info(contributor, Language.townManagerText.releaseSuccess,
-                            outpost.getName(), town.getName(), CacheManager.instance.getPlayerName(outpost.getOwner()));
-                }
+            } catch (Exception notificationError) {
+                XLogger.warn("Town disband committed; deletion notification failed for {0}: {1}",
+                        outpost.getId(), notificationError.getMessage());
             }
         }
-        TownMemberDOO.deleteByTown(town.getId());
-        TownTrustDOO.deleteByTown(town.getId());
-        TownInviteManager.deleteByTown(town.getId());
-        TownDOO.deleteById(town.getId());
-        cache().reloadNow();
-        CacheManager.instance.getCache().getDominionCache().load();
-        CacheManager.instance.getCache().getMemberCache().load();
-        // dissolved outposts' @town groups die with them via FK cascade
-        // (or orphan on SQLite); don't leave phantoms in the group cache
-        CacheManager.instance.getCache().getGroupCache().load();
+        for (DominionDOO outpost : result.returned()) {
+            try {
+                notifyIfOnline(outpost.getOwner(), Language.townManagerText.releaseSuccess,
+                        outpost.getName(), town.getName(), CacheManager.instance.getPlayerName(outpost.getOwner()));
+            } catch (Exception notificationError) {
+                XLogger.warn("Town disband committed; return notification failed for {0}: {1}",
+                        outpost.getId(), notificationError.getMessage());
+            }
+        }
         if (dissolveAll) {
-            Notification.info(operator, Language.townManagerText.disbandSuccess, town.getName(), dissolved);
+            Notification.info(operator, Language.townManagerText.disbandSuccess, town.getName(), result.deleted().size());
         } else {
-            Notification.info(operator, Language.townManagerText.disbandSuccessReturn, town.getName(), returned, dissolved);
+            Notification.info(operator, Language.townManagerText.disbandSuccessReturn,
+                    town.getName(), result.returned().size(), result.deleted().size());
         }
     }
 
@@ -1476,6 +1444,15 @@ public class TownManager {
         return town != null && town.getMayorUuid().equals(player.getUniqueId());
     }
 
+    /** UI visibility only. The delete transaction rechecks the role from the database. */
+    public static boolean canDeleteOutpost(@NotNull CommandSender sender, @NotNull DominionDOO outpost) {
+        if (!outpost.isTownOutpost()) return false;
+        if (cn.lunadeer.dominion.misc.Others.isAdministrator(sender)) return true;
+        if (!(sender instanceof Player player)) return false;
+        TownDOO town = cache().getTown(outpost.getTownId());
+        return town != null && isManager(town, player.getUniqueId());
+    }
+
     /**
      * Release an outpost back to its contributor. Authorization is enforced
      * here and re-checked under the town's database lock by the sync handler.
@@ -1648,47 +1625,6 @@ public class TownManager {
             }
         }
         return null;
-    }
-
-    // ------------------------------------------------------------------
-    // Archiving (INSERT..SELECT keeps every flag column without
-    // enumerating them; both archive tables mirror their source)
-    // ------------------------------------------------------------------
-
-    private static void archiveMembers(@NotNull DominionDOO dominion, @NotNull Integer townId,
-                                       @NotNull String reason) throws SQLException {
-        String columns = String.join(", ", memberColumns());
-        String sql = "INSERT INTO dominion_member_archive (" + columns + ", town_id, archived_at, archive_reason) "
-                + "SELECT " + columns + ", ?, CURRENT_TIMESTAMP, ? FROM dominion_member WHERE dom_id = ?";
-        try (Connection conn = DatabaseManager.instance.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, townId);
-            ps.setString(2, reason);
-            ps.setInt(3, dominion.getId());
-            ps.executeUpdate();
-        }
-    }
-
-    private static void archiveDominion(@NotNull DominionDOO dominion, @NotNull Integer townId,
-                                        @NotNull String reason) throws SQLException {
-        String columns = String.join(", ", dominionColumns());
-        String sql = "INSERT INTO dominion_archive (" + columns + ", archived_town_id, archived_at, archive_reason) "
-                + "SELECT " + columns + ", ?, CURRENT_TIMESTAMP, ? FROM dominion WHERE id = ?";
-        try (Connection conn = DatabaseManager.instance.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, townId);
-            ps.setString(2, reason);
-            ps.setInt(3, dominion.getId());
-            ps.executeUpdate();
-        }
-    }
-
-    private static List<String> memberColumns() throws SQLException {
-        return new ArrayList<>(Show.show().columns().from("dominion_member").execute().keySet());
-    }
-
-    private static List<String> dominionColumns() throws SQLException {
-        return new ArrayList<>(Show.show().columns().from("dominion").execute().keySet());
     }
 
     // ------------------------------------------------------------------

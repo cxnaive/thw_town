@@ -469,6 +469,15 @@ dominion-list-cui:
     - '§7Status: §3Town outpost you manage'
     material: BEACON
 dominion-manage-cui:
+  delete-outpost-button:
+    symbol: i
+    material: RED_DYE
+    name: '§cDelete Outpost'
+    lore:
+    - '§7Mayor/assistant: delete only this outpost.'
+    - '§cRemoves protection and permissions; no refund.'
+    - '§7Blocks, child dominions and the town remain.'
+    - '§c▶ Click twice to confirm'
   title: §6✦ §a§lManage {0} §6✦
   list-configuration:
     item-symbol: i

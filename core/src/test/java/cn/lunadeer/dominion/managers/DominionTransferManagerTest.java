@@ -103,7 +103,7 @@ class DominionTransferManagerTest {
         assertEquals(List.of(30, 31), DominionTransferManager.transfer(connection, 30, NEW));
         try (ResultSet row = query("SELECT parent_dom_id FROM dominion WHERE id=30")) {
             assertTrue(row.next());
-            assertEquals(-1, row.getInt(1));
+            assertEquals(20, row.getInt(1)); // Keep containment; do not overlap the parent as another root.
         }
         for (int id : List.of(20, 32, 33)) {
             try (ResultSet row = query("SELECT owner FROM dominion WHERE id=" + id)) {

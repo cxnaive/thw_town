@@ -61,6 +61,13 @@ vault-connect-text:
   economy-unavailable: 缺少经济插件，请至少安装一个经济插件以使用经济功能。
   insufficient-funds: 余额不足，需要 {0} {1}，但是你只有 {2} {1}
 dominion-provider-handler-text:
+  personal-delete-confirm: '执行 /dom delete {0} confirm 确认删除以下个人领地：{1}。镇属领地及其整条下级分支都会保留。'
+  personal-delete-preserved: '已保留以下镇属领地及其整条下级分支：{0}。'
+  delete-refund-failed: '领地 {0} 已删除，但退款失败：{1}。请联系管理员核对款项，不要重复删除。'
+  outpost-delete-denied: '只有该镇的镇长、副镇长或服务器管理员可以删除镇属领地。'
+  outpost-delete-changed: '该属地已被删除或归属已变更，请重新打开管理界面后操作。'
+  outpost-delete-confirm: '确认只删除属地 {0}？删除后失去领地保护并清除该地权限，不退款；方块、下级领地及小镇保留。执行 /dom delete {0} confirm 确认。'
+  outpost-delete-success: '已删除并归档属地 {0}。该地保护已解除，不退款；方块、下级领地及小镇均保留。'
   give-force-admin-only: 只有 OP 或拥有 dominion.admin 权限的管理员可使用 give force；普通转交请使用 confirm。
   give-force-success: 已将 {0} 强制转交给 {1}，旧小镇关联已解除，共处理 {2} 块领地。
   give-result-refresh-failed: 领地 {0} 的转交已提交，但读取最新状态失败，尚未尝试自动挂靠；请先查看领地状态，不要直接重复转交。原因：{1}
@@ -75,6 +82,7 @@ dominion-provider-handler-text:
   town-outpost-no-transfer: 领地 {0} 属于城镇财产，不可转让。
   auto-attached-to-town: 领地 {0} 已挂靠至城镇 {1}（新主人是城镇成员）。
   auto-attach-failed: 领地 {0} 已成功转让，但无法自动挂靠至城镇 {1}：{2}。它将保留为新主人的个人领地。
+  auto-attach-refresh-failed: 领地 {0} 已成功转交并挂靠至城镇 {1}，但刷新状态或发送通知失败：{2}。请勿重复转交。
   expand-success: 成功扩张领地 {0}
   expand-failed: 扩张领地 {0} 失败，原因：{1}
   contract-success: 成功缩小领地 {0}

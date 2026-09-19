@@ -81,7 +81,7 @@ public class DominionOperateCommand {
 
     public static SecondaryCommand delete = new SecondaryCommand("delete", List.of(
             new CommandArguments.RequiredDominionArgument(),
-            new Option(List.of("force"), "")
+            new Option(List.of("confirm", "force"), "")
     ), Language.dominionOperateCommandText.deleteDescription) {
         @Override
         public void executeHandler(CommandSender sender) {
@@ -320,7 +320,7 @@ public class DominionOperateCommand {
     public static void delete(CommandSender sender, String dominionName, String forceStr) {
         try {
             DominionDTO dominion = toDominionDTO(dominionName);
-            boolean force = forceStr.equals("force");
+            boolean force = forceStr.equalsIgnoreCase("force") || forceStr.equalsIgnoreCase("confirm");
             DominionProviderHandler.getInstance().deleteDominion(sender, dominion, false, force);
         } catch (Exception e) {
             Notification.error(sender, e);

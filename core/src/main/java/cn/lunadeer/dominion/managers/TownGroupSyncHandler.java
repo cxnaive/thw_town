@@ -12,6 +12,7 @@ import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownGroupDOO;
 import cn.lunadeer.dominion.misc.DominionException;
 import cn.lunadeer.dominion.utils.Notification;
+import cn.lunadeer.dominion.utils.XLogger;
 import cn.lunadeer.dominion.utils.databse.DatabaseManager;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -41,20 +42,31 @@ public final class TownGroupSyncHandler {
     }
 
     private static <T> T transaction(TransactionWork<T> work) throws Exception {
+        T result = null;
+        boolean committed = false;
         try (Connection connection = DatabaseManager.instance.getConnection()) {
             boolean oldAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
-                T result = work.run(connection);
+                result = work.run(connection);
                 connection.commit();
-                return result;
+                committed = true;
             } catch (Exception e) {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(oldAutoCommit);
+                try {
+                    connection.setAutoCommit(oldAutoCommit);
+                } catch (SQLException cleanupError) {
+                    if (!committed) throw cleanupError;
+                    XLogger.warn("Town operation committed, but connection cleanup failed: {0}", cleanupError.getMessage());
+                }
             }
+        } catch (SQLException closeError) {
+            if (!committed) throw closeError;
+            XLogger.warn("Town operation committed, but closing the connection failed: {0}", closeError.getMessage());
         }
+        return result;
     }
 
     public static @NotNull TownGroupDOO createGroup(@NotNull TownDOO town,
@@ -515,17 +527,25 @@ public final class TownGroupSyncHandler {
             return new AttachResult(updated, convertedMembers);
         });
 
-        for (AttachCandidate candidate : candidatesById(result.attachedIds(), candidates)) {
-            ServerCache cache = CacheManager.instance.getCache(candidate.serverId());
-            if (cache != null) cache.getDominionCache().load(candidate.id());
+        // From here on, failures cannot undo attachment or change its result.
+        try {
+            for (AttachCandidate candidate : candidatesById(result.attachedIds(), candidates)) {
+                ServerCache cache = CacheManager.instance.getCache(candidate.serverId());
+                if (cache != null) cache.getDominionCache().load(candidate.id());
+            }
+            reloadCaches();
+        } catch (Exception refreshError) {
+            XLogger.warn("Outpost attachment committed, but cache refresh failed: {0}", refreshError.getMessage());
         }
-        reloadCaches();
         for (ConvertedMember converted : result.convertedMembers()) {
-            Player online = cn.lunadeer.dominion.Dominion.instance.getServer()
-                    .getPlayer(converted.player());
-            if (online != null) {
-                Notification.info(online, Language.townManagerText.mergeMemberTrusted,
-                        CacheManager.instance.getPlayerName(converted.player()), converted.dominionName());
+            try {
+                Player online = cn.lunadeer.dominion.Dominion.instance.getServer().getPlayer(converted.player());
+                if (online != null) {
+                    Notification.info(online, Language.townManagerText.mergeMemberTrusted,
+                            CacheManager.instance.getPlayerName(converted.player()), converted.dominionName());
+                }
+            } catch (Exception notificationError) {
+                XLogger.warn("Outpost attachment committed, but member notification failed: {0}", notificationError.getMessage());
             }
         }
         return result.attachedIds();

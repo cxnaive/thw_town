@@ -32,6 +32,9 @@ dominion-list-tui-text:
   legacy-tag: ' (legacy - create or join a town!)'
   legacy-notice: Personal dominions are a legacy system - create or join a town soon (/town create, /town join, or the main menu), then use /town attach to contribute selected land.
 dominion-manage-tui-text:
+  delete-outpost-button: '刪除屬地'
+  delete-outpost-description: '鎮長/副鎮長可刪除此屬地；解除保護，不退款。'
+  delete-outpost-confirm: '§c5 秒內再次點擊確認刪除屬地 {0}。將解除保護並清除權限，不退款；方塊、下級領地及小鎮保留。'
   release-description: Return contributed land to its contributor (mayor; OP arbitration).
   release-button: RETURN
   trusts-description: Manage per-player trust grants of this town outpost.

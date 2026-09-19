@@ -461,6 +461,15 @@ dominion-list-cui:
     - §7状态：§3你管理的镇属地
     material: BEACON
 dominion-manage-cui:
+  delete-outpost-button:
+    symbol: i
+    material: RED_DYE
+    name: '§c删除属地'
+    lore:
+    - '§7镇长/副镇长：只删除当前属地。'
+    - '§c解除领地保护并清除权限，不退款。'
+    - '§7方块、下级领地及小镇保留。'
+    - '§c▶ 连续点击两次确认'
   title: §6✦ §a§l管理 {0} §6✦
   list-configuration:
     item-symbol: i
