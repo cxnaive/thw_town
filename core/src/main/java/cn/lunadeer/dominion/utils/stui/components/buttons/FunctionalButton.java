@@ -26,7 +26,7 @@ public abstract class FunctionalButton extends PermissionButton {
                 function();
             }
         }.dynamic().register();
-        this.action = ClickEvent.Action.RUN_COMMAND;
+        this.action = ClickEvent::runCommand;
         this.clickExecute = CommandManager.getRootCommand() + " tui_btn_future_" + uuid;
     }
 

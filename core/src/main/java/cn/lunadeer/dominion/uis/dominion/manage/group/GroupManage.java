@@ -129,12 +129,11 @@ public class GroupManage extends AbstractUI {
 
         public ButtonConfiguration townGroupHintButton = ButtonConfiguration.createMaterial(
                 'i', Material.BOOK,
-                "§6⛨ §eImplicit Town Membership",
+                "§6⛨ §eDefault Member Permissions",
                 List.of(
-                        "§7Every member of the town holds this",
-                        "§7group's permissions on this outpost.",
-                        "§7No member list exists — membership",
-                        "§7is implicit in being a town member.",
+                        "§7Members without a custom group use",
+                        "§7this group's permissions on this land.",
+                        "§7Assign groups from Town → Member Permissions.",
                         "",
                         "§8Managed by the town system."
                 )

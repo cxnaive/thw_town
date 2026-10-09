@@ -45,27 +45,28 @@ public final class TownTrustEditor {
                 List.of("§7Configure this player's four trust categories.")
         );
         public ButtonConfiguration buildButton = ButtonConfiguration.createMaterial(
-                'B', Material.BRICKS, "§eBuild (B)", List.of(
+                'B', Material.BRICKS, "§eBuild", List.of(
                         "§7State: {0}", "§7{1}", "", "{2}"
                 )
         );
         public ButtonConfiguration destroyButton = ButtonConfiguration.createMaterial(
-                'D', Material.DIAMOND_PICKAXE, "§eDestroy (D)", List.of(
+                'D', Material.DIAMOND_PICKAXE, "§eDestroy", List.of(
                         "§7State: {0}", "§7{1}", "", "{2}"
                 )
         );
         public ButtonConfiguration switchButton = ButtonConfiguration.createMaterial(
-                'S', Material.LEVER, "§eSwitch (S)", List.of(
+                'S', Material.LEVER, "§eSwitches and containers", List.of(
                         "§7State: {0}", "§7{1}", "", "{2}"
                 )
         );
         public ButtonConfiguration itemUseButton = ButtonConfiguration.createMaterial(
-                'I', Material.CRAFTING_TABLE, "§eItem use (I)", List.of(
+                'I', Material.CRAFTING_TABLE, "§eItem use", List.of(
                         "§7State: {0}", "§7{1}", "", "{2}"
                 )
         );
-        public String enabledState = "§aEnabled";
-        public String disabledState = "§cDisabled";
+        public String enabledState = "§aAdditional access";
+        public String disabledState = "§7No additional access";
+        public String trustUnavailable = "This trust entry no longer exists. Reopen the list.";
         public String toggleHint = "§a▶ Click to toggle";
         public String readOnlyHint = "§8Read-only: you cannot edit this trust";
         public String buildDescription = "Place, sow, and spawn vehicles.";
@@ -93,7 +94,7 @@ public final class TownTrustEditor {
     public static void showTown(Player player, TownDOO town, UUID target, String returnPage) {
         try {
             TownTrustDOO trust = find(town, target, TownTrustDOO.TrustScope.TOWN, town.getId());
-            if (trust == null) throw new IllegalStateException("Trust entry no longer exists.");
+            if (trust == null) throw new IllegalStateException(ChestUserInterface.townTrustEditorCui.trustUnavailable);
             boolean editor = TownManager.isManager(town, player.getUniqueId())
                     || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
             render(player, new Context(town, null, target, trust, editor, returnPage));
@@ -106,7 +107,7 @@ public final class TownTrustEditor {
         try {
             TownDOO town = TownManager.requireTown(outpost.getTownId());
             TownTrustDOO trust = find(town, target, TownTrustDOO.TrustScope.OUTPOST, outpost.getId());
-            if (trust == null) throw new IllegalStateException("Trust entry no longer exists.");
+            if (trust == null) throw new IllegalStateException(ChestUserInterface.townTrustEditorCui.trustUnavailable);
             boolean editor = cn.lunadeer.dominion.misc.Others.bypassLimit(player)
                     || TownManager.isOutpostManager(player, outpost);
             render(player, new Context(town, outpost, target, trust, editor, returnPage));

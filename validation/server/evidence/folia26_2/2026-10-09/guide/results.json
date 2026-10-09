@@ -1,0 +1,140 @@
+{
+  "results": [
+    {
+      "name": "townless player reads the Chinese handbook",
+      "status": "PASS",
+      "elapsedMs": 1004
+    },
+    {
+      "name": "read start lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 1061
+    },
+    {
+      "name": "read roles lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 1056
+    },
+    {
+      "name": "read templates lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 1969
+    },
+    {
+      "name": "read trust lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 1157
+    },
+    {
+      "name": "read land lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 1309
+    },
+    {
+      "name": "read levels lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 904
+    },
+    {
+      "name": "read faq lesson by lesson and return to contents",
+      "status": "PASS",
+      "elapsedMs": 903
+    },
+    {
+      "name": "invalid topic and oversized page remain usable",
+      "status": "PASS",
+      "elapsedMs": 503
+    },
+    {
+      "name": "main-menu handbook and back navigation",
+      "status": "PASS",
+      "elapsedMs": 1004
+    },
+    {
+      "name": "town template contextual help returns to the same settings",
+      "status": "PASS",
+      "elapsedMs": 3836
+    },
+    {
+      "name": "custom permission groups show their display name in default settings",
+      "status": "PASS",
+      "elapsedMs": 1257
+    },
+    {
+      "name": "town trust contextual help preserves its return location",
+      "status": "PASS",
+      "elapsedMs": 955
+    },
+    {
+      "name": "native and attached land have distinct origins in both chest lists",
+      "status": "PASS",
+      "elapsedMs": 3339
+    },
+    {
+      "name": "trust lists and independent controls use localized categories and states",
+      "status": "PASS",
+      "elapsedMs": 6315
+    },
+    {
+      "name": "TUI chapter links, pagination and back navigation",
+      "status": "PASS",
+      "elapsedMs": 2419
+    },
+    {
+      "name": "chat lists also distinguish creators and contributors",
+      "status": "PASS",
+      "elapsedMs": 1057
+    },
+    {
+      "name": "TUI member permissions link opens the labeled default group",
+      "status": "PASS",
+      "elapsedMs": 960
+    },
+    {
+      "name": "chat trust controls display access states and toggle the named category",
+      "status": "PASS",
+      "elapsedMs": 1110
+    },
+    {
+      "name": "town search ranks literal and fuzzy matches and supports list input",
+      "status": "PASS",
+      "elapsedMs": 1112
+    },
+    {
+      "name": "personal land search is scoped and preserves results across GUI pages",
+      "status": "PASS",
+      "elapsedMs": 653
+    },
+    {
+      "name": "case, width, multiple words, empty results, cancel and length limits",
+      "status": "PASS",
+      "elapsedMs": 2416
+    },
+    {
+      "name": "town outpost search keeps scope and explains remote actions",
+      "status": "PASS",
+      "elapsedMs": 903
+    },
+    {
+      "name": "search action rechecks a removed result before opening it",
+      "status": "PASS",
+      "elapsedMs": 435
+    },
+    {
+      "name": "administrator list search requires administrator access",
+      "status": "PASS",
+      "elapsedMs": 1152
+    },
+    {
+      "name": "TUI search retains keyword on real next-page links",
+      "status": "PASS",
+      "elapsedMs": 1809
+    }
+  ],
+  "shutdown": {
+    "code": 0,
+    "signal": null,
+    "forced": false
+  },
+  "issues": []
+}

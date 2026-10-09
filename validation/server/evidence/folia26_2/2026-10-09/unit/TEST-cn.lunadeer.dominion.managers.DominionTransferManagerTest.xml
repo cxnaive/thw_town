@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.DominionTransferManagerTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:43.715Z" hostname="DESKTOP-L5R1PDQ" time="0.124">
+  <properties/>
+  <testcase name="orphanTownLandBecomesPersonalAndArchivesThePreviousState()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.102"/>
+  <testcase name="foundingAndSameOwnerTransfersAreAllowedWithoutDeletingTown()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.005"/>
+  <testcase name="personalPermissionsAndUnrelatedTownLandArePreserved()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.005"/>
+  <testcase name="missingTargetsAndVirtualRootAreNeverCreatedOrTransferred()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.003"/>
+  <testcase name="personalChildrenMoveButTownEnclaveAndItsDescendantsDoNot()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.004"/>
+  <testcase name="failureAfterCleanupRollsBackOwnershipPrivilegesAndArchives()" classname="cn.lunadeer.dominion.managers.DominionTransferManagerTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+</testsuite>

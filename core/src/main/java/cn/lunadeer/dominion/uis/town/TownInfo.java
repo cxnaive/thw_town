@@ -109,8 +109,8 @@ public class TownInfo extends AbstractUI {
         public String createOutpostDescription = "Create from the two selected points and charge the town bank.";
         public String attachButton = "ATTACH";
         public String attachDescription = "Attach your personal dominions to this town.";
-        public String groupsButton = "GROUPS";
-        public String groupsDescription = "Manage custom groups shared by town outposts.";
+        public String groupsButton = "MEMBER PERMISSIONS";
+        public String groupsDescription = "Set whether members can build, break blocks and open chests on town land.";
         public String inviteButton = "INVITE";
         public String inviteDescription = "Invite a player to join.";
         public String leaveButton = "LEAVE";
@@ -286,8 +286,8 @@ public class TownInfo extends AbstractUI {
                 'i', Material.LEAD, "§eAttach Dominions",
                 List.of("§7Attach your personal dominions to this town.", "§a▶ Click to select"));
         public ButtonConfiguration groupsButton = ButtonConfiguration.createMaterial(
-                'i', Material.CHEST, "§eTown Groups",
-                List.of("§7Groups mirrored to every town outpost.", "§a▶ Click to manage"));
+                'i', Material.CHEST, "§eMember Permissions",
+                List.of("§7Set members' building, breaking and chest access", "§7on town land.", "§a▶ Click to manage"));
         public ButtonConfiguration inviteButton = ButtonConfiguration.createMaterial(
                 'i', Material.WRITABLE_BOOK, "§aInvite",
                 List.of("§7Invite a player to join.", "§a▶ Click to invite"));

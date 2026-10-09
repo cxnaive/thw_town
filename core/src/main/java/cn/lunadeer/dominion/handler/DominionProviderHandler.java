@@ -638,10 +638,10 @@ public class DominionProviderHandler extends DominionProvider {
             try {
                 assertDominionAdmin(event.getOperator(), event.getDominion());
                 event.setDominion(event.getDominion().setEnvFlagValue(event.getFlag(), event.getNewValue()));
-                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.setEnvFlagSuccess, event.getFlag().getDisplayName(), event.getNewValue());
+                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.setEnvFlagSuccess, event.getFlag().getDisplayName(), cn.lunadeer.dominion.misc.DisplayNames.feature(event.getNewValue()));
                 return event.getDominion();
             } catch (Exception e) {
-                Notification.error(event.getOperator(), Language.dominionProviderHandlerText.setEnvFlagFailed, event.getFlag().getDisplayName(), event.getNewValue(), e.getMessage());
+                Notification.error(event.getOperator(), Language.dominionProviderHandlerText.setEnvFlagFailed, event.getFlag().getDisplayName(), cn.lunadeer.dominion.misc.DisplayNames.feature(event.getNewValue()), e.getMessage());
                 return null;
             }
         });
@@ -659,10 +659,10 @@ public class DominionProviderHandler extends DominionProvider {
             try {
                 assertDominionAdmin(event.getOperator(), event.getDominion());
                 event.setDominion(event.getDominion().setGuestFlagValue(event.getFlag(), event.getNewValue()));
-                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.setGuestFlagSuccess, event.getFlag().getDisplayName(), event.getNewValue());
+                Notification.info(event.getOperator(), Language.dominionProviderHandlerText.setGuestFlagSuccess, event.getFlag().getDisplayName(), cn.lunadeer.dominion.misc.DisplayNames.permission(event.getNewValue()));
                 return event.getDominion();
             } catch (Exception e) {
-                Notification.error(event.getOperator(), Language.dominionProviderHandlerText.setGuestFlagFailed, event.getFlag().getDisplayName(), event.getNewValue(), e.getMessage());
+                Notification.error(event.getOperator(), Language.dominionProviderHandlerText.setGuestFlagFailed, event.getFlag().getDisplayName(), cn.lunadeer.dominion.misc.DisplayNames.permission(event.getNewValue()), e.getMessage());
                 return null;
             }
         });

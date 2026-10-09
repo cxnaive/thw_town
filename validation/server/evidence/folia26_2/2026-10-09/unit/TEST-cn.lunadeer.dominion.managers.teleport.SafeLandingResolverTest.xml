@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:52.770Z" hostname="DESKTOP-L5R1PDQ" time="0.074">
+  <properties/>
+  <testcase name="storedPositionsKeepOrientationAndRejectInvalidNumbers()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.014"/>
+  <testcase name="slabOnlyWorksAtItsActualSurfaceNotIntegerFeet()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.002"/>
+  <testcase name="netherIgnoresBedrockRoofAndUsesFirstSpaciousChamber()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.012"/>
+  <testcase name="automaticSurfaceCanBeHalfSlab()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.015"/>
+  <testcase name="ejectionMustLeaveExcludedClaim()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="blockedExplicitPointSearchesLocallyNotDownToDistantCaveFloor()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.002"/>
+  <testcase name="unsupportedAndHalfBlockInsideGroundAreRejected()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="passablePlantsArePartOfOpenSpaceRatherThanAFalseFloor()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.006"/>
+  <testcase name="automaticSearchUsesExposedSurfaceAndNeverFallsThroughItIntoCaves()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.004"/>
+  <testcase name="explicitlySelectedAirIsAllowedAndKeepsExactHeightAndOrientation()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="chunkEdgeDoesNotCauseOffRegionShapeReads()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="candidateOrderIsBoundedUniqueAndUsesFloorForNegativeCoordinates()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.005"/>
+  <testcase name="ejectionDoesNotGainVoluntaryAirFallback()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <testcase name="emptyHighClaimFallsBackToClearAirInsideItsOwnBounds()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.002"/>
+  <testcase name="dangerousSupportAndLiquidsAreRejected()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="recheckKeepsAirPolicyButRejectsNewObstaclesAndLostGround()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="netherNarrowTunnelDoesNotQualifyForAutomaticLanding()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <testcase name="headCollisionIsRejected()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <testcase name="groundOutranksAirRegardlessOfChunkTraversalOrder()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.002"/>
+  <testcase name="explicitIndoorPointIsUsedWithoutSkyOrLargeRoomRequirements()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="fullSupportAndClearBodyAreSafeWithOrientationIntact()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <testcase name="budgetIsBoundedAndNeverFallsBackToUncheckedCoordinates()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.0"/>
+  <testcase name="claimBodyBoundaryWorldBorderAndHeightAreEnforced()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <testcase name="undergroundOnlyClaimCannotUseAirFallbackToBypassSkyRequirement()" classname="cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

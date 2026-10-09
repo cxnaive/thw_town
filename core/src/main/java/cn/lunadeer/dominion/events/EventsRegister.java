@@ -88,6 +88,8 @@ public class EventsRegister {
 
     private void registerVersion() throws ClassNotFoundException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         for (XVersionManager.ImplementationVersion v : XVersionManager.ImplementationVersion.values()) {
+            // Do not load Java 25 classes while running a legacy server on Java 21.
+            if (v.compareWith(version) > 0) continue;
             String packageName = "cn.lunadeer.dominion." + v.name() + ".";
             registerPackageEvents(packageName + "events.player");
             registerPackageEvents(packageName + "events.environment");

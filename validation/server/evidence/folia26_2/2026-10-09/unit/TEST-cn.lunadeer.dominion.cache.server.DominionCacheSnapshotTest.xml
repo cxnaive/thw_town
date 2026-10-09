@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:43.668Z" hostname="DESKTOP-L5R1PDQ" time="0.045">
+  <properties/>
+  <testcase name="failedIndexBuildDoesNotPublishAnyPartialData()" classname="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" time="0.028"/>
+  <testcase name="retainedTreeStillResolvesAfterDeletionAndReparenting()" classname="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" time="0.002"/>
+  <testcase name="sectorsRespectWorldAndBoundaryCoordinates()" classname="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" time="0.001"/>
+  <testcase name="repeatedReplacementNeverExposesHalfBuiltOrMissingProtection()" classname="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" time="0.012"/>
+  <testcase name="delayedIndexBuildKeepsOldDataPublishedUntilAllIndexesAreReady()" classname="cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

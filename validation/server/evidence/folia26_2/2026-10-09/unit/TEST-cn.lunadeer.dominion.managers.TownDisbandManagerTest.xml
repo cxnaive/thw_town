@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.TownDisbandManagerTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:43.843Z" hostname="DESKTOP-L5R1PDQ" time="8.926">
+  <properties/>
+  <testcase name="disbandFirstNeverAllowsForceToRecreateDeletedLand()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.252"/>
+  <testcase name="concurrentDisbandWaitsForForceCommitAndDoesNotDeleteTransferredLand()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.581"/>
+  <testcase name="newlyAttachedChildIsExcludedWhenPersonalDeleteExecutes()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.742"/>
+  <testcase name="transferredLandIsExcludedFromDisbandAndKeepsItsNewOwner()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.895"/>
+  <testcase name="mayorAndAssistantMayDeleteExactlyOneOutpostIncludingFounding()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.941"/>
+  <testcase name="failedPersonalDeletionRestoresWholeTreeAndArchives()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.382"/>
+  <testcase name="personalDeletionAndConcurrentForceSerializeWithoutDeletingTownBranch()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="1.057"/>
+  <testcase name="confirmationDoesNotDeleteAndRoleIsRecheckedAtExecution()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.224"/>
+  <testcase name="forceTransferInvalidatesAnEarlierOutpostDeleteConfirmation()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.148"/>
+  <testcase name="failedSingleDeleteRollsBackChildReparentingAndPermissionCleanup()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.605"/>
+  <testcase name="transferredSubAndForeignBranchKeepNearestSurvivingAncestor()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.624"/>
+  <testcase name="failedTownDeletionRollsBackLandArchivesPermissionsAndReparenting()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.389"/>
+  <testcase name="personalDeleteRechecksOwnershipAndAttachmentAfterPreview()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.166"/>
+  <testcase name="residentContributorAndOutpostAdminCannotDelete()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.156"/>
+  <testcase name="personalDeletionPreservesTownBranchAndItsPersonalDescendants()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.94"/>
+  <testcase name="returnPolicyArchivesAndDetachesContributedSubBeforeDeletingFoundingParent()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.328"/>
+  <testcase name="administratorCanDeleteOrphanButDoesNotDisbandItsTown()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.124"/>
+  <testcase name="changedMayorCannotDisbandUsingStaleAuthorization()" classname="cn.lunadeer.dominion.managers.TownDisbandManagerTest" time="0.366"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

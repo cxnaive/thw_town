@@ -19,6 +19,9 @@ const { values: options } = parseArgs({ options: {
   libraries: { type: "string" }, jar: { type: "string" }, "server-jar": { type: "string" },
 } });
 if (!options["accept-eula"]) throw new Error("Read https://aka.ms/MinecraftEULA and pass --accept-eula.");
+const serverArtifact = artifacts[options.server];
+assert(serverArtifact, "Unknown server profile");
+const mojangArtifact = artifacts[serverArtifact.mojang ?? "mojang"];
 const port = Number(options.port);
 assert(Number.isInteger(port) && port >= 1024 && port <= 65535);
 await assertPortFree(port);
@@ -33,19 +36,24 @@ await mkdir(join(dir, "cache"));
 await mkdir(join(dir, "config"));
 if (options.libraries) await cp(options.libraries, join(dir, "libraries"), { recursive: true });
 await writeFile(join(dir, "server.jar"), serverJar);
-await writeFile(join(dir, "cache", artifacts.mojang.filename), await readVerified(options.cache, artifacts.mojang));
+await writeFile(join(dir, "cache", mojangArtifact.filename), await readVerified(options.cache, mojangArtifact));
 await copyFile(pluginJar, join(dir, "plugins/Dominion.jar"));
 await writeFile(join(dir, "plugins/Dominion/config.yml"), YAML.stringify({ version: 3, "default-ui-type": "BY_PLAYER" }));
 await writeFile(join(dir, "eula.txt"), "eula=true\n");
+for (const name of serverArtifact.plugins ?? []) {
+  const artifact = artifacts[name];
+  await writeFile(join(dir, "plugins", artifact.filename), await readVerified(options.cache, artifact));
+}
 await writeFile(join(dir, "config/paper-global.yml"), "threaded-regions:\n  threads: 2\n");
 await writeFile(join(dir, "server.properties"),
   `server-ip=127.0.0.1\nserver-port=${port}\nonline-mode=false\nenforce-secure-profile=false\nenable-rcon=false\nlevel-type=minecraft:flat\ngenerator-settings={"biome":"minecraft:plains","layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":3},{"block":"minecraft:grass_block","height":1}]}\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nspawn-protection=0\nmax-players=4\ndifficulty=peaceful\nallow-flight=true\n`);
-await writeFile(join(dir, "environment.json"), JSON.stringify({ server: options.server, version, pluginVersion,
+await writeFile(join(dir, "environment.json"), JSON.stringify({ server: options.server, serverVersion: serverArtifact.version, clientVersion: version,
+  protocolTranslation: serverArtifact.plugins ?? [], version, pluginVersion,
   serverHash: createHash("sha256").update(serverJar).digest("hex"),
   pluginHash: createHash("sha256").update(await readFile(pluginJar)).digest("hex"), port, node: process.version,
   database: "isolated SQLite" }, null, 2));
 console.log(`RUN_DIR=${dir}`);
-const server = managedProcess(process.env.JAVA_HOME ? join(process.env.JAVA_HOME, "bin/java") : "/usr/lib/jvm/java-21-openjdk-amd64/bin/java",
+const server = managedProcess(process.env.JAVA_HOME ? join(process.env.JAVA_HOME, "bin/java") : (options.server === "folia26_2" ? "/usr/lib/jvm/java-25-openjdk-amd64/bin/java" : "/usr/lib/jvm/java-21-openjdk-amd64/bin/java"),
   ["-Xms512M", "-Xmx2G", "-XX:ActiveProcessorCount=4", "-jar", "server.jar", "--nogui"],
   { cwd: dir, log: join(dir, "console.log") });
 let bot, db, failure, abilities;
@@ -232,7 +240,14 @@ try {
   await delay(10500);
   await scenario("duplicate click is coalesced and movement cancels without cooldown", async () => {
     await moveTo("overworld");
-    await chat(tp(claims.the_end), "秒后传送");
+    // Wait for the server's cooldown feedback; wall-clock expiry can lag a client timer.
+    await until("server cooldown expires", async () => {
+      const begin = messages.length;
+      bot.chat(tp(claims.the_end));
+      await until("cooldown or countdown feedback", () => messages.slice(begin).some(message =>
+        message.text.includes("秒后传送") || message.text.includes("请等待")));
+      return messages.slice(begin).some(message => message.text.includes("秒后传送"));
+    }, { timeout: 20000, interval: 500 });
     await chat(tp(claims.the_end), "正在处理");
     const begin = messages.length;
     await moveTo("overworld", 1002.5);

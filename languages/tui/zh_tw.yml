@@ -1,3 +1,19 @@
+outpost-trusts-tui-text:
+  flag-on: "§a{0}: 額外允許"
+  flag-off: "§8{0}: 不額外授權"
+town-groups-tui-text:
+  title: "{0} - 成員權限組"
+  button: 成員權限管理
+  open-description: 查看成員並設定他們在小鎮屬地中的權限。
+  default-template-line: §e小鎮成員（預設組） §7- 全鎮預設權限
+town-group-manage-tui-text:
+  title: "成員權限組: {0}"
+  button: 成員權限組
+  template-button: 全鎮預設權限
+town-template-flags-tui-text:
+  title: "全鎮預設權限: {0}"
+  button: 全鎮預設權限
+  description: 各屬地預設使用這裡的設定，可以為個別屬地單獨調整。
 style:
   primary-color: '#0094D5'
   secondary-color: '#7A7A7A'
@@ -17,6 +33,8 @@ menu-tui-text:
   switch-to-cui-button: 切換至 CUI 🆕
   fail-to-switch-message: 切換至 {0} 失敗：{1}
 dominion-list-tui-text:
+  creator-tag: " §7建立者：§e{0}"
+  contributor-tag: " §7貢獻者：§e{0}"
   remote-owned-line: §b{0} §7- server {1}
   remote-owned-section: Your dominions on other servers.
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
@@ -191,6 +209,8 @@ town-info-tui-text:
   rename-description: 修改小鎮名稱（僅鎮長）。
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
+  groups-button: 成員權限管理
+  groups-description: 設定成員在小鎮屬地中的建造、破壞、開箱等權限。
 town-level-tasks-tui-text:
   title: '{0} 的等級任務'
   button: 等級任務
@@ -223,8 +243,8 @@ town-trusts-tui-text:
   add-button: ADD TRUST
   add-hint: Enter the player name to trust (town scope, all flags off — toggle after).
   remove-button: X
-  flag-on: §a{0}
-  flag-off: §8{0}
+  flag-on: "§a{0}: 額外允許"
+  flag-off: "§8{0}: 不額外授權"
 town-bank-tui-text:
   title: Bank of {0}
   button: BANK
@@ -235,10 +255,11 @@ town-bank-tui-text:
   withdraw-hint: Enter the amount to withdraw.
   invalid-amount: 'Invalid amount: {0}'
 town-outposts-tui-text:
+  creator-tag: " §7建立者：§e{0}"
+  contributor-tag: " §7貢獻者：§e{0}"
   title: '{0} 的屬地'
   button: 屬地
   outpost-line: §b{0} §7- {1} ({2}，伺服器 {3})
-  contributor-tag: ' §7貢獻者：§e{0}'
   remote-hint: 查看遠端位置
   remote-action-hint: 屬地 {0} 位於伺服器 {1}、世界 {2}。管理需要先切換到對應伺服器；需要前往時請點擊「傳送」。
   teleport-button: 傳送

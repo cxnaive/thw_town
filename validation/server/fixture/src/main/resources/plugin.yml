@@ -1,0 +1,10 @@
+name: DominionUpgradeFixture
+version: 1.0
+main: cn.lunadeer.validation.UpgradeFixture
+api-version: '26.2'
+folia-supported: true
+depend: [Dominion]
+commands:
+  upgradeqa:
+    description: Isolated validation fixtures only
+    permission: dominion.admin

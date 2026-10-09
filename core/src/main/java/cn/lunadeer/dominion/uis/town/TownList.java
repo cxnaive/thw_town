@@ -6,6 +6,8 @@ import cn.lunadeer.dominion.configuration.uis.TextUserInterface;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.MainMenu;
+import cn.lunadeer.dominion.uis.NameSearch;
+import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import cn.lunadeer.dominion.utils.scui.ChestButton;
@@ -37,7 +39,9 @@ import static cn.lunadeer.dominion.utils.Misc.formatString;
 public class TownList extends AbstractUI {
 
     public static void show(CommandSender sender, String pageStr) {
-        new TownList().displayByPreference(sender, pageStr);
+        Runnable render = () -> new TownList().displayByPreference(sender, pageStr);
+        if (sender instanceof Player player) Scheduler.runEntityTask(render, player);
+        else render.run();
     }
 
     // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ TUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -66,6 +70,7 @@ public class TownList extends AbstractUI {
         view.navigator(Line.create()
                 .append(MainMenu.button(player).build())
                 .append(TextUserInterface.townListTuiText.button)
+                .append(new NameSearch(NameSearch.Scope.TOWNS, null, () -> show(player, args[0])).button(player).build())
                 .append(TownGuide.button(player, TownGuide.Topic.CONTENTS, null,
                         () -> show(player, args[0])).build()));
         for (TownDOO town : CacheManager.instance.getTownCache().getAllTowns()) {
@@ -145,6 +150,7 @@ public class TownList extends AbstractUI {
                 });
         TownGuide.addHelpButton(view, player, TownGuide.Topic.CONTENTS, null,
                 () -> show(player, args[0]));
+        new NameSearch(NameSearch.Scope.TOWNS, null, () -> show(player, args[0])).addButton(view, player);
         view.open();
     }
 

@@ -1,0 +1,244 @@
+Applying patches
+Starting org.bukkit.craftbukkit.Main
+2026-10-09T09:00:09.792505850Z ServerMain WARN Advanced terminal features are not available in this environment
+[17:00:09 INFO]: [bootstrap] Running Java 25 (OpenJDK 64-Bit Server VM 25.0.4.1+1-1-22.04.4-Ubuntu; Ubuntu null) on Linux 6.6.87.2-microsoft-standard-WSL2 (amd64)
+[17:00:09 INFO]: [bootstrap] Loading Folia 26.2-7-ver/26.2.x@14b7fee (2026-08-25T13:29:28Z) for Minecraft 26.2
+[17:00:09 INFO]: [PluginInitializerManager] Initializing plugins...
+[17:00:10 INFO]: [PluginInitializerManager] Initialized 3 plugins
+[17:00:10 INFO]: [PluginInitializerManager] Bukkit plugins (3):
+ - Dominion (5.2.5-release), ViaBackwards (5.12.1), ViaVersion (5.12.1)
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/tmp/dominion-guide-folia26_2-eEZBGf/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[17:00:12 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
+[17:00:12 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[17:00:13 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 248.2ms
+[17:00:13 INFO]: Found new data pack paper, loading it automatically
+[17:00:13 INFO]: No existing world data, creating new world
+[17:00:14 INFO]: Loaded 1585 recipes
+[17:00:14 INFO]: Loaded 1688 advancements
+[17:00:14 INFO]: Starting minecraft server version 26.2
+[17:00:14 INFO]: Loading properties
+[17:00:14 INFO]: This server is running Folia version 26.2-7-ver/26.2.x@14b7fee (2026-08-25T13:29:28Z) (Implementing API version 26.2.build.7-beta)
+[17:00:14 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[17:00:14 INFO]: Server Ping Player Sample Count: 12
+[17:00:14 INFO]: Using 4 threads for Netty based IO
+[17:00:14 WARN]: [Configurations] The global config file didn't have a version set, assuming latest
+[17:00:14 INFO]: [io.papermc.paper.threadedregions.TickRegions] Initialised EDF Folia scheduler with initial 2 target thread(s)
+[17:00:14 INFO]: [MoonriseCommon] Paper is using 1 worker threads, 1 I/O threads
+[17:00:14 INFO]: Default game type: SURVIVAL
+[17:00:14 INFO]: Generating keypair
+[17:00:14 INFO]: Starting Minecraft server on 127.0.0.1:25686
+[17:00:14 INFO]: Paper: Using libdeflate (Linux x86_64) compression from Velocity.
+[17:00:14 INFO]: Paper: Using OpenSSL 3.x.x (Linux x86_64) cipher from Velocity.
+[17:00:14 INFO]: [ViaVersion] Loading server plugin ViaVersion v5.12.1
+[17:00:14 INFO]: [ViaVersion] ViaVersion 5.12.1 is now loaded. Registering protocol transformers and injecting...
+[17:00:15 INFO]: [ViaBackwards] Loading translations...
+[17:00:15 INFO]: [ViaBackwards] Registering protocols...
+[17:00:15 INFO]: [ViaBackwards] Loading server plugin ViaBackwards v5.12.1
+[17:00:15 INFO]: [Dominion] Loading server plugin Dominion v5.2.5-release
+[17:00:15 WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[17:00:15 WARN]: The server will make no attempt to authenticate usernames. Beware.
+[17:00:15 WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[17:00:15 WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[17:00:15 INFO]: Preparing level "world"
+[17:00:15 INFO]: Selecting spawn point for level 'minecraft:overworld'...
+[17:00:15 INFO]: Selecting spawn point for level 'minecraft:the_nether'...
+[17:00:16 INFO]: Selecting spawn point for level 'minecraft:the_end'...
+[17:00:16 INFO]: Loading 0 persistent chunks for level 'minecraft:overworld'...
+[17:00:16 INFO]: Preparing spawn area: 100%
+[17:00:16 INFO]: Prepared spawn area in 917 ms
+[17:00:16 INFO]: Loading 0 persistent chunks for level 'minecraft:the_nether'...
+[17:00:16 INFO]: Preparing spawn area: 100%
+[17:00:16 INFO]: Prepared spawn area in 708 ms
+[17:00:16 INFO]: Loading 0 persistent chunks for level 'minecraft:the_end'...
+[17:00:16 INFO]: Preparing spawn area: 100%
+[17:00:16 INFO]: Prepared spawn area in 103 ms
+[17:00:16 INFO]: Done preparing level "world" (1.042s)
+[17:00:16 INFO]: [ViaVersion] Enabling ViaVersion v5.12.1
+[17:00:16 INFO]: [ViaBackwards] Enabling ViaBackwards v5.12.1
+[17:00:16 INFO]: [Dominion] Enabling Dominion v5.2.5-release
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |   _____                  _       _[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  |  __ \                (_)     (_)[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |  | | ___  _ __ ___  _ _ __  _  ___  _ __[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |  | |/ _ \| '_ ` _ \| | '_ \| |/ _ \| '_ \[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |__| | (_) | | | | | | | | | | | (_) | | | |[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  |_____/ \___/|_| |_| |_|_|_| |_|_|\___/|_| |_|[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  [0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Plugin Version: 5.2.5-release[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading Configurations...[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading limitation configuration...[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Because no limitation file found, saving default limitation file.[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading world-settings...[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Successfully loaded 1 world-settings: default.[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0mSuccessfully loaded configuration.[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0mLoading language zh_cn...[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功加载语言 zh_cn。[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 加载权限配置...[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 成功加载权限配置。[0m
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m准备数据库连接...[0m
+[17:00:16 INFO]: [com.zaxxer.hikari.HikariDataSource] HikariPool-1 - Starting...
+[17:00:16 INFO]: [com.zaxxer.hikari.pool.HikariPool] HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@2d945bfd
+[17:00:16 INFO]: [com.zaxxer.hikari.HikariDataSource] HikariPool-1 - Start completed.
+[17:00:16 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m数据库连接成功！[0m
+[17:00:51 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | NMS implementations loaded for version: v26_2[0m
+[17:00:51 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 启动完成！[0m
+[17:00:51 INFO]: [spark] The spark plugin has been preferred but was not loaded. The bundled spark profiler will enabled instead.
+[17:00:51 INFO]: [spark] The spark profiler will not be enabled because it is currently disabled in the configuration.
+[17:00:52 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[17:00:52 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[17:00:52 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[17:00:53 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[17:00:53 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[17:00:53 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[17:00:53 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[17:00:53 INFO]: [ViaVersion] ViaVersion detected server version: 26.2 (776)
+[17:00:53 INFO]: [ViaVersion] Finished mapping loading, shutting down loader executor.
+[17:00:53 INFO]: Done (43.781s)! For help, type "help"
+[17:00:53 INFO]: UUID of player TownGuideQA is 7c21e495-0190-3a68-bfac-416a507cee4d
+[17:00:54 INFO]: [38;2;255;255;85mTownGuideQA joined the game[0m
+[17:00:54 INFO]: TownGuideQA[/127.0.0.1:54074] logged in with entity id 3 at ([minecraft:overworld]2.5, -59.0, -2.5)
+[17:00:59 INFO]: TownGuideQA issued server command: /dom menu
+[17:01:00 INFO]: TownGuideQA issued server command: /town help
+[17:01:06 INFO]: TownGuideQA issued server command: /town guide invalid 2147483647
+[17:01:06 INFO]: TownGuideQA issued server command: /town help land 2147483647
+[17:01:07 INFO]: TownGuideQA issued server command: /dom menu
+[17:01:07 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[17:01:08 INFO]: Made TownGuideQA a server operator
+[17:01:08 INFO]: TownGuideQA issued server command: /town create 手册测试镇
+[17:01:09 INFO]: TownGuideQA issued server command: /town
+[17:01:10 INFO]: TownGuideQA issued server command: /town
+[17:01:12 INFO]: TownGuideQA issued server command: /town group create builders 建筑组
+[17:01:12 INFO]: TownGuideQA issued server command: /town
+[17:01:13 INFO]: TownGuideQA issued server command: /town help trust
+[17:01:14 INFO]: TownGuideQA issued server command: /dom rename 自建样例临时 自建样例
+[17:01:15 INFO]: TownGuideQA issued server command: /dom rename 贡献样例临时 贡献样例
+[17:01:15 INFO]: TownGuideQA issued server command: /dom rename 代管自建临时 代管自建
+[17:01:16 INFO]: TownGuideQA issued server command: /dom rename 代管贡献临时 代管贡献
+[17:01:16 INFO]: TownGuideQA issued server command: /town help land
+[17:01:17 INFO]: TownGuideQA issued server command: /dom list
+[17:01:17 INFO]: TownGuideQA issued server command: /town trust TownGuideQA town false false false false
+[17:01:17 INFO]: TownGuideQA issued server command: /town help trust
+[17:01:21 INFO]: TownGuideQA issued server command: /town trust TownGuideQA outpost 手册测试镇 false false false false
+[17:01:21 INFO]: TownGuideQA issued server command: /town help trust
+[17:01:23 INFO]: TownGuideQA issued server command: /dom menu
+[17:01:24 INFO]: TownGuideQA issued server command: /town help
+[17:01:24 INFO]: TownGuideQA issued server command: /dominion tui_page_btn_future_7d890055-97f4-41e6-9dc9-e4d950bd1e9a
+[17:01:24 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_1ec6fc19-170b-473f-b849-da87d0f33db5
+[17:01:25 INFO]: TownGuideQA issued server command: /dominion tui_page_btn_future_a723fc2b-4991-4a28-8d4b-f5bb35799a25
+[17:01:25 INFO]: TownGuideQA issued server command: /town help trust 2
+[17:01:25 INFO]: TownGuideQA issued server command: /town help land 2147483647
+[17:01:26 INFO]: TownGuideQA issued server command: /town help land
+[17:01:26 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_adcbcda2-8cd2-40da-b593-912839855a94
+[17:01:27 INFO]: TownGuideQA issued server command: /dom list
+[17:01:27 INFO]: TownGuideQA issued server command: /town help templates
+[17:01:27 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_de6b3aa2-09bf-4730-9b32-0b5254e0bc32
+[17:01:28 INFO]: TownGuideQA issued server command: /dominion tui_page_btn_future_44a8bd3a-3488-4b5d-882c-d5b09895f1cf
+[17:01:28 INFO]: TownGuideQA issued server command: /town help trust
+[17:01:28 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_2a7c9571-d540-4f1e-b832-fce8e57a45a1
+[17:01:29 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_0cbc7146-6158-422f-9e17-7a5e096aca61
+[17:01:29 INFO]: TownGuideQA issued server command: /town rename 手册搜索镇
+[17:01:30 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城临时 重命名为 黄金城[0m
+[17:01:30 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城01临时 重命名为 黄金城01[0m
+[17:01:30 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城02临时 重命名为 黄金城02[0m
+[17:01:31 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城03临时 重命名为 黄金城03[0m
+[17:01:31 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城04临时 重命名为 黄金城04[0m
+[17:01:31 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城05临时 重命名为 黄金城05[0m
+[17:01:32 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城06临时 重命名为 黄金城06[0m
+[17:01:32 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城07临时 重命名为 黄金城07[0m
+[17:01:33 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城08临时 重命名为 黄金城08[0m
+[17:01:33 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城09临时 重命名为 黄金城09[0m
+[17:01:33 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城10临时 重命名为 黄金城10[0m
+[17:01:33 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城11临时 重命名为 黄金城11[0m
+[17:01:34 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城12临时 重命名为 黄金城12[0m
+[17:01:34 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城13临时 重命名为 黄金城13[0m
+[17:01:34 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城14临时 重命名为 黄金城14[0m
+[17:01:34 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城15临时 重命名为 黄金城15[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城16临时 重命名为 黄金城16[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城17临时 重命名为 黄金城17[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城18临时 重命名为 黄金城18[0m
+[17:01:36 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城19临时 重命名为 黄金城19[0m
+[17:01:36 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城20临时 重命名为 黄金城20[0m
+[17:01:34 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城21临时 重命名为 黄金城21[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城22临时 重命名为 黄金城22[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城23临时 重命名为 黄金城23[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城24临时 重命名为 黄金城24[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城25临时 重命名为 黄金城25[0m
+[17:01:35 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 IronFarm临时 重命名为 IronFarm[0m
+[17:01:36 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功将领地 黄金城私有临时 重命名为 黄金城私有[0m
+[17:01:36 INFO]: Made TownGuideQA no longer a server operator
+[17:01:37 INFO]: TownGuideQA issued server command: /dom menu
+[17:01:37 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_93f623d9-0844-4b48-9313-db242219f815
+[17:01:37 INFO]: TownGuideQA issued server command: /town search 黄金城
+[17:01:38 INFO]: TownGuideQA issued server command: /dom search 黄金城
+[17:01:39 INFO]: TownGuideQA issued server command: /dom list
+[17:01:40 INFO]: TownGuideQA issued server command: /dom search 字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字
+[17:01:41 INFO]: TownGuideQA issued server command: /dom search %
+[17:01:41 INFO]: TownGuideQA issued server command: /dom search 黄金城 2147483647
+[17:01:41 INFO]: TownGuideQA issued server command: /town help land
+[17:01:42 INFO]: TownGuideQA issued server command: /dom search IronFarm
+[17:01:43 INFO]: Made TownGuideQA a server operator
+[17:01:43 INFO]: TownGuideQA issued server command: /dom list_all
+[17:01:43 INFO]: Made TownGuideQA no longer a server operator
+[17:01:44 INFO]: TownGuideQA issued server command: /dom menu
+[17:01:44 INFO]: TownGuideQA issued server command: /dom search 黄金城
+[17:01:44 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_e8e67b43-6f5d-4f47-947b-4b6c5a6b7419
+[17:01:45 INFO]: TownGuideQA issued server command: /dominion tui_btn_future_f68bfdc4-a3c4-41ac-aaf9-1b25f9118178
+[17:01:45 INFO]: TownGuideQA issued server command: /town search 黄城
+[17:01:46 INFO]: Stopping the server
+[17:01:46 INFO]: [RegionShutdownThread] Awaiting scheduler termination for 60s...
+[17:01:46 INFO]: [RegionShutdownThread] Scheduler halted
+[17:01:46 INFO]: Stopping server
+[17:01:46 INFO]: [Dominion] Disabling Dominion v5.2.5-release
+[17:01:46 INFO]: [ViaBackwards] Disabling ViaBackwards v5.12.1
+[17:01:46 INFO]: [ViaVersion] Disabling ViaVersion v5.12.1
+[17:01:46 INFO]: [ViaVersion] ViaVersion has been disabled; uninjected the platform and shut down the scheduler.
+[17:01:46 INFO]: [RegionShutdownThread] Halting chunk systems...
+[17:01:46 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:overworld'
+[17:01:46 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:overworld'
+[17:01:46 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_nether'
+[17:01:46 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_nether'
+[17:01:46 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_end'
+[17:01:46 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_end'
+[17:01:46 INFO]: [RegionShutdownThread] Halted chunk systems
+[17:01:46 INFO]: [RegionShutdownThread] Finishing pending teleports...
+[17:01:46 INFO]: [RegionShutdownThread] Finished pending teleports
+[17:01:46 INFO]: [RegionShutdownThread] Saving all worlds
+[17:01:46 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:overworld'
+[17:01:46 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:01:46 INFO]: [RegionShutdownThread] Closed player inventories
+[17:01:46 INFO]: [RegionShutdownThread] Saving chunks...
+[17:01:46 INFO]: [RegionShutdownThread] Saving chunks around region around chunk [0, -1] in world 'world'
+[17:01:46 INFO]: [ChunkHolderManager] Saved 1089 block chunks, 121 entity chunks, 0 poi chunks in world 'minecraft:overworld' in 0.29s
+[17:01:46 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:overworld'
+[17:01:46 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:overworld'
+[17:01:46 INFO]: [RegionShutdownThread] Saved chunks
+[17:01:46 INFO]: [RegionShutdownThread] Saving level data...
+[17:01:46 INFO]: [RegionShutdownThread] Saved level data
+[17:01:46 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:overworld'
+[17:01:46 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:the_nether'
+[17:01:46 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:01:46 INFO]: [RegionShutdownThread] Closed player inventories
+[17:01:46 INFO]: [RegionShutdownThread] Saving chunks...
+[17:01:46 INFO]: [RegionShutdownThread] Saved chunks
+[17:01:46 INFO]: [RegionShutdownThread] Saving level data...
+[17:01:46 INFO]: [RegionShutdownThread] Saved level data
+[17:01:46 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:the_nether'
+[17:01:46 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:the_end'
+[17:01:46 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:01:46 INFO]: [RegionShutdownThread] Closed player inventories
+[17:01:46 INFO]: [RegionShutdownThread] Saving chunks...
+[17:01:46 INFO]: [RegionShutdownThread] Saved chunks
+[17:01:46 INFO]: [RegionShutdownThread] Saving level data...
+[17:01:46 INFO]: [RegionShutdownThread] Saved level data
+[17:01:46 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:the_end'
+[17:01:46 INFO]: [RegionShutdownThread] Saved all worlds
+[17:01:46 INFO]: [RegionShutdownThread] Saving global world data...
+[17:01:46 INFO]: [RegionShutdownThread] Saved global world data.
+[17:01:46 INFO]: [RegionShutdownThread] Saving all player data...
+[17:01:46 INFO]: [RegionShutdownThread] Saved all player data
+[17:01:46 INFO]: Waiting for all RegionFile I/O tasks to complete...
+[17:01:46 INFO]: All RegionFile I/O tasks to complete
+[17:01:46 INFO]: [MoonriseCommon] Awaiting termination of worker pool for up to 60s...
+[17:01:46 INFO]: [MoonriseCommon] Awaiting termination of I/O pool for up to 60s...

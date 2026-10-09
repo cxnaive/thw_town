@@ -1,3 +1,15 @@
+outpost-trusts-tui-text:
+  flag-on: "§a{0}: Additional access"
+  flag-off: "§8{0}: No additional access"
+town-groups-tui-text:
+  title: Member Permission Groups of {0}
+  button: Member Permissions
+  open-description: Assign members and set their permissions on town land.
+  default-template-line: §eTown Members (Default Group) §7- town-wide default permissions
+town-group-manage-tui-text:
+  title: "Member Permission Group: {0}"
+  button: Member Permission Group
+  template-button: Town-wide Default Permissions
 style:
   primary-color: '#0094D5'
   secondary-color: '#7A7A7A'
@@ -17,6 +29,8 @@ menu-tui-text:
   switch-to-cui-button: ' SWITCH TO CUI 🆕 '
   fail-to-switch-message: 'Failed to switch to {0}: {1}'
 dominion-list-tui-text:
+  creator-tag: " §7Creator: §e{0}"
+  contributor-tag: " §7Contributor: §e{0}"
   remote-owned-line: §b{0} §7- server {1}
   remote-owned-section: Your dominions on other servers.
   town-managed-line: '§b{0} §7- town: {1}, server {2}'
@@ -200,6 +214,8 @@ town-info-tui-text:
   rename-description: Rename this town (mayor only).
   disband-button: DISBAND
   disband-description: Disband this town (confirmation required).
+  groups-button: Member Permissions
+  groups-description: Set whether members can build, break blocks and open chests on town land.
 town-level-tasks-tui-text:
   title: Level task of {0}
   button: LEVEL TASK
@@ -232,8 +248,8 @@ town-trusts-tui-text:
   add-button: ADD TRUST
   add-hint: Enter the player name to trust (town scope, all flags off — toggle after).
   remove-button: X
-  flag-on: §a{0}
-  flag-off: §8{0}
+  flag-on: "§a{0}: Additional access"
+  flag-off: "§8{0}: No additional access"
 town-bank-tui-text:
   title: Bank of {0}
   button: BANK
@@ -244,15 +260,16 @@ town-bank-tui-text:
   withdraw-hint: Enter the amount to withdraw.
   invalid-amount: 'Invalid amount: {0}'
 town-outposts-tui-text:
+  creator-tag: " §7Creator: §e{0}"
+  contributor-tag: " §7Contributor: §e{0}"
   title: Outposts of {0}
   button: OUTPOSTS
   outpost-line: §b{0} §7- {1} ({2}, server {3})
-  contributor-tag: ' §7by §e{0}'
   remote-hint: REMOTE LOCATION
   remote-action-hint: Outpost {0} is on server {1}, world {2}. Switch to that server to manage it, or use TELEPORT to travel there.
   teleport-button: TELEPORT
 town-template-flags-tui-text:
-  title: 'Town Template: {0}'
-  button: TEMPLATE
-  description: Edit the town-wide default permissions inherited by outposts.
+  title: "Town-wide Default Permissions: {0}"
+  button: "Town-wide Default Permissions"
+  description: "Outposts use these permissions by default; individual outposts can be set separately."
   mode-hint: §7Changes apply to every outpost still using inheritance.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.teleport.TeleportHandoffDialectTest" tests="1" skipped="1" failures="0" errors="0" timestamp="2026-10-09T08:56:52.847Z" hostname="DESKTOP-L5R1PDQ" time="0.0">
+  <properties/>
+  <testcase name="additiveMigrationAndAtomicHandoffOnRealDatabase()" classname="cn.lunadeer.dominion.managers.teleport.TeleportHandoffDialectTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -72,7 +72,8 @@ public class AllDominion extends AbstractUI {
         view.title(TextUserInterface.allDominionTuiText.title);
         view.navigator(Line.create()
                 .append(MainMenu.button(sender).build())
-                .append(TextUserInterface.allDominionTuiText.button));
+                .append(TextUserInterface.allDominionTuiText.button)
+                .append(new NameSearch(NameSearch.Scope.ADMIN_LAND, null, () -> show(sender, args[0])).button(sender).build()));
         view.addLines(BuildTreeLines(sender, CacheManager.instance.getCache().getDominionCache().getAllDominionNodes(), 0));
         view.showOn(sender, page);
     }
@@ -138,7 +139,7 @@ public class AllDominion extends AbstractUI {
                 }
             };
             btn = btn.setDisplayNameArgs(dominion.getName());
-            btn = btn.setLoreArgs(List.of(dominion.getOwnerDTO().getLastKnownName()));
+            btn = btn.setLoreArgs(List.of(CacheManager.instance.getPlayerName(dominion.getOwner())));
             view = view.addItem(btn);
         }
 
@@ -151,6 +152,7 @@ public class AllDominion extends AbstractUI {
                 }
         );
 
+        new NameSearch(NameSearch.Scope.ADMIN_LAND, null, () -> show(player, args[0])).addButton(view, player);
         view.open();
     }
 
@@ -169,7 +171,7 @@ public class AllDominion extends AbstractUI {
         Triple<Integer, Integer, Integer> pageInfo = pageUtil(page, 15, dominions.size());
         for (int i = pageInfo.getLeft(); i < pageInfo.getMiddle(); i++) {
             DominionDTO dominion = dominions.get(i);
-            String ownerName = dominion.getOwnerDTO().getLastKnownName();
+            String ownerName = CacheManager.instance.getPlayerName(dominion.getOwner());
             Notification.info(sender, "§6▶ §e{0} §7(§b{1}§7) ", dominion.getName(), ownerName);
         }
         // page info

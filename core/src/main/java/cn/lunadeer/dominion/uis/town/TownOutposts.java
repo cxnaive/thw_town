@@ -10,6 +10,7 @@ import cn.lunadeer.dominion.managers.MultiServerManager;
 import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.WorldMapManager;
 import cn.lunadeer.dominion.uis.AbstractUI;
+import cn.lunadeer.dominion.uis.NameSearch;
 import cn.lunadeer.dominion.uis.dominion.DominionManage;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -135,15 +136,17 @@ public class TownOutposts extends AbstractUI {
         public String title = "Outposts of {0}";
         public String button = "OUTPOSTS";
         public String outpostLine = "§b{0} §7- {1} ({2}, server {3})";
-        public String contributorTag = " §7by §e{0}";
+        public String contributorTag = " §7Contributor: §e{0}";
+        public String creatorTag = " §7Creator: §e{0}";
         public String remoteHint = "REMOTE LOCATION";
         public String remoteActionHint = "Outpost {0} is on server {1}, world {2}. Switch to that server to manage it, or use TELEPORT to travel there.";
         public String teleportButton = "TELEPORT";
     }
 
-    /** owner_uuid on a town outpost is the contributor record (§2.4). */
-    private static String contributorTag(DominionDOO outpost) {
-        return formatString(TextUserInterface.townOutpostsTuiText.contributorTag,
+    private static String originTag(DominionDOO outpost) {
+        return formatString(outpost.getAttachedBy() == null
+                        ? TextUserInterface.townOutpostsTuiText.creatorTag
+                        : TextUserInterface.townOutpostsTuiText.contributorTag,
                 CacheManager.instance.getPlayerName(outpost.getOwner()));
     }
 
@@ -158,6 +161,8 @@ public class TownOutposts extends AbstractUI {
             view.navigator(Line.create()
                     .append(TownInfo.button(player, town.getName()).build())
                     .append(TextUserInterface.townOutpostsTuiText.button)
+                    .append(new NameSearch(NameSearch.Scope.TOWN_LAND, town.getId(),
+                            () -> show(player, town.getName(), args[1])).button(player).build())
                     .append(TownGuide.button(player, TownGuide.Topic.LAND, town.getId(),
                             () -> show(player, town.getName(), args[1])).build()));
 
@@ -177,8 +182,8 @@ public class TownOutposts extends AbstractUI {
                     line.append(outpost.getName());
                 }
                 line.append(formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
-                        "", worldLabel(outpost), outpost.getClaimKind(), serverLabel(outpost)));
-                line.append(contributorTag(outpost));
+                        "", worldLabel(outpost), cn.lunadeer.dominion.misc.DisplayNames.claimKind(outpost.getClaimKind()), serverLabel(outpost)));
+                line.append(originTag(outpost));
                 if (!local) {
                     line.append(new FunctionalButton(TextUserInterface.townOutpostsTuiText.remoteHint) {
                         @Override
@@ -224,7 +229,7 @@ public class TownOutposts extends AbstractUI {
                         "§7World: §b{0}",
                         "§7Kind: §b{1}",
                         "§7Server: §b{2}",
-                        "§7Contributor: §e{3}",
+                        "{3}",
                         "",
                         "§a▶ Left Click: manage (this server)",
                         "§b▶ Right Click: teleport (this server)"
@@ -236,7 +241,7 @@ public class TownOutposts extends AbstractUI {
                         "§7World: §b{0}",
                         "§7Kind: §b{1}",
                         "§7Server: §b{2}",
-                        "§7Contributor: §e{3}",
+                        "{3}",
                         "",
                         "§e▶ Left Click: show location / management server",
                         "§b▶ Right Click: cross-server teleport"
@@ -280,9 +285,9 @@ public class TownOutposts extends AbstractUI {
                     }
                 };
                 btn = btn.setDisplayNameArgs(outpost.getName());
-                btn = btn.setLoreArgs(worldLabel(outpost), outpost.getClaimKind(),
+                btn = btn.setLoreArgs(worldLabel(outpost), cn.lunadeer.dominion.misc.DisplayNames.claimKind(outpost.getClaimKind()),
                         serverLabel(outpost),
-                        CacheManager.instance.getPlayerName(outpost.getOwner()));
+                        originTag(outpost).stripLeading());
                 view = view.addItem(btn);
             }
             view.setButton(ChestUserInterface.townOutpostsCui.backButton.getSymbol(),
@@ -294,6 +299,8 @@ public class TownOutposts extends AbstractUI {
                     });
             TownGuide.addHelpButton(view, player, TownGuide.Topic.LAND, town.getId(),
                     () -> show(player, town.getName(), args[1]));
+            new NameSearch(NameSearch.Scope.TOWN_LAND, town.getId(),
+                    () -> show(player, town.getName(), args[1])).addButton(view, player);
             view.open();
         } catch (Exception e) {
             Notification.error(player, e);
@@ -308,8 +315,8 @@ public class TownOutposts extends AbstractUI {
         TownDOO town = TownManager.requireTown(args[0]);
         for (DominionDOO outpost : outposts(town.getId())) {
             Notification.info(sender, formatString(TextUserInterface.townOutpostsTuiText.outpostLine,
-                    outpost.getName(), worldLabel(outpost), outpost.getClaimKind(), serverLabel(outpost))
-                    + contributorTag(outpost));
+                    outpost.getName(), worldLabel(outpost), cn.lunadeer.dominion.misc.DisplayNames.claimKind(outpost.getClaimKind()), serverLabel(outpost))
+                    + originTag(outpost));
         }
     }
 }

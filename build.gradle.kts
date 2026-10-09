@@ -21,7 +21,7 @@ libraries += "net.kyori:adventure-text-minimessage:4.22.0"
 var suffixes = getAndIncrementVersion()
 
 group = "cn.lunadeer"
-version = "5.2.1-$suffixes"
+version = "5.2.6-$suffixes"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -96,6 +96,7 @@ dependencies {
     implementation(project("versions:v1_21_6"))
     implementation(project("versions:v1_21_8"))
     implementation(project("versions:v1_21_9"))
+    implementation(project(mapOf("path" to ":versions:v26_2", "configuration" to "mojangElements")))
 }
 
 // Reobfuscate all subproject JARs that have paperweight reobfJar task
@@ -106,7 +107,8 @@ val reobfAllJars = tasks.register("reobfAllJars") {
 
 subprojects {
     afterEvaluate {
-        tasks.findByName("reobfJar")?.let { reobfTask ->
+        // 26.2 ships Mojang names and its dev bundle has no reobfuscation mappings.
+        tasks.findByName("reobfJar")?.takeIf { it.project.path != ":versions:v26_2" }?.let { reobfTask ->
             reobfAllJars.configure {
                 dependsOn(reobfTask)
             }

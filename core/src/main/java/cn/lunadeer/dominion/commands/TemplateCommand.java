@@ -160,7 +160,8 @@ public class TemplateCommand {
                 throw new DominionException(Language.templateCommandText.templateNotExist, templateName);
             }
             template.setFlagValue(flag, value);
-            Notification.info(sender, Language.templateCommandText.setFlagSuccess, flagName, templateName, valueStr);
+            Notification.info(sender, Language.templateCommandText.setFlagSuccess, flag.getDisplayName(),
+                    templateName, cn.lunadeer.dominion.misc.DisplayNames.permission(value));
             TemplateFlags.show(sender, templateName, pageStr);
         } catch (Exception e) {
             Notification.error(sender, Language.templateCommandText.setFlagFail, e.getMessage());

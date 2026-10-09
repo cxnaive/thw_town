@@ -11,12 +11,10 @@ import cn.lunadeer.dominion.uis.MainMenu;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.scheduler.Scheduler;
 import cn.lunadeer.dominion.utils.scui.ChestButton;
-import cn.lunadeer.dominion.utils.scui.ChestListView;
 import cn.lunadeer.dominion.utils.scui.ChestUserInterfaceManager;
 import cn.lunadeer.dominion.utils.scui.ChestView;
 import cn.lunadeer.dominion.utils.scui.configuration.ButtonConfiguration;
-import cn.lunadeer.dominion.utils.scui.configuration.ListViewConfiguration;
-import cn.lunadeer.dominion.utils.stui.ListView;
+import cn.lunadeer.dominion.utils.stui.View;
 import cn.lunadeer.dominion.utils.stui.components.Line;
 import cn.lunadeer.dominion.utils.stui.components.buttons.FunctionalButton;
 import cn.lunadeer.dominion.utils.stui.components.buttons.ListViewButton;
@@ -129,8 +127,7 @@ public final class TownGuide extends AbstractUI {
 
     private String context(TownDOO town) {
         TownGuideText text = Language.townGuideText;
-        return town == null ? text.noTown : formatString(text.context, town.getName(),
-                town.isTemplatePermissionMode() ? text.templateMode : text.legacyMode);
+        return town == null ? text.noTown : formatString(text.context, town.getName());
     }
 
     private void back(Player player) {
@@ -144,25 +141,30 @@ public final class TownGuide extends AbstractUI {
         Topic topic = topic(player, args[0]);
         TownDOO town = town(player);
         TownGuideText text = Language.townGuideText;
-        ListView view = ListView.create(8, pageButton(player, topic, text.button));
+        View view = View.create();
         view.title(topic == Topic.CONTENTS ? text.title : article(topic).title);
         Line nav = Line.create().append(new FunctionalButton(text.back) {
             @Override public void function() { back(player); }
         }.needPermission(defaultPermission).build());
         if (topic != Topic.CONTENTS) nav.append(pageButton(player, Topic.CONTENTS, text.contents).build());
-        List<Line> lines = new ArrayList<>();
-        for (String line : wrap(context(town), 64)) lines.add(Line.create().append(line));
         if (topic == Topic.CONTENTS) {
+            for (String line : wrap(context(town), 64)) view.addLine(line);
             for (Topic entry : Topic.values()) {
                 if (entry == Topic.CONTENTS) continue;
-                lines.add(Line.create().append(pageButton(player, entry, article(entry).title).build())
+                view.addLine(Line.create().append(pageButton(player, entry, article(entry).title).build())
                         .append(article(entry).summary));
             }
         } else {
-            for (String section : renderedSections(topic, town == null ? null : town.getName())) {
-                for (String line : wrap(section, 64)) lines.add(Line.create().append(line));
-                lines.add(Line.create());
+            List<String> sections = renderedSections(topic, town == null ? null : town.getName());
+            int page = boundedPage(args[1], sections.size(), 1);
+            if (!sections.isEmpty()) {
+                for (String line : wrap(sections.get(page - 1), 64)) view.addLine(line);
             }
+            Line actions = Line.create().append(formatString(text.pageInfo, page, Math.max(1, sections.size())));
+            for (ReadingLink link : readingLinks(topic, page)) actions.append(new FunctionalButton(link.label()) {
+                @Override public void function() { display(player, link.topic().id(), String.valueOf(link.page())); }
+            }.needPermission(defaultPermission).setHoverText(link.heading()).build());
+            view.actionBar(actions);
         }
         for (Link link : links(player, town, topic)) {
             nav.append(new FunctionalButton(link.label()) {
@@ -170,8 +172,7 @@ public final class TownGuide extends AbstractUI {
             }.needPermission(defaultPermission).build());
         }
         view.navigator(nav);
-        view.addLines(lines);
-        view.showOn(player, boundedPage(args[1], lines.size(), 8));
+        view.showOn(player);
     }
 
     @Override
@@ -179,15 +180,10 @@ public final class TownGuide extends AbstractUI {
         Topic topic = topic(player, args[0]);
         TownDOO town = town(player);
         TownGuideText text = Language.townGuideText;
-        ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
+        ChestView view = ChestUserInterfaceManager.getInstance().getViewOf(player);
         openView = view;
         view.setTitle(topic == Topic.CONTENTS ? text.title : article(topic).title);
-        int count = topic == Topic.CONTENTS ? Topic.values().length - 1 : article(topic).sections.size();
-        view.applyListConfiguration(new ListViewConfiguration('i',
-                List.of("<###c###h", "#iiiiiii#", "#iiiiiii#", "#iiiiiii#", "p#######n"),
-                ButtonConfiguration.createMaterial('p', Material.ARROW, text.previousPage, List.of(text.pageInfo)),
-                ButtonConfiguration.createMaterial('n', Material.ARROW, text.nextPage, List.of(text.pageInfo))),
-                boundedPage(args[1], count, 21));
+        view.setLayout(List.of("<###c###h", "#########", "####i####", "#########", "p###s###n"));
         view.setButton('<', card('<', Material.RED_STAINED_GLASS_PANE, text.back, List.of(), () -> back(player)));
         view.setButton('c', card('c', Material.BOOK, text.contents, wrap(context(town), 44),
                 () -> display(player, Topic.CONTENTS.id(), "1")));
@@ -198,24 +194,52 @@ public final class TownGuide extends AbstractUI {
                     () -> openLink(player, topic, link.home())));
         }
         if (topic == Topic.CONTENTS) {
+            int slot = 10;
             for (Topic entry : Topic.values()) {
                 if (entry == Topic.CONTENTS) continue;
                 List<String> lore = new ArrayList<>(wrap(article(entry).summary, 44));
                 lore.addAll(wrap(text.read, 44));
-                view.addItem(card('i', entry.icon, article(entry).title, lore,
+                view.setButton(slot++, card('i', entry.icon, article(entry).title, lore,
                         () -> display(player, entry.id(), "1")));
             }
         } else {
-            for (String section : renderedSections(topic, town == null ? null : town.getName())) {
-                String[] parts = section.split("\\n", 2);
-                view.addItem(card('i', Material.PAPER, parts[0],
+            List<String> sections = renderedSections(topic, town == null ? null : town.getName());
+            int page = boundedPage(args[1], sections.size(), 1);
+            if (!sections.isEmpty()) {
+                String[] parts = sections.get(page - 1).split("\\n", 2);
+                view.setButton('i', card('i', Material.PAPER, parts[0],
                         parts.length == 2 ? wrap(parts[1], 44) : List.of(), () -> { }));
+            }
+            view.setButton('s', card('s', Material.BOOK, formatString(text.pageInfo, page, Math.max(1, sections.size())),
+                    List.of(article(topic).title), () -> { }));
+            for (ReadingLink link : readingLinks(topic, page)) {
+                char symbol = link.previous() ? 'p' : 'n';
+                view.setButton(symbol, card(symbol, Material.ARROW, link.label(), wrap(link.heading(), 44),
+                        () -> display(player, link.topic().id(), String.valueOf(link.page()))));
             }
         }
         // ChestView can reuse an inventory without clearing old slots. Start the reader clean,
         // otherwise a short chapter can still show items from the previous management page.
         view.close();
         view.open();
+    }
+
+    record ReadingLink(Topic topic, int page, String label, String heading, boolean previous) { }
+
+    /** A page is a complete lesson; the last lesson leads to the next chapter. */
+    static List<ReadingLink> readingLinks(Topic topic, int page) {
+        List<ReadingLink> links = new ArrayList<>();
+        TownGuideText text = Language.townGuideText;
+        List<String> sections = article(topic).sections;
+        if (page > 1) links.add(new ReadingLink(topic, page - 1, text.previousPage,
+                sections.get(page - 2).split("\\n", 2)[0], true));
+        if (page < sections.size()) links.add(new ReadingLink(topic, page + 1, text.nextPage,
+                sections.get(page).split("\\n", 2)[0], false));
+        else if (topic.ordinal() + 1 < Topic.values().length) {
+            Topic next = Topic.values()[topic.ordinal() + 1];
+            links.add(new ReadingLink(next, 1, text.nextChapter, article(next).title, false));
+        }
+        return links;
     }
 
     private record Link(String label, boolean home) { }
@@ -274,7 +298,8 @@ public final class TownGuide extends AbstractUI {
         var pricing = config.outpostPricing;
         TownGuideText text = Language.townGuideText;
         Map<String, String> values = new LinkedHashMap<>();
-        values.put("tool", Configuration.selectTool);
+        values.put("tool", "STICK".equalsIgnoreCase(Configuration.selectTool)
+                ? text.stick + " (STICK)" : Configuration.selectTool);
         values.put("founding_size", String.valueOf(config.foundingSize));
         values.put("founding_cost", number(config.foundingCost));
         values.put("remote_enabled", state(config.outpostAllowRemote));

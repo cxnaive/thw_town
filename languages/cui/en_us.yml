@@ -1,3 +1,52 @@
+outpost-trusts-cui:
+  trust-item-button:
+    lore:
+      - §7This land only
+      - "§7Additional access: §b{0}"
+      - §8Other categories keep their existing permissions.
+      - ""
+      - §a▶ Click to manage four independent categories
+town-groups-cui:
+  title: §6✦ §eMember Permission Groups of {0} §6✦
+  create-button:
+    symbol: A
+    material: LIME_DYE
+    name: §aCreate Permission Group
+    lore:
+      - §7Let selected members share permissions on town land.
+      - '§7Example: §fbuilders Builders'
+      - §a▶ Click to enter names
+  default-template-button:
+    symbol: i
+    material: WRITABLE_BOOK
+    name: §eTown Members (Default Group)
+    lore:
+      - §7For members without a custom group.
+      - §7Town-wide Default Permissions
+      - §7Outposts use these permissions by default.
+      - §7Individual outposts can be set separately.
+      - ""
+      - §e▶ Click to edit permissions
+town-group-manage-cui:
+  title: "§6✦ §eMember Permission Group: {0} §6✦"
+  back-button:
+    name: §c« Back to Member Permission Groups
+  template-button:
+    symbol: T
+    material: WRITABLE_BOOK
+    name: §eTown-wide Default Permissions
+    lore:
+      - §7Outposts use these permissions by default.
+      - §7Individual outposts can be set separately.
+      - §e▶ Click to edit permissions
+  delete-button:
+    name: §cDelete Permission Group
+    lore:
+      - §7Members return to Town Members (Default Group).
+      - §c▶ Click twice to confirm
+town-group-member-selector-cui:
+  back-button:
+    name: §c« Back to Member Permission Groups
 main-menu-cui:
   title: §b✦ §6§lDominion Main Menu §b✦
   admin-layout:
@@ -447,7 +496,7 @@ dominion-list-cui:
     name: §6🏰 §e{0}
     lore:
     - '§7Town: §b{0}'
-    - §7Contributor: §e{1}
+    - '§7Contributor: §e{1}'
     - §8Your land belongs to a town now.
     - ''
     - '§b▶ Left Click: info/manage'
@@ -455,13 +504,26 @@ dominion-list-cui:
     - ''
     - '§7Status: §6Contributed to town'
     material: BROWN_BANNER
+  native-dominion-button:
+    symbol: i
+    name: "§6🏰 §e{0}"
+    lore:
+    - "§7Town: §b{0}"
+    - "§7Creator: §e{1}"
+    - "§8Created directly for the town."
+    - ""
+    - "§b▶ Left Click: info/manage"
+    - "§b▶ Right Click: teleport"
+    - ""
+    - "§7Status: §6Town land"
+    material: BROWN_BANNER
   town-managed-button:
     symbol: i
     name: §3⛨ §b{0}
     lore:
     - '§7Town: §b{0}'
     - '§7Server: §b{1}'
-    - §7Contributor: §e{2}
+    - '{2}'
     - ''
     - '§b▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (all servers)'
@@ -1130,14 +1192,10 @@ group-manage-cui:
   - §8  They'll return to default group
   town-group-hint-button:
     symbol: i
-    name: §6⛨ §eImplicit Town Membership
+    name: "§6⛨ §eDefault Member Permissions"
     lore:
-    - §7Every member of the town holds this
-    - §7group's permissions on this outpost.
-    - §7No member list exists — membership
-    - §7is implicit in being a town member.
-    - ''
-    - §8Managed by the town system.
+    - §7Members without a custom group use this group's permissions.
+    - §7Assign groups from Town → Member Permissions.
     material: BOOK
 group-setting-cui:
   title: §6✦ §9§lGroup {0} Settings §6✦
@@ -1576,6 +1634,14 @@ town-info-cui:
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+  groups-button:
+    symbol: i
+    material: CHEST
+    name: §eMember Permissions
+    lore:
+      - §7Set members' building, breaking and chest access
+      - §7on town land.
+      - §e▶ Click to edit permissions
 town-members-cui:
   title: §6✦ §eMembers of {0} §6✦
   list-configuration:
@@ -1666,11 +1732,11 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - '§7Scope: §bAll town outposts'
-    - '§7Flags: §b{0}'
-    - §8B Build · D Destroy · S Switch · I Item use
-    - ''
-    - §a▶ Click to manage four independent flags
+    - §7All town land
+    - "§7Additional access: §b{0}"
+    - §8Other categories keep their existing permissions.
+    - ""
+    - §a▶ Click to manage four independent categories
     material: PLAYER_HEAD
   add-item-button:
     symbol: A
@@ -1828,7 +1894,7 @@ town-outposts-cui:
     - '§7World: §b{0}'
     - '§7Kind: §b{1}'
     - '§7Server: §b{2}'
-    - §7Contributor: §e{3}
+    - '{3}'
     - ''
     - '§a▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (this server)'
@@ -1840,7 +1906,7 @@ town-outposts-cui:
     - '§7World: §b{0}'
     - '§7Kind: §b{1}'
     - '§7Server: §b{2}'
-    - §7Contributor: §e{3}
+    - '{3}'
     - ''
     - '§e▶ Left Click: show location / management server'
     - '§b▶ Right Click: cross-server teleport'
@@ -1866,7 +1932,7 @@ town-trust-editor-cui:
     material: PLAYER_HEAD
   build-button:
     symbol: B
-    name: §eBuild (B)
+    name: "§eBuild"
     lore:
     - '§7State: {0}'
     - §7{1}
@@ -1875,7 +1941,7 @@ town-trust-editor-cui:
     material: BRICKS
   destroy-button:
     symbol: D
-    name: §eDestroy (D)
+    name: "§eDestroy"
     lore:
     - '§7State: {0}'
     - §7{1}
@@ -1884,7 +1950,7 @@ town-trust-editor-cui:
     material: DIAMOND_PICKAXE
   switch-button:
     symbol: S
-    name: §eSwitch (S)
+    name: "§eSwitches and containers"
     lore:
     - '§7State: {0}'
     - §7{1}
@@ -1893,15 +1959,15 @@ town-trust-editor-cui:
     material: LEVER
   item-use-button:
     symbol: I
-    name: §eItem use (I)
+    name: "§eItem use"
     lore:
     - '§7State: {0}'
     - §7{1}
     - ''
     - '{2}'
     material: CRAFTING_TABLE
-  enabled-state: §aEnabled
-  disabled-state: §cDisabled
+  enabled-state: "§aAdditional access"
+  disabled-state: "§7No additional access"
   toggle-hint: §a▶ Click to toggle
   read-only-hint: '§8Read-only: you cannot edit this trust'
   build-description: Place, sow, and spawn vehicles.
@@ -1922,8 +1988,9 @@ town-trust-editor-cui:
     - §c▶ Click twice to confirm
     material: BARRIER
   remove-confirm: '§cClick Remove trust again within 5 seconds to remove {0}.'
+  trust-unavailable: This trust entry no longer exists. Reopen the list.
 town-template-flags-cui:
-  title: '§6✦ §eTown Template: {0} §6✦'
+  title: "§6✦ §eTown-wide Default Permissions: {0} §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -1934,7 +2001,7 @@ town-template-flags-cui:
     - p#######n
   back-button:
     symbol: <
-    name: §c« Back to Town Groups
+    name: "§c« Back to Member Permission Groups"
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
@@ -1942,8 +2009,8 @@ town-template-flags-cui:
   flag-state-true: §a§l[ALLOW]
   flag-state-false: §c§l[DENY]
   flag-item-lore:
-  - '§7Template: {0}'
+  - "§7Town-wide default: {0}"
   - §7{1}
   - §7{2}
-  - ''
+  - ""
   - §e▶ Click to toggle

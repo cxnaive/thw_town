@@ -1,0 +1,12 @@
+{
+  "version": "5.2.6-release",
+  "artifact": "build/libs/Dominion-5.2.6-release-full.jar",
+  "sha256": "d067167ff46f2045b2ffd002d7c1682cb04d2c2625e77b26dc1182fafdd5e2d6",
+  "testedVersion": "5.2.5-release",
+  "testedArtifactSha256": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+  "changedEntries": [
+    "plugin.yml"
+  ],
+  "verification": "All JAR entry contents match the tested artifact except the version field in plugin.yml.",
+  "unitTestsPassed": 86
+}

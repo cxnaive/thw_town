@@ -151,7 +151,7 @@ public class MainMenu extends AbstractUI {
                     p.setUiPreference(PlayerDTO.UI_TYPE.CUI);
                     MainMenu.show(player, "1");
                 } catch (Exception e) {
-                    Notification.error(player, TextUserInterface.menuTuiText.failToSwitchMessage, "CUI", e.getMessage());
+                    Notification.error(player, TextUserInterface.menuTuiText.failToSwitchMessage, Language.playerDisplayText.chestMenu, e.getMessage());
                 }
             }
         }.needPermission(defaultPermission);
@@ -442,7 +442,7 @@ public class MainMenu extends AbstractUI {
                             view.close();
                             MainMenu.show(player, "1");
                         } catch (Exception e) {
-                            Notification.error(player, TextUserInterface.menuTuiText.failToSwitchMessage, "TUI", e.getMessage());
+                            Notification.error(player, TextUserInterface.menuTuiText.failToSwitchMessage, Language.playerDisplayText.chatMenu, e.getMessage());
                         }
                     }
                 }

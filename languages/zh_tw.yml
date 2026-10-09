@@ -1,92 +1,142 @@
+player-display-text:
+  ordinary-land: 普通領地
+  founding-land: 建鎮屬地
+  unknown-land: 領地
+  town-scope: 全鎮
+  outpost-scope: 僅此屬地
+  allow: 允許
+  deny: 禁止
+  enabled: 已開啟
+  disabled: 已關閉
+  chest-menu: 箱子選單
+  chat-menu: 聊天選單
+  trust-build: 建造
+  trust-destroy: 破壞
+  trust-switch: 機關與容器
+  trust-item-use: 物品使用
+  no-additional-trust: 無
+name-search-text:
+  button: "搜尋"
+  hint: "輸入名稱的一部分，例如「黃金」或「黃城」可找「黃金城」。英文不分大小寫，可用空格分開多個關鍵字，最多 64 字。"
+  description: "在目前列表搜尋名稱；支援部分名稱、依序省略字，英文不分大小寫。"
+  town-title: "搜尋小鎮"
+  land-title: "搜尋領地"
+  all-towns: "範圍：所有小鎮"
+  own-land: "範圍：我擁有或可管理的領地"
+  town-land: "範圍：{0} 的屬地"
+  admin-land: "範圍：本伺服器所有領地（管理員）"
+  summary: "關鍵字：{0} | 找到 {1} 項"
+  empty: "沒有符合的名稱，試試更短的關鍵字。"
+  too-long: "關鍵字最多 {0} 字。"
+  back: "返回列表"
+  change: "修改關鍵字"
+  clear: "清除搜尋"
+  previous: "上一頁"
+  next: "下一頁"
+  page: "第 {0}/{1} 頁"
+  teleport: "傳送"
+  town-details: "鎮長：{0} | 成員：{1}"
+  town-owner: "所屬小鎮：{0}"
+  personal-owner: "領地主人：{0}"
+  location: "區服：{0} | 世界：{1}"
+  town-click: "左鍵：查看小鎮"
+  land-click: "左鍵：查看／管理；右鍵：傳送"
+  remote: "此領地位於 {0}，世界 {1}。管理請先前往該區服；可使用傳送前往。"
+  missing: "這項結果已不存在，請重新搜尋更新列表。"
+  town-usage: "/town search <關鍵字> [頁碼] - 搜尋所有小鎮名稱"
+  land-usage: "/dom search <關鍵字> [頁碼] - 搜尋自己擁有或可管理的領地"
 town-guide-text:
   title: "小鎮手冊"
   button: "小鎮手冊"
-  page-help: "本頁說明"
-  description: "了解小鎮身分、權限範本、信任與屬地管理。"
-  read: "點擊進入章節；將游標移到文章卡片上閱讀步驟。"
+  page-help: "本頁幫助"
+  description: "從加入小鎮開始，逐步了解建造、權限和屬地。"
+  read: "點擊開始閱讀；將滑鼠移到紙張上看內容，箭頭翻頁。"
   back: "返回原頁面"
   contents: "手冊目錄"
-  previous-page: "上一頁"
-  next-page: "下一頁"
-  page-info: "第 {0}/{1} 頁"
+  previous-page: "上一節"
+  next-page: "下一節"
+  next-chapter: "下一章"
+  page-info: "第 {0}/{1} 節"
   open-town: "開啟小鎮首頁"
-  open-groups: "開啟小鎮權限組"
-  open-outposts: "開啟屬地清單"
+  open-groups: "開啟成員權限管理"
+  open-outposts: "開啟屬地列表"
   open-trusts: "開啟小鎮信任"
   open-tasks: "開啟共同升級任務"
-  context: "小鎮：{0} | 權限模式：{1}"
-  no-town: "未加入小鎮也可以閱讀全部章節。"
-  template-mode: "小鎮範本"
-  legacy-mode: "舊版逐屬地權限"
+  context: "小鎮：{0}"
+  no-town: "未加入小鎮也可以閱讀。初次遊玩，建議從第一章開始。"
   example-town: "橡樹鎮"
-  enabled: "已啟用"
+  stick: "木棍"
+  enabled: "已開啟"
   disabled: "已關閉"
   unlimited: "不限"
   unknown-topic: "沒有章節 {0}，已開啟手冊目錄。"
   task-line: "{0} 級：{1} × {2}"
-  no-tasks: "目前開放等級範圍內沒有設定物品任務。"
-  dissolve-all: "刪除該鎮全部屬地的領地紀錄。方塊和箱內物品保留，但對應的領地保護會消失。"
-  return-contributed: "貢獻領地歸還貢獻者，其餘鎮屬地的領地紀錄刪除。方塊和箱內物品保留。"
+  no-tasks: "目前沒有可提交的升級任務。"
+  dissolve-all: "全鎮屬地都會失去領地保護。建築和箱內物品不會被刪除。"
+  return-contributed: "貢獻的領地歸還貢獻者，其他鎮屬地失去保護。建築和箱內物品不會被刪除。"
   start:
-    title: "加入與建立"
-    summary: "如何接受邀請、獲得建鎮屬地、使用圈選工具。"
+    title: "開始玩小鎮"
+    summary: "認識屬地，加入朋友的小鎮，或自己建鎮。"
     sections:
-      - "接受邀請\n請鎮管理者邀請你，然後輸入 /town join {town}（範例名稱請換成受邀小鎮名）。可以在另一個互通子服接受邀請。加入小鎮不會自動掛靠你的個人領地。"
-      - "建立小鎮\n輸入 /town create <小鎮名>，或點擊主選單的建立小鎮。已有個人領地保持個人狀態；沒有領地的建立者會在目前位置獲得 {founding_size} × {founding_size} × {founding_size} 的建鎮屬地，設定費用為 {founding_cost}，從個人錢包支付。依建立提示確認。"
-      - "圈選新屬地\n手持 {tool}，左鍵點擊第一個方塊、右鍵點擊第二個方塊，選出同一世界中的兩個對角點。鎮長或副鎮長再進入「小鎮 → 建立屬地」，核對尺寸及金庫報價後確認。"
-      - "建立限制\n遠端新建屬地功能：{remote_enabled}。領地不能與已有領地重疊；部分世界可能禁止非管理員建立。輸入 /town 可以回到自己的小鎮或小鎮清單。"
+      - "小鎮和屬地是什麼\n小鎮是大家一起生活的團隊。「屬地」是屬於小鎮的一塊領地，例如住宅區、農場或倉庫。\n同一小鎮可以有多塊屬地，不必連在一起。輸入 /town 開啟選單。"
+      - "接受朋友的邀請\n請鎮長或副鎮長邀請你，再按邀請訊息輸入加入指令。\n例如：/town join {town}\n互通子服之間也能接受邀請。加入小鎮不會自動把個人領地交給小鎮。"
+      - "自己建立小鎮\n在主選單點擊「建立小鎮」，或輸入 /town create <小鎮名>。\n沒有領地時，會在目前位置建立 {founding_size} × {founding_size} × {founding_size} 的建鎮屬地，費用 {founding_cost} 由個人錢包支付。已有領地不會自動掛靠。"
+      - "接下來做什麼\n成員可以請鎮長安排住處和權限；鎮長可以從新增成員、設定權限組開始。\n想增加活動範圍，閱讀「管理小鎮屬地」。想知道為何不能建造，閱讀「權限怎麼繼承」。"
+      - "找小鎮和領地\n在小鎮或領地列表點擊「搜尋」，輸入名字的一部分。例如「黃金」或「黃城」都能找到「黃金城」，英文不分大小寫。\n也可用 /town search <關鍵字> 找小鎮，或 /dom search <關鍵字> 找自己擁有或可管理的領地。在鎮屬地列表搜尋時，只找這個小鎮的屬地。"
   roles:
-    title: "身分與權限組"
-    summary: "管理小鎮的身分，不等於放置方塊等操作權限。"
+    title: "誰能做什麼"
+    summary: "先認識管理身分，再認識成員權限組。"
     sections:
-      - "鎮長與副鎮長\n兩者都可以管理成員、權限組和單塊鎮屬地。解散小鎮僅限鎮長或伺服器管理員，副鎮長無權操作。普通權限組不會賦予這些管理身分。"
-      - "成員權限\n進入「小鎮 → 權限組 → 選擇組 → 成員」分配現有成員。分配了自訂組的成員按該組判斷操作權限；未分組的成員使用內建小鎮成員組。建立組輸入範例：builders 建築組。"
-      - "屬地管理員與貢獻者\n貢獻者或被任命的屬地管理員可以管理該屬地的部分設定，但僅憑此身分不能刪除、調整鎮屬地大小或解散小鎮。鎮長、副鎮長及伺服器管理員可以刪除單塊屬地。"
-      - "測試權限時注意\n伺服器管理員和領地管理者可能直接略過操作限制，建議用普通成員帳號驗證。爆炸等環境設定與玩家操作權限是分開的。"
+      - "權限是什麼\n權限就是「能不能做某件事」。放置方塊、破壞方塊、開啟箱子都有各自的設定。\n允許建造不一定允許開箱；需要什麼操作，就查看對應的權限。"
+      - "鎮長、副鎮長和成員\n鎮長和副鎮長都能管理成員、權限組及單塊屬地。普通成員能做什麼，由自己的權限組決定。\n解散小鎮只允許鎮長或伺服器管理員操作，副鎮長不能解散。"
+      - "權限組與分配成員\n權限組讓一批成員共用操作權限。例如把建房玩家放進「建築組」，統一允許建造；未分組的成員使用「小鎮成員（預設組）」。\n進入「小鎮 → 成員權限管理」建立組，例如輸入 builders 建築組，再到成員頁選擇已有成員。加入建築組不會變成副鎮長。"
+      - "建立者與貢獻者\n為小鎮直接新建的屬地顯示「建立者」；個人領地掛靠後，原主人顯示為「貢獻者」。\n他們和被任命的屬地管理員能管理這塊地的部分設定，但僅憑這些身分不能刪除或調整鎮屬地大小。"
   templates:
-    title: "小鎮範本與屬地覆寫"
-    summary: "統一設定全鎮預設權限，再為單塊屬地設定例外。"
+    title: "權限怎麼繼承"
+    summary: "從全鎮共用設定，到一塊屬地的例外。"
     sections:
-      - "修改全鎮預設值\n範本模式下，進入「小鎮 → 權限組 → 小鎮成員範本」，或「自訂組 → 範本」。修改只影響該組仍在繼承此項權限的屬地，不會自動修改訪客權限或環境設定。"
-      - "屬地的三種狀態\n「繼承」跟隨小鎮範本；「本地允許」和「本地禁止」只覆寫目前屬地。GUI 左鍵切換本地值，右鍵恢復繼承；TUI 使用對應狀態按鈕。"
-      - "範例：建築組不能改倉庫\n先在建築組的小鎮範本允許放置方塊，再到倉庫屬地的對應權限組，將放置方塊設為本地禁止。其他繼承範本的屬地仍可建造。恢復繼承後，倉庫也會重新跟隨範本。"
-      - "舊小鎮的一次性升級\n舊模式小鎮在升級前保留逐屬地設定。鎮長可在小鎮首頁點擊「升級權限模式」，將鎮管理的屬地組權限重設為繼承。此操作不可逆，升級後需要設定並檢查小鎮範本，不能再切回舊模式。"
+      - "全鎮預設權限是什麼\n「全鎮預設權限」是一份全鎮共用的權限範本，每個成員組都有自己的範本。\n例如建築組的範本允許放置方塊，就能讓這組在多塊屬地建造，不必每塊地設定一遍。"
+      - "繼承是什麼意思\n「繼承」就是這塊屬地跟著小鎮範本走。\n範本允許放置方塊，這裡就允許；範本改成禁止，這裡也禁止。\n繼承本身不等於允許或禁止，要看範本目前的設定。"
+      - "例子一：兩處都能建造\n小明屬於建築組，小鎮有住宅區和農場。\n把建築組範本的「放置方塊」設為允許，兩塊地保持繼承。\n小明就能在住宅區和農場放置方塊。"
+      - "例子二：倉庫單獨禁止\n新增一塊倉庫，想讓建築組在別處建造，但不能改倉庫。\n到倉庫的建築組權限，把「放置方塊」單獨設為禁止。\n這叫「覆蓋」：只讓這塊地、這個組的這項權限使用自己的設定。"
+      - "之後修改範本會怎樣\n把建築組範本改為禁止，再改回允許。\n住宅區和農場一直跟著變化；倉庫仍然禁止。\n倉庫其他保持繼承的權限，仍會跟著範本變化。"
+      - "如何恢復繼承\n如果倉庫也可以建造了，把倉庫的「放置方塊」恢復為繼承。\n它就會按範本目前的值決定允許或禁止，以後範本再改，它也會跟著改。"
+      - "到哪裡設定\n全鎮：小鎮 → 成員權限管理 → 小鎮成員（預設組），或自訂組 → 全鎮預設權限。\n單塊地：開啟該屬地的對應組權限。箱子介面左鍵切換本地允許／禁止，右鍵恢復繼承；聊天介面點擊對應狀態按鈕。\n訪客及爆炸等環境設定另外管理。"
+      - "舊小鎮如何開始使用\n首頁若有「升級權限模式」，需要鎮長進行一次性升級。\n升級會清空原有屬地組權限，全部改為繼承，不能撤回。先和成員商量，再確認升級，並設定好各組的小鎮範本。"
   trust:
-    title: "訪客與信任"
-    summary: "讓鎮外朋友獲得操作權限，無需加入小鎮。"
+    title: "讓鎮外朋友來幫忙"
+    summary: "不必加入小鎮，也能給朋友需要的權限。"
     sections:
-      - "先選擇授權範圍\n信任功能：{trust_enabled}。小鎮信任作用於全鎮，屬地信任只作用於一塊屬地。新增玩家後，再分別開啟所需權限，四個開關可以獨立設定。"
-      - "建造與破壞\n建造包含放置方塊、播種及生成載具；破壞包含破壞方塊、收穫及破壞載具。依朋友實際需要開啟。"
-      - "互動與物品使用\n互動包含門、按鈕、容器、漏斗等，範圍比「只開箱子」更大。物品使用包含合成、交易、餵養、拾取、丟棄等。這些開關授權一類行為，不是單個行為。"
-      - "關閉不等於禁止\n信任用於給非鎮成員額外授權。某項關閉表示不額外授予，仍可能由舊成員／組或訪客權限允許。信任不能略過小鎮成員組已經作出的拒絕。"
-      - "屬地紀錄優先\n存在屬地信任紀錄時，使用整筆屬地紀錄，不與小鎮信任逐項合併。四項全部關閉不會恢復小鎮信任；刪除該屬地紀錄才會回到小鎮信任。"
-      - "範例：讓朋友在一塊地開箱\n進入「目標屬地 → 信任」，新增鎮外朋友並開啟互動。它同時授予該類別的其他互動行為。如需限制其他訪客，還應檢查這塊屬地的訪客權限。"
+      - "什麼時候用信任\n朋友只想幫忙或取材料、不想加入小鎮，可以給他信任。\n小鎮信任適用全鎮，屬地信任只適用一塊地。目前功能：{trust_enabled}。\n已是小鎮成員的玩家，請透過成員權限組安排。"
+      - "四個獨立開關\n建造：放置方塊、播種、放置載具等。\n破壞：拆方塊、收穫、破壞載具等。\n互動：開門、按鈕、開箱等。\n物品使用：合成、交易、餵養、拾取和丟棄等。\n例如朋友來倉庫取材料，新增屬地信任並開啟互動即可，也會允許開門和按按鈕。"
+      - "關閉後為什麼仍能操作\n關閉表示不透過信任額外給權限。\n例如訪客本來能開門，關掉朋友的互動信任，他仍能開門。要限制路人，需要查看屬地的訪客權限。"
+      - "同時設定小鎮與屬地信任\n有屬地信任時，這塊地只使用該份設定，不再疊加小鎮信任。\n例如小鎮允許建造，但倉庫只開互動，就不會透過信任取得倉庫建造權限。\n刪除屬地信任才能重新使用小鎮信任；只關閉四項開關不會恢復。"
   land:
-    title: "屬地管理與計費"
-    summary: "新建、掛靠、歸還、刪除與解散分別會發生什麼。"
+    title: "管理小鎮屬地"
+    summary: "圈選新地、貢獻舊地，以及費用與刪除。"
     sections:
-      - "掛靠與歸還\n透過「小鎮 → 掛靠領地」或 /town attach <領地名> 貢獻個人領地。退出小鎮不會自動取回它。鎮長可用 /town release <領地名> 歸還符合條件的非建鎮貢獻領地，再依提示確認；OP 可仲裁其他非建鎮屬地。"
-      - "刪除單塊屬地\n鎮長、副鎮長及伺服器管理員可在管理頁點擊「刪除屬地」，再次確認。只刪除選中鎮屬地及其權限紀錄，子領地和小鎮保留，不退款，也不會刪除方塊或箱內物品。"
-      - "解散整個小鎮\n僅鎮長或伺服器管理員可操作，並需要依現有流程確認。目前子服設定：{disband_policy} 請確認預覽中的影響範圍。"
-      - "尺寸與高度\nX、Z 每條邊最大 {max_xz}，X/Y/Z 最小尺寸為 {min_x}/{min_height}/{min_z}。設定 Y 範圍為 {min_y} 到 {max_y}，最大高度為 {max_height}，同時受世界高度限制。歷史超高領地在 Y 範圍不變時可保留原高度調整。"
-      - "按面積階梯計費\n鎮屬地階梯計費：{pricing_enabled}。只計算 X × Z 面積，不按高度收費。前 250000 平方格免費；之後至 1000000／2250000／4000000 的各段單價分別為 {price_1}／{price_2}／{price_3} 每平方格，分段累加，不是整塊地按最高單價計算。"
-      - "擴縮地與退款\n遠端新建和付費擴地從小鎮金庫扣款。縮地只退有付費紀錄且符合條件的部分，退款比例為 {refund_rate}；歷史未付費面積不會退款。具體金額以建立／調整時的報價為準，也會考慮管理員免計費等情況。"
+      - "怎樣圈選新屬地\n鎮長或副鎮長手持 {tool}，左鍵點一個方塊、右鍵點另一個方塊，選出同一世界的兩個對角。\n到「小鎮 → 建立屬地」確認範圍和報價。新建功能：{remote_enabled}。\n不能與其他領地重疊，部分世界可能禁止建立。"
+      - "大小與高度\n每條水平邊最長 {max_xz} 格，最小長寬為 {min_x}、{min_z}，最小高度 {min_height}。\nY 範圍為 {min_y} 到 {max_y}，最大高度 {max_height}，也受世界高度限制。\n舊超高領地保持 Y 範圍不變時，可以保留原高度調整長寬。"
+      - "面積費用與例子\n階梯計費：{pricing_enabled}，只算長 × 寬。前 250000 平方格免費；之後到 1000000、2250000、4000000 的各段單價為 {price_1}、{price_2}、{price_3}。\n例如 1000 × 1000 的地，超出免費範圍 750000 平方格，這部分按 {price_1} 計費。費用由小鎮金庫支付，確認前看報價。"
+      - "縮地與退款\n縮地只對有付費記錄的部分按 {refund_rate} 退款，免費面積不退款。\n單純改變高度不影響面積價格，也不會產生面積退款。"
+      - "掛靠與歸還\n在「小鎮 → 掛靠領地」或 /town attach <領地名> 貢獻個人領地，原主人顯示為貢獻者。退鎮不會自動取回。\n鎮長可用 /town release <領地名> 歸還符合條件的貢獻領地，再按提示確認；建鎮屬地不能這樣歸還。"
+      - "刪除或解散\n鎮長或副鎮長能在管理頁確認刪除單塊屬地，不退款；建築、箱內物品、下級領地和小鎮保留。\n解散全鎮只限鎮長或伺服器管理員。目前結果：{disband_policy}\n確認前請看清受影響的領地。"
   levels:
-    title: "等級與共同任務"
-    summary: "全鎮共同提交物品，解鎖更多屬地名額。"
+    title: "一起升級小鎮"
+    summary: "全鎮一起交材料，解鎖更多屬地名額。"
     sections:
-      - "等級與屬地上限\n1 級總屬地上限為 {base_limit}，單世界上限為 {base_world_limit}；存在上限時，每升一級增加 {per_level} 個名額。建鎮屬地和貢獻領地也計入。降低上限不會刪除已有屬地，新建和掛靠會檢查上限。"
-      - "一起提交任務\n進入「小鎮 → 小鎮等級」查看目前共同任務。成員從背包提交符合要求的物品，物品會被消耗，進度全鎮共享，也支援跨服累計。達到要求後晉升。"
-      - "目前開放等級\n成員任務開放到 {open_level} 級，系統最大等級為 {max_level}。缺少中間等級的任務時不能繼續晉升。OP 可以在系統上限內設定等級。"
-      - "目前設定的物品任務\n{tasks}"
+      - "升級有什麼用\n1 級全鎮屬地上限 {base_limit}，單世界 {base_world_limit}；有上限時，每升一級增加 {per_level} 個名額。\n建鎮和貢獻領地也占名額，既有屬地不會因超限被刪除。"
+      - "怎樣參加任務\n開啟「小鎮 → 小鎮等級」，查看材料需求，將物品放在背包並提交。\n物品會被消耗，進度全鎮共享，互通子服也能累計。交齊後升級。"
+      - "例子：分工完成\n假設需要 9 個獄髓錠，你交 4 個，朋友交 5 個，就能完成。\n不用一個人一次交齊。提交前請看任務頁的材料和剩餘數量。"
+      - "目前開放等級\n共同任務開放到 {open_level} 級，達到後可等待後續任務開放。\n目前升級材料：\n{tasks}"
   faq:
-    title: "常見問題"
-    summary: "不能操作、範本不生效、跨服使用時如何排查。"
+    title: "遇到問題怎麼辦"
+    summary: "不能建造、範本沒變化、跨服使用。"
     sections:
-      - "成員為什麼不能建造\n先確認是哪塊屬地，再檢查玩家的小鎮權限組、該組範本和屬地覆寫。非鎮成員應檢查屬地／小鎮信任及訪客權限。權限組、管理身分、環境設定各自解決不同問題。"
-      - "改了範本卻沒變化\n確認小鎮已進入範本模式、改的是該玩家所在組、該屬地的權限是繼承。本地允許／禁止會在範本修改後繼續保留。"
-      - "在不同子服使用\n留意屬地項目的區服與世界名稱。邀請可以跨服；跨服傳送需要伺服器設定好對應的連線。其他子服的保護設定可能要等待重新整理才生效；建立和調整範圍需要在對應的本地世界操作。"
-      - "其他保護也可能生效\n其他保護插件或世界規則也可能阻止操作。請聯絡小鎮管理者檢查對應權限設定。"
+      - "為什麼不能放方塊\n確認目前屬地，請鎮長查看你所在組的範本，以及該屬地是否單獨禁止放置方塊。\n非鎮成員則請鎮長查看訪客權限或給予適當信任。"
+      - "改了範本卻沒變化\n確認改的是玩家所在組，屬地的這項權限是繼承。\n若是本地允許或禁止，就先決定是否恢復繼承。舊模式小鎮需要鎮長先升級。"
+      - "鎮長能用，成員不能用\n鎮長、屬地管理者和伺服器管理員可能有直接管理權限，不能以他們的操作判斷普通成員設定。\n測試建築組能否開箱，請該組的普通成員實際試一次。"
+      - "在其他子服使用\n查看屬地的區服和世界。互通子服可以接受邀請；伺服器支援跨服傳送時，可以從屬地列表傳送。\n建立和調整範圍要到對應世界。其他子服的權限可能稍後更新；仍失敗時請告知鎮長地點和提示。"
 dominion-text:
   loading-config: 正在載入設定…
   plugin-enabled: 插件已啟用！
@@ -207,7 +257,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: 成功將通用權限 {0} 設定為 {1}。
   set-guest-flag-failed: 設定通用權限 {0} 為 {1} 失敗，原因：{2}。
 member-provider-handler-text:
-  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
+  use-trust-for-town-outposts: "小鎮成員請使用「成員權限管理」；鎮外朋友請使用信任功能。"
   set-flag-success: 已成功在領地 {2} 為 {1} 設定權限 {0}。
   owner-only: 僅有領地擁有者可管理管理員。
   group-already: 該成員已屬於權限組 {0}，無法重複設定。
@@ -219,7 +269,7 @@ member-provider-handler-text:
   remove-member-success: 成功將成員 {0} 從領地 {1} 移除。
   remove-member-failed: 移除成員失敗，原因：{0}。
 group-provider-handler-text:
-  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-outpost-no-custom-groups: "小鎮屬地的成員權限組由小鎮統一管理，請到「小鎮 → 成員權限管理」建立及分配。"
   town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: 僅有領地擁有者可管理管理員群組。
   set-flag-success: 成功將群組 {0} 的權限 {1} 設定為 {2}。
@@ -234,7 +284,7 @@ group-provider-handler-text:
   add-member-failed: 新增成員至群組失敗，原因：{0}。
   remove-member-success: 成功將成員 {0} 從群組 {1} 移除。
   remove-member-failed: 從群組移除成員失敗，原因：{0}。
-  town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
+  town-group-members-implicit: "未分配自訂組的成員使用小鎮成員（預設組），請到「小鎮 → 成員權限管理」調整分組。"
 select-point-events-handler-text:
   selection-tool-hint: '選點工具：{0}。左鍵選擇第一個方塊，右鍵選擇第二個方塊。'
   first-point: 第一個選取點：{0}, {1}, {2}。
@@ -781,7 +831,8 @@ town-manager-text:
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
-  town-group-display-name: Town Members
+  town-group-display-name: "小鎮成員（預設組）"
+  template-flag-updated: 已將 {0} 的全鎮預設權限 {1} 設為 {2}。
 town-level-manager-text:
   member-only: 只有 {0} 的小鎮成員可以為等級任務提交物品。
   progression-closed: 小鎮 {0} 目前為 {1} 級，成員晉升目前只開放到 {2} 級。
@@ -802,47 +853,7 @@ town-command-text:
   dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: '&b/town help [章節] [頁碼] &7- 閱讀遊戲內小鎮手冊
-
-    &b/town create <name> &7- create a town (existing land stays personal; landless founders receive a free founding outpost)
-
-    &b/town invite <player> &7- invite a player (mayor/assistant)
-
-    &b/town join <town> [confirm] &7- join an invited town
-
-    &b/town rename <new name> &7- rename your town (mayor only)
-
-    &b/town leave &7- leave your town (land stays with the town)
-
-    &b/town kick <player> &7- kick a resident (mayor/assistant)
-
-    &b/town transfer <player> &7- transfer the mayor role
-
-    &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
-
-    &b/town disband [confirm] &7- disband the town (dissolves outposts)
-
-    &b/town deposit <amount> &7- deposit into the town bank
-
-    &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
-
-    &b/town outpost create <name> &7- create a remote outpost (selected points)
-
-    &b/town admin <outpost> [player] &7- set/clear the outpost admin
-
-    &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
-
-    &b/town level [submit] &7- 查看共同等級任務或提交背包物品
-
-    &b/town level set <town> <level> &7- set town level (OP only)
-
-    &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
-
-    &b/town untrust <player> [town|outpost <name>]
-
-    &b/town info [town] &7- town information
-
-    &b/town list &7- list towns'
+  usage: "&b/town help [章節] [頁碼] &7- 閱讀遊戲內小鎮手冊\n&b/town create <name> &7- create a town (existing land stays personal; landless founders receive a founding outpost; see the creation quote)\n&b/town invite <player> &7- invite a player (mayor/assistant)\n&b/town join <town> [confirm] &7- join an invited town\n&b/town rename <new name> &7- rename your town (mayor only)\n&b/town leave &7- leave your town (land stays with the town)\n&b/town kick <player> &7- kick a resident (mayor/assistant)\n&b/town transfer <player> &7- transfer the mayor role\n&b/town promote|demote <player> &7- appoint assistant / set member role (mayor only)\n&b/town disband [confirm] &7- disband the town (dissolves outposts)\n&b/town deposit <amount> &7- deposit into the town bank\n&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n&b/town outpost create <name> &7- create a remote outpost (selected points)\n&b/town admin <outpost> [player] &7- set/clear the outpost admin\n&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n&b/town level [submit] &7- 查看共同等級任務或提交背包物品\n&b/town level set <town> <level> &7- set town level (OP only)\n&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n&b/town untrust <player> [town|outpost <name>]\n&b/town info [town] &7- town information\n&b/town list &7- list towns"
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).

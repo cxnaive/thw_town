@@ -1,0 +1,247 @@
+Applying patches
+Starting org.bukkit.craftbukkit.Main
+2026-10-09T09:06:50.232094054Z ServerMain WARN Advanced terminal features are not available in this environment
+[17:06:50 INFO]: [bootstrap] Running Java 25 (OpenJDK 64-Bit Server VM 25.0.4.1+1-1-22.04.4-Ubuntu; Ubuntu null) on Linux 6.6.87.2-microsoft-standard-WSL2 (amd64)
+[17:06:50 INFO]: [bootstrap] Loading Folia 26.2-7-ver/26.2.x@14b7fee (2026-08-25T13:29:28Z) for Minecraft 26.2
+[17:06:50 INFO]: [PluginInitializerManager] Initializing plugins...
+[17:06:50 INFO]: [PluginInitializerManager] Initialized 3 plugins
+[17:06:50 INFO]: [PluginInitializerManager] Bukkit plugins (3):
+ - Dominion (5.2.5-release), ViaBackwards (5.12.1), ViaVersion (5.12.1)
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/tmp/dominion-teleport-folia26_2-twsrwA/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[17:06:52 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
+[17:06:52 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[17:06:53 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 225.4ms
+[17:06:53 INFO]: Found new data pack paper, loading it automatically
+[17:06:53 INFO]: No existing world data, creating new world
+[17:06:53 INFO]: Loaded 1585 recipes
+[17:06:53 INFO]: Loaded 1688 advancements
+[17:06:54 INFO]: Starting minecraft server version 26.2
+[17:06:54 INFO]: Loading properties
+[17:06:54 INFO]: This server is running Folia version 26.2-7-ver/26.2.x@14b7fee (2026-08-25T13:29:28Z) (Implementing API version 26.2.build.7-beta)
+[17:06:54 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[17:06:54 INFO]: Server Ping Player Sample Count: 12
+[17:06:54 INFO]: Using 4 threads for Netty based IO
+[17:06:54 WARN]: [Configurations] The global config file didn't have a version set, assuming latest
+[17:06:54 INFO]: [io.papermc.paper.threadedregions.TickRegions] Initialised EDF Folia scheduler with initial 2 target thread(s)
+[17:06:54 INFO]: [MoonriseCommon] Paper is using 1 worker threads, 1 I/O threads
+[17:06:54 INFO]: Default game type: SURVIVAL
+[17:06:54 INFO]: Generating keypair
+[17:06:54 INFO]: Starting Minecraft server on 127.0.0.1:25686
+[17:06:54 INFO]: Paper: Using libdeflate (Linux x86_64) compression from Velocity.
+[17:06:54 INFO]: Paper: Using OpenSSL 3.x.x (Linux x86_64) cipher from Velocity.
+[17:06:54 INFO]: [ViaVersion] Loading server plugin ViaVersion v5.12.1
+[17:06:54 INFO]: [ViaVersion] ViaVersion 5.12.1 is now loaded. Registering protocol transformers and injecting...
+[17:06:55 INFO]: [ViaBackwards] Loading translations...
+[17:06:55 INFO]: [ViaBackwards] Registering protocols...
+[17:06:55 INFO]: [ViaBackwards] Loading server plugin ViaBackwards v5.12.1
+[17:06:55 INFO]: [Dominion] Loading server plugin Dominion v5.2.5-release
+[17:06:55 WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[17:06:55 WARN]: The server will make no attempt to authenticate usernames. Beware.
+[17:06:55 WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[17:06:55 WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[17:06:55 INFO]: Preparing level "world"
+[17:06:55 INFO]: Selecting spawn point for level 'minecraft:overworld'...
+[17:06:55 INFO]: Selecting spawn point for level 'minecraft:the_nether'...
+[17:06:55 INFO]: Selecting spawn point for level 'minecraft:the_end'...
+[17:06:56 INFO]: Loading 0 persistent chunks for level 'minecraft:overworld'...
+[17:06:56 INFO]: Preparing spawn area: 100%
+[17:06:56 INFO]: Prepared spawn area in 731 ms
+[17:06:56 INFO]: Loading 0 persistent chunks for level 'minecraft:the_nether'...
+[17:06:56 INFO]: Preparing spawn area: 100%
+[17:06:56 INFO]: Prepared spawn area in 524 ms
+[17:06:56 INFO]: Loading 0 persistent chunks for level 'minecraft:the_end'...
+[17:06:56 INFO]: Preparing spawn area: 100%
+[17:06:56 INFO]: Prepared spawn area in 100 ms
+[17:06:56 INFO]: Done preparing level "world" (0.853s)
+[17:06:56 INFO]: [ViaVersion] Enabling ViaVersion v5.12.1
+[17:06:56 INFO]: [ViaBackwards] Enabling ViaBackwards v5.12.1
+[17:06:56 INFO]: [Dominion] Enabling Dominion v5.2.5-release
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |   _____                  _       _[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  |  __ \                (_)     (_)[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |  | | ___  _ __ ___  _ _ __  _  ___  _ __[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |  | |/ _ \| '_ ` _ \| | '_ \| |/ _ \| '_ \[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  | |__| | (_) | | | | | | | | | | | (_) | | | |[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  |_____/ \___/|_| |_| |_|_|_| |_|_|\___/|_| |_|[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I |  [0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Plugin Version: 5.2.5-release[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading Configurations...[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading limitation configuration...[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Because no limitation file found, saving default limitation file.[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Loading world-settings...[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | Successfully loaded 1 world-settings: default.[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0mSuccessfully loaded configuration.[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0mLoading language zh_cn...[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m成功加载语言 zh_cn。[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 加载权限配置...[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 成功加载权限配置。[0m
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m准备数据库连接...[0m
+[17:06:56 INFO]: [com.zaxxer.hikari.HikariDataSource] HikariPool-1 - Starting...
+[17:06:56 INFO]: [com.zaxxer.hikari.pool.HikariPool] HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@50809772
+[17:06:56 INFO]: [com.zaxxer.hikari.HikariDataSource] HikariPool-1 - Start completed.
+[17:06:56 INFO]: [38;2;255;170;0m[[38;2;255;255;85mDominion[38;2;255;170;0m][38;2;255;255;255m [38;2;0;170;0m数据库连接成功！[0m
+[17:07:25 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | NMS implementations loaded for version: v26_2[0m
+[17:07:25 INFO]: [38;2;255;170;0m[[38;2;255;255;85m领地[38;2;255;170;0m][38;2;255;255;255m [38;2;85;255;85m I | 启动完成！[0m
+[17:07:25 INFO]: [spark] The spark plugin has been preferred but was not loaded. The bundled spark profiler will enabled instead.
+[17:07:25 INFO]: [spark] The spark profiler will not be enabled because it is currently disabled in the configuration.
+[17:07:25 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[17:07:25 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[17:07:26 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[17:07:26 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[17:07:26 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[17:07:26 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[17:07:26 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[17:07:26 INFO]: [ViaVersion] ViaVersion detected server version: 26.2 (776)
+[17:07:26 INFO]: [ViaVersion] Finished mapping loading, shutting down loader executor.
+[17:07:26 INFO]: Done (36.757s)! For help, type "help"
+[17:07:26 INFO]: UUID of player TpQA is d5c74e9d-6cd3-339e-8ad1-b785afe395cb
+[17:07:28 INFO]: [38;2;255;255;85mTpQA joined the game[0m
+[17:07:28 INFO]: TpQA[/127.0.0.1:55122] logged in with entity id 3 at ([minecraft:overworld]-8.5, -59.0, 2.5)
+[17:07:29 INFO]: Made TpQA a server operator
+[17:07:29 INFO]: Set TpQA's game mode to Creative Mode
+[17:07:29 INFO]: TpQA issued server command: /dom switch_ui CUI
+[17:07:30 INFO]: Teleported TpQA to 100.500000, 80.000000, 100.500000
+[17:07:30 INFO]: TpQA has made the advancement [38;2;85;255;85m[We Need to Go Deeper][0m
+[17:07:31 INFO]: Teleported TpQA to 100.500000, 80.000000, 100.500000
+[17:07:31 INFO]: Successfully filled 2673 block(s)
+[17:07:31 INFO]: [38;2;255;85;85mNo blocks were filled[0m
+[17:07:31 INFO]: Successfully filled 1519 block(s)
+[17:07:31 INFO]: TpQA has made the advancement [38;2;85;255;85m[The End?][0m
+[17:07:32 INFO]: Teleported TpQA to 100.500000, 80.000000, 100.500000
+[17:07:32 INFO]: Successfully filled 49 block(s)
+[17:07:32 INFO]: [38;2;255;85;85mNo blocks were filled[0m
+[17:07:32 INFO]: Scanning for legacy world dragon fight...
+[17:07:32 INFO]: Found that the dragon has not yet been killed in this world.
+[17:07:32 INFO]: Successfully filled 49 block(s)
+[17:07:32 INFO]: [38;2;255;85;85mNo blocks were filled[0m
+[17:07:33 INFO]: TpQA issued server command: /town create TpAudit
+[17:07:34 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:34 INFO]: TpQA issued server command: /dom set_tp TpAudit
+[17:07:34 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:35 INFO]: TpQA issued server command: /dom tp TpAudit
+[17:07:35 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:36 INFO]: TpQA issued server command: /dom tp TpAudit
+[17:07:37 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:37 INFO]: TpQA issued server command: /dom tp TpAudit
+[17:07:38 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:38 INFO]: TpQA issued server command: /dom tp TpAudit
+[17:07:39 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:40 INFO]: TpQA issued server command: /dom tp the_nether
+[17:07:40 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:41 INFO]: TpQA issued server command: /dom tp the_nether
+[17:07:44 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:44 INFO]: TpQA issued server command: /dom tp the_end
+[17:07:45 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:45 INFO]: TpQA issued server command: /dom tp the_end
+[17:07:48 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:49 INFO]: TpQA issued server command: /town help land
+[17:07:49 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[17:07:52 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:52 INFO]: TpQA issued server command: /dom list
+[17:07:55 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:07:56 INFO]: TpQA issued server command: /dom switch_ui TUI
+[17:07:56 INFO]: TpQA issued server command: /town help land
+[17:07:56 INFO]: TpQA issued server command: /dominion tui_btn_future_7618cbc6-402b-4e5b-ac33-bb44bf9a4314
+[17:07:56 INFO]: TpQA issued server command: /dominion tui_btn_future_6c294f81-14ea-4f41-8397-f39c97c34911
+[17:07:59 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:00 INFO]: TpQA issued server command: /dom list
+[17:08:00 INFO]: TpQA issued server command: /dominion tui_btn_future_182c5707-5520-42a4-b1e3-25419e7ebcb0
+[17:08:03 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:03 INFO]: Made TpQA no longer a server operator
+[17:08:04 INFO]: TpQA issued server command: /dom tp MissingWorld
+[17:08:09 INFO]: TpQA issued server command: /dom tp TpAudit
+[17:08:15 INFO]: TpQA issued server command: /dom tp the_end
+[17:08:25 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:26 INFO]: TpQA issued server command: /dom tp the_end
+[17:08:26 INFO]: TpQA issued server command: /dom tp the_end
+[17:08:26 INFO]: Teleported TpQA to 1002.500000, 150.000000, 1000.500000
+[17:08:31 INFO]: TpQA issued server command: /dom tp the_nether
+[17:08:40 INFO]: Made TpQA a server operator
+[17:08:40 INFO]: Set TpQA's game mode to Survival Mode
+[17:08:41 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:41 INFO]: TpQA issued server command: /dom tp EmptyHighClaim
+[17:08:42 INFO]: Set TpQA's game mode to Creative Mode
+[17:08:42 INFO]: Teleported TpQA to 408.500000, 85.000000, 408.500000
+[17:08:43 INFO]: [38;2;255;85;85mNo blocks were filled[0m
+[17:08:43 INFO]: Successfully filled 441 block(s)
+[17:08:43 INFO]: Successfully filled 441 block(s)
+[17:08:43 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:44 INFO]: TpQA issued server command: /dom tp CaveAudit
+[17:08:46 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:47 INFO]: TpQA issued server command: /dom tp CaveAudit
+[17:08:48 INFO]: Changed the block at 408, 60, 408
+[17:08:48 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:48 INFO]: TpQA issued server command: /dom tp CaveAudit
+[17:08:52 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:52 INFO]: TpQA issued server command: /dom tp HiddenCave
+[17:08:55 INFO]: Teleported TpQA to 504.500000, 85.000000, 504.500000
+[17:08:55 INFO]: [38;2;255;85;85mNo blocks were filled[0m
+[17:08:55 INFO]: Successfully filled 441 block(s)
+[17:08:55 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:56 INFO]: TpQA issued server command: /dom tp SlabAudit
+[17:08:59 INFO]: Successfully filled 441 block(s)
+[17:08:59 INFO]: Successfully filled 441 block(s)
+[17:08:59 INFO]: Teleported TpQA to 1000.500000, 150.000000, 1000.500000
+[17:08:59 INFO]: TpQA issued server command: /dom tp SlabAudit
+[17:09:02 INFO]: Stopping the server
+[17:09:02 INFO]: [RegionShutdownThread] Awaiting scheduler termination for 60s...
+[17:09:02 INFO]: [RegionShutdownThread] Scheduler halted
+[17:09:02 INFO]: Stopping server
+[17:09:02 INFO]: [Dominion] Disabling Dominion v5.2.5-release
+[17:09:02 INFO]: [ViaBackwards] Disabling ViaBackwards v5.12.1
+[17:09:02 INFO]: [ViaVersion] Disabling ViaVersion v5.12.1
+[17:09:02 INFO]: [ViaVersion] ViaVersion has been disabled; uninjected the platform and shut down the scheduler.
+[17:09:02 INFO]: [RegionShutdownThread] Halting chunk systems...
+[17:09:02 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:overworld'
+[17:09:02 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:overworld'
+[17:09:02 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_nether'
+[17:09:02 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_nether'
+[17:09:02 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_end'
+[17:09:02 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_end'
+[17:09:02 INFO]: [RegionShutdownThread] Halted chunk systems
+[17:09:02 INFO]: [RegionShutdownThread] Finishing pending teleports...
+[17:09:02 INFO]: [RegionShutdownThread] Finished pending teleports
+[17:09:02 INFO]: [RegionShutdownThread] Saving all worlds
+[17:09:02 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:overworld'
+[17:09:02 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:09:02 INFO]: [RegionShutdownThread] Closed player inventories
+[17:09:02 INFO]: [RegionShutdownThread] Saving chunks...
+[17:09:02 INFO]: [RegionShutdownThread] Saving chunks around region around chunk [32, 31] in world 'world'
+[17:09:03 INFO]: [ChunkHolderManager] Saved 930 block chunks, 134 entity chunks, 0 poi chunks in world 'minecraft:overworld' in 0.28s
+[17:09:03 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:overworld'
+[17:09:03 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:overworld'
+[17:09:03 INFO]: [RegionShutdownThread] Saved chunks
+[17:09:03 INFO]: [RegionShutdownThread] Saving level data...
+[17:09:03 INFO]: [RegionShutdownThread] Saved level data
+[17:09:03 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:overworld'
+[17:09:03 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:the_nether'
+[17:09:03 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:09:03 INFO]: [RegionShutdownThread] Closed player inventories
+[17:09:03 INFO]: [RegionShutdownThread] Saving chunks...
+[17:09:03 INFO]: [RegionShutdownThread] Saved chunks
+[17:09:03 INFO]: [RegionShutdownThread] Saving level data...
+[17:09:03 INFO]: [RegionShutdownThread] Saved level data
+[17:09:03 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:the_nether'
+[17:09:03 INFO]: [RegionShutdownThread] Saving world data for world 'minecraft:the_end'
+[17:09:03 INFO]: [RegionShutdownThread] Closing player inventories...
+[17:09:03 INFO]: [RegionShutdownThread] Closed player inventories
+[17:09:03 INFO]: [RegionShutdownThread] Saving chunks...
+[17:09:03 INFO]: [RegionShutdownThread] Saving chunks around region around chunk [62, 62] in world 'world_the_end'
+[17:09:03 INFO]: [ChunkHolderManager] Saved 121 block chunks, 121 entity chunks, 0 poi chunks in world 'minecraft:the_end' in 0.20s
+[17:09:03 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:the_end'
+[17:09:03 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:the_end'
+[17:09:03 INFO]: [RegionShutdownThread] Saved chunks
+[17:09:03 INFO]: [RegionShutdownThread] Saving level data...
+[17:09:03 INFO]: [RegionShutdownThread] Saved level data
+[17:09:03 INFO]: [RegionShutdownThread] Saved world data for world 'minecraft:the_end'
+[17:09:03 INFO]: [RegionShutdownThread] Saved all worlds
+[17:09:03 INFO]: [RegionShutdownThread] Saving global world data...
+[17:09:03 INFO]: [RegionShutdownThread] Saved global world data.
+[17:09:03 INFO]: [RegionShutdownThread] Saving all player data...
+[17:09:03 INFO]: [RegionShutdownThread] Saved all player data
+[17:09:03 INFO]: Waiting for all RegionFile I/O tasks to complete...
+[17:09:03 INFO]: All RegionFile I/O tasks to complete
+[17:09:03 INFO]: [MoonriseCommon] Awaiting termination of worker pool for up to 60s...
+[17:09:03 INFO]: [MoonriseCommon] Awaiting termination of I/O pool for up to 60s...

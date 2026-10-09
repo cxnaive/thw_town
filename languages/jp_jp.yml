@@ -1,92 +1,143 @@
+player-display-text:
+  ordinary-land: 通常の領地
+  founding-land: 創設領地
+  unknown-land: 領地
+  town-scope: 町全体
+  outpost-scope: この領地のみ
+  allow: 許可
+  deny: 禁止
+  enabled: 有効
+  disabled: 無効
+  chest-menu: チェストメニュー
+  chat-menu: チャットメニュー
+  trust-build: 建築
+  trust-destroy: 破壊
+  trust-switch: スイッチとコンテナ
+  trust-item-use: アイテム使用
+  no-additional-trust: なし
+name-search-text:
+  button: "検索"
+  hint: "名前の一部を入力します。英字の大小は区別せず、文字を順番に省略した名前や空白区切りの複数キーワードも使えます。例：オークでオーク町を検索。最大64文字。"
+  description: "この一覧の名前を検索。部分一致・順序付きの文字一致に対応し、英字の大小は区別しません。"
+  town-title: "タウン検索"
+  land-title: "領地検索"
+  all-towns: "対象：すべてのタウン"
+  own-land: "対象：自分の所有・管理領地"
+  town-land: "対象：{0} の領地"
+  admin-land: "対象：このサーバーの全領地（管理者）"
+  summary: "検索：{0} | {1} 件"
+  empty: "一致する名前がありません。短いキーワードを試してください。"
+  too-long: "キーワードは {0} 文字までです。"
+  back: "一覧に戻る"
+  change: "キーワードを変更"
+  clear: "検索を解除"
+  previous: "前のページ"
+  next: "次のページ"
+  page: "ページ {0}/{1}"
+  teleport: "テレポート"
+  town-details: "町長：{0} | メンバー：{1}"
+  town-owner: "タウン：{0}"
+  personal-owner: "所有者：{0}"
+  location: "サーバー：{0} | ワールド：{1}"
+  town-click: "左クリック：タウンを見る"
+  land-click: "左クリック：情報／管理；右クリック：テレポート"
+  remote: "この領地は {0} のワールド {1} にあります。管理にはそのサーバーへ移動してください。テレポートで訪問できます。"
+  missing: "この結果はもう存在しません。検索し直してください。"
+  town-usage: "/town search <キーワード> [ページ] - 全タウンの名前を検索"
+  land-usage: "/dom search <キーワード> [ページ] - 自分の所有・管理領地を検索"
 town-guide-text:
-  title: "町の手引き"
-  button: "手引き"
-  page-help: "この画面の説明"
-  description: "町の役職、権限テンプレート、信頼、領地管理を学べます。"
-  read: "クリックで章を開き、記事カードにカーソルを合わせて手順を読みます。"
-  back: "元の画面へ"
+  title: "タウン手帳"
+  button: "手帳"
+  page-help: "このページのヘルプ"
+  description: "タウンへの参加から、建築・権限・領地を順に学べます。"
+  read: "クリックで読み始めます。紙にカーソルを合わせて読み、矢印で次へ進みます。"
+  back: "元の画面に戻る"
   contents: "目次"
-  previous-page: "前のページ"
-  next-page: "次のページ"
-  page-info: "ページ {0}/{1}"
-  open-town: "町のホームを開く"
-  open-groups: "町の権限グループを開く"
+  previous-page: "前の項目"
+  next-page: "次の項目"
+  next-chapter: "次の章"
+  page-info: "項目 {0}/{1}"
+  open-town: "タウンのホーム"
+  open-groups: "メンバー権限管理を開く"
   open-outposts: "領地一覧を開く"
-  open-trusts: "町の信頼設定を開く"
-  open-tasks: "共同レベル課題を開く"
-  context: "町：{0} | 権限モード：{1}"
-  no-town: "町に未加入でも、すべての章を読めます。"
-  template-mode: "町のテンプレート"
-  legacy-mode: "従来の領地別権限"
-  example-town: "オークの町"
+  open-trusts: "タウンの信頼を開く"
+  open-tasks: "共同レベル任務を開く"
+  context: "タウン：{0}"
+  no-town: "未参加でも読めます。初めての方は最初の章からどうぞ。"
+  example-town: "オーク町"
+  stick: "棒"
   enabled: "有効"
   disabled: "無効"
-  unlimited: "無制限"
-  unknown-topic: "章 {0} はありません。目次を開きました。"
+  unlimited: "制限なし"
+  unknown-topic: "章 {0} が見つからないため、目次を開きました。"
   task-line: "レベル {0}：{1} × {2}"
-  no-tasks: "開放中のレベル範囲にはアイテム課題が設定されていません。"
-  dissolve-all: "この町の全領地の保護登録が削除されます。ブロックやチェスト内の物品は残りますが、その領地保護はなくなります。"
-  return-contributed: "寄贈された領地は寄贈者に返却され、それ以外の町領地の保護登録は削除されます。ブロックやチェスト内の物品は残ります。"
+  no-tasks: "現在、提出できるレベル任務はありません。"
+  dissolve-all: "町の全領地が保護を失います。建物やチェストの中身は残ります。"
+  return-contributed: "寄贈した領地は寄贈者に戻り、ほかの町領地は保護を失います。建物やチェストの中身は残ります。"
   start:
-    title: "加入と設立"
-    summary: "招待への承諾、設立領地、範囲選択ツール。"
+    title: "タウンを始めよう"
+    summary: "友達の町に参加するか、自分の町を作ります。"
     sections:
-      - "招待を承諾する\n町の管理者に招待してもらい、/town join {town} を入力します（例の町名は招待された町名に置き換えてください）。接続された別サーバーでも承諾できます。加入だけでは個人領地は自動で町に所属しません。"
-      - "町を設立する\n/town create <町名> またはメインメニューの設立ボタンを使います。既存の個人領地は個人のままです。領地がない設立者には現在地に {founding_size} × {founding_size} × {founding_size} の設立領地が与えられ、設定費用 {founding_cost} を個人残高から支払います。確認案内に従ってください。"
-      - "新しい町領地を選択する\n{tool} を持ち、左クリックで始点、右クリックで終点を選びます。同じワールドの対角の二点を指定してください。町長か副町長が「町 → 領地作成」を開き、サイズと町銀行からの支払額を確認します。"
-      - "作成の制限\n遠隔地への新規領地作成は {remote_enabled} です。既存領地との重複はできません。一部ワールドでは一般プレイヤーの作成が禁止される場合があります。/town で町または町一覧に戻れます。"
+      - "タウンと領地\nタウンは一緒に暮らすプレイヤーの集まりです。町の領地には住宅地、農場、倉庫などを作れます。\n一つの町が複数の離れた領地を持つこともできます。/town でメニューを開きます。"
+      - "招待を受ける\n町長か副町長に招待してもらい、招待メッセージの参加コマンドを入力します。\n例：/town join {town}\n接続された別サーバーでも参加できます。参加だけで個人領地が町に渡ることはありません。"
+      - "自分の町を作る\nメインメニューの作成ボタン、または /town create <町名> を使います。\n領地を持っていなければ、現在地に {founding_size} × {founding_size} × {founding_size} の創設領地が作られ、個人の財布から {founding_cost} 支払います。既存の個人領地は自動で寄贈されません。"
+      - "次にすること\nメンバーは町長に住む場所や必要な権限を相談しましょう。町長はメンバーを招待し、グループを設定できます。\n土地を増やすには「町の領地を管理」、建築の許可を知るには「継承のしくみ」を読みましょう。"
+      - "タウンや領地を探す\n一覧で検索を押し、名前の一部を入力します。「オーク」で「オーク町」が見つかります。英字の大小は区別しません。\n/town search <キーワード> で町、/dom search <キーワード> で自分の所有・管理領地を探せます。町の領地一覧から検索すると、その町だけが対象です。"
   roles:
-    title: "役職と権限グループ"
-    summary: "町の管理役職とブロック操作の権限は別です。"
+    title: "誰が何をできる？"
+    summary: "町の役職と権限グループを知りましょう。"
     sections:
-      - "町長と副町長\nどちらもメンバー、グループ、個々の町領地を管理できます。町の解散は町長またはサーバー管理者のみで、副町長は行えません。通常の権限グループに入れても管理役職にはなりません。"
-      - "メンバーの権限\n「町 → グループ → 対象グループ → メンバー」で既存メンバーを割り当てます。所属するカスタムグループが操作権限を決め、未所属のメンバーは標準町メンバーグループを使います。作成入力例：builders 建築班。"
-      - "領地管理者と寄贈者\n寄贈者や任命された領地管理者は、その領地の一部設定を管理できます。それだけでは町領地の削除・サイズ変更・町の解散はできません。個別領地の削除は町長、副町長、サーバー管理者が行えます。"
-      - "権限をテストするとき\nサーバー管理者や領地管理者には操作制限の免除があるため、通常メンバーのアカウントで確認してください。爆発などの環境設定はプレイヤーの操作権限とは別です。"
+      - "権限とは\n権限は「その操作をしてよいか」を決める設定です。ブロックの設置、破壊、チェストの利用などにそれぞれ設定があります。\n建築できても、チェストを開けるとは限りません。"
+      - "町長・副町長・メンバー\n町長と副町長はメンバー、グループ、一つの町領地を管理できます。一般メンバーの操作は所属グループの権限で決まります。\n町全体の解散は町長かサーバー管理者のみで、副町長にはできません。"
+      - "グループとは\nグループは複数のメンバーで同じ権限を使うためのものです。例えば建築係を建築グループに入れて、まとめて建築を許可します。\n未割り当ての人は町メンバー（既定グループ）を使います。グループに入っても副町長にはなりません。"
+      - "メンバーを割り当てる\nタウン → メンバー権限管理で作成し、そのメンバーページから既存の町メンバーを選びます。\n入力例：builders 建築係\n最初はコマンド用の名前、後ろは画面に表示する名前です。"
+      - "作成者と寄贈者\n町のために直接作った領地には作成者、個人領地を町に渡した場合は元の所有者が寄贈者として表示されます。\nその人と任命された領地管理者は一部の設定を管理できますが、その立場だけでは町領地の削除や拡縮はできません。"
   templates:
-    title: "テンプレートと上書き"
-    summary: "町全体の既定値と、一つの領地だけの例外。"
+    title: "継承のしくみ"
+    summary: "町共通の設定から、一つの領地の例外へ。"
     sections:
-      - "町全体の既定値を編集\nテンプレートモードでは「町 → グループ → 町メンバーテンプレート」または「カスタムグループ → テンプレート」を開きます。そのグループの該当権限を継承する領地だけに変更が反映されます。訪問者権限や環境設定は自動変更されません。"
-      - "領地での三つの状態\n継承は町テンプレートに従います。ローカル許可とローカル拒否は、この領地だけの例外です。GUI は左クリックでローカル値を切り替え、右クリックで継承に戻します。TUI では対応する状態ボタンを使います。"
-      - "例：建築班が倉庫を編集できないようにする\n建築班の町テンプレートでブロック設置を許可します。倉庫領地の同じグループでは設置をローカル拒否にします。他の継承中の領地では設置可能です。継承に戻すと倉庫もテンプレートに従います。"
-      - "既存の町の一度限りの移行\n旧モードの町は移行まで領地別設定を維持します。町長は町ホームの権限モード移行から、町管理グループの領地権限を継承にリセットできます。元に戻せません。移行後に町テンプレートを設定・確認してください。"
+      - "町全体の既定権限とは\n各領地が共通に使う権限テンプレートです。メンバーの各グループにそれぞれあります。\n建築グループのテンプレートで設置を許可すれば、複数の領地で一つずつ設定する手間を省けます。"
+      - "継承とは\nこの領地も町のテンプレートに従う、という意味です。\nテンプレートが設置を許可すればここも許可、禁止に変わればここも禁止です。\n継承そのものは許可でも禁止でもなく、現在のテンプレートの値に従います。"
+      - "例：住宅地と農場\nアキは建築グループに所属しています。住宅地と農場の設置権限は継承にしておきます。\nグループのテンプレートでブロック設置を許可すると、アキは両方で建築できます。"
+      - "例：倉庫だけ禁止\n新しい倉庫では建物を変えてほしくないとします。\n倉庫の建築グループで、設置をローカル禁止にします。\nこれが上書きです。この領地・このグループ・この権限だけ別の設定を使います。"
+      - "あとでテンプレートを変えたら\n建築グループの設置を禁止にし、再び許可にします。\n住宅地と農場は両方の変更に従いますが、倉庫は禁止のままです。\n倉庫でも継承にしてあるほかの権限は、引き続きテンプレートに従います。"
+      - "継承に戻す\n倉庫でも建築してよくなったら、設置権限を継承に戻します。\n現在のテンプレートの値が使われ、その後の変更にも従うようになります。"
+      - "設定する場所\n町全体：タウン → メンバー権限管理 → 町メンバー（既定グループ）、または独自グループ → 町全体の既定権限。\n一つの領地：対応するグループ権限を開きます。箱の画面では左クリックで個別の許可／禁止、右クリックで継承に戻します。チャットでは状態ボタンを使います。\n訪問者や爆発などの環境設定は別です。"
+      - "古い町の場合\nホームに権限モードのアップグレードがあれば、町長が一度だけ実行します。\n以前の領地グループ設定が消え、すべて継承になります。元に戻せないので先にメンバーと相談し、確認後に各テンプレートを設定しましょう。"
   trust:
-    title: "訪問者と信頼"
-    summary: "町に加入していない友人に操作を許可します。"
+    title: "町の外の友達を招く"
+    summary: "町に参加せず、必要な操作を許可できます。"
     sections:
-      - "許可する範囲を選ぶ\n信頼機能は {trust_enabled} です。町の信頼は町全体、領地の信頼は一つの領地に適用されます。プレイヤーを追加し、必要な権限を有効にします。四つのスイッチは個別設定できます。"
-      - "建築と破壊\n建築はブロック設置、種まき、乗り物の生成などを含みます。破壊はブロック破壊、収穫、乗り物の破壊などを含みます。必要なものだけ有効にしてください。"
-      - "操作とアイテム使用\n操作にはドア、ボタン、コンテナ、ホッパーなどが含まれ、チェストを開けるだけではありません。アイテム使用には作成、取引、餌やり、拾得、投棄などが含まれます。単一行動ではなくカテゴリ単位の許可です。"
-      - "無効は強制拒否ではない\n信頼は町外のプレイヤーへの追加許可です。無効なら追加許可しませんが、従来のメンバー・グループ・訪問者権限で許可される場合があります。町メンバーグループの拒否を信頼で上書きはできません。"
-      - "領地の信頼記録が優先\n領地の信頼記録があると、その記録全体を町の信頼の代わりに使用します。項目ごとには合成しません。四項目を無効にしても町の信頼には戻りません。領地側の記録を削除すると町の信頼が再び使われます。"
-      - "例：一つの領地で友人にチェストを開かせる\n「対象領地 → 信頼」で町外の友人を追加し、操作を有効にします。同じカテゴリの他の操作も許可されます。他の訪問者を制限したい場合は訪問者権限も確認してください。"
+      - "信頼を使う場面\n友達が建築の手伝いや材料の受け取りだけに来るときに使います。\n町の信頼は全領地、領地の信頼は一つの場所に適用されます。現在：{trust_enabled}。\n既に町メンバーなら、所属グループで設定します。"
+      - "四つの独立したスイッチ\n建築：設置、植え付け、乗り物の設置など。\n破壊：ブロック破壊、収穫、乗り物の破壊など。\n操作：ドア、ボタン、チェストなど。\nアイテム使用：作業、取引、餌やり、拾う、捨てるなど。\n例えば倉庫の信頼で操作だけを有効にすると、チェストのほかドアやボタンも使えます。"
+      - "無効なのに操作できるのは？\n無効は信頼による追加の許可がない、という意味です。\n訪問者が元からドアを使えるなら、友達の操作信頼を無効にしても使えます。通行人全体を制限するには訪問者権限を確認します。"
+      - "町と領地の両方で設定したら\n領地の信頼がある場所では、その設定だけを使い、町の信頼は加わりません。\n町で建築を許可しても、倉庫で操作のみなら、倉庫の建築は信頼から許可されません。\n町の信頼に戻すには領地の信頼を削除します。四つを無効にするだけでは戻りません。"
   land:
-    title: "領地管理と料金"
-    summary: "作成、所属、返却、削除、解散の違い。"
+    title: "町の領地を管理"
+    summary: "範囲の選択、寄贈、料金と削除。"
     sections:
-      - "所属させる・返却する\n「町 → 領地を所属させる」または /town attach <領地名> で個人領地を寄贈します。脱退しても自動返却されません。町長は条件を満たす設立領地以外の寄贈領地を /town release <領地名> で返却し、案内に従い確認できます。OP は他の設立領地以外の領地も仲裁できます。"
-      - "一つの領地を削除\n町長、副町長、サーバー管理者は管理画面の領地削除から再確認して削除できます。選択した町領地とその権限記録だけが削除され、子領地と町は残ります。返金はなく、ブロックや物品は消えません。"
-      - "町全体を解散\n町長またはサーバー管理者だけが実行でき、既存の確認手順が必要です。現在のサーバー設定：{disband_policy} 実行前にプレビューを確認してください。"
-      - "サイズと高さ\nX、Z の各辺は最大 {max_xz}、X/Y/Z の最小サイズは {min_x}/{min_height}/{min_z} です。設定 Y 範囲は {min_y} から {max_y}、最大高さは {max_height} で、ワールド高度制限も適用されます。既存の高すぎる領地は Y 範囲を変えないサイズ変更で元の高さを維持できます。"
-      - "面積による段階料金\n町領地の段階料金は {pricing_enabled} です。高さではなく X × Z 面積で計算します。最初の 250000 平方ブロックは無料。続く 1000000／2250000／4000000 までの各帯域の単価は {price_1}／{price_2}／{price_3} です。帯域別に合算し、全体を最高単価で再計算しません。"
-      - "拡大・縮小と返金\n遠隔作成と有料拡張は町銀行から支払います。縮小の返金は記録された対象支払額のみで、返金率は {refund_rate} です。過去の未払い面積は返金対象外です。管理者免除なども含め、作成・変更時の見積額を確認してください。"
+      - "新しい領地を選択\n町長か副町長が {tool} を持ち、同じワールド内の対角となる二つのブロックを左・右クリックします。\nタウン → 領地作成で範囲と見積もりを確認して作成します。新規作成は {remote_enabled} です。\n既存領地と重ねられず、作成できないワールドもあります。"
+      - "大きさと高さ\n水平の各辺は最大 {max_xz}、最小の長さと幅は {min_x} と {min_z}、最小高さは {min_height} です。\nY 範囲は {min_y}～{max_y}、最大高さは {max_height}。ワールドの高さ制限も適用されます。\n古い高い領地は、Y 範囲を変えずに長さや幅を調整できます。"
+      - "面積料金と例\n段階料金は {pricing_enabled} で、長さ × 幅だけを数えます。250000 平方ブロックまで無料。その先 1000000、2250000、4000000 までの各部分の単価は {price_1}、{price_2}、{price_3} です。\n1000 × 1000 なら無料分を超える 750000 に {price_1} を掛けます。町の金庫から払うので見積もりを確認しましょう。"
+      - "縮小と返金\n支払い記録のある面積だけが {refund_rate} の返金対象です。無料だった部分は返金されません。\n高さだけを変えても面積料金や面積の返金は変わりません。"
+      - "個人領地を寄贈・返却\nタウン → 寄贈、または /town attach <領地名> を使うと町領地となり、元の所有者が寄贈者として表示されます。脱退しても自動では戻りません。\n町長は /town release <領地名> で対象の寄贈領地を返却し、確認できます。創設領地はこの方法で返せません。"
+      - "一つの領地の削除と解散\n町長か副町長は管理画面で一つの領地を確認して削除できます。返金はなく、建物・チェストの中身・子領地・町は残ります。\n全体の解散は町長かサーバー管理者のみ。現在の結果：{disband_policy}\n影響を受ける領地を確認してください。"
   levels:
-    title: "レベルと共同課題"
-    summary: "町全体でアイテムを提出し、領地上限を増やします。"
+    title: "一緒にレベルアップ"
+    summary: "材料を持ち寄り、領地枠を増やします。"
     sections:
-      - "レベルと領地上限\nレベル 1 の全体上限は {base_limit}、ワールド別上限は {base_world_limit} です。上限がある場合、レベルごとに {per_level} 枠増えます。設立・寄贈領地も含みます。上限を下げても既存領地は消えず、新規作成と所属追加で上限を確認します。"
-      - "共同で提出\n「町 → 町レベル」で現在の課題を確認します。メンバーはインベントリから対象アイテムを提出し、アイテムは消費されます。進捗はサーバーをまたいで町全体で共有し、必要量に達すると昇格します。"
-      - "開放中のレベル\nメンバー課題はレベル {open_level} まで開放され、システム最大は {max_level} です。途中の課題が未設定なら進行できません。OP はシステム上限内でレベルを設定できます。"
-      - "現在設定されているアイテム課題\n{tasks}"
+      - "レベルを上げると？\nレベル 1 の領地上限は全体 {base_limit}、ワールドごと {base_world_limit}。上限がある場合、1 レベルごとに {per_level} 枠増えます。\n創設・寄贈領地も数えます。既存の領地は上限超過で削除されません。"
+      - "共同任務に参加\nタウン → タウンレベルで次に必要な材料を確認し、持ち物から提出します。\n提出物は消費され、進捗は町全体で共有されます。接続された別サーバーからも追加できます。揃うとレベルが上がります。"
+      - "例：分担して完成\nネザライトインゴット 9 個の任務なら、あなたが 4 個、友達が 5 個を出せば完成です。\n一人で一度に揃える必要はありません。提出前に任務画面で材料と残りの数を確認しましょう。"
+      - "現在の開放レベル\n共同任務はレベル {open_level} までです。その先の任務が開くまで引き続き町で遊べます。\n現在の材料：\n{tasks}"
   faq:
-    title: "よくある質問"
-    summary: "操作できない・変更が反映されない場合の確認事項。"
+    title: "困ったときは"
+    summary: "建築できない、設定が変わらない、別サーバー。"
     sections:
-      - "メンバーが建築できない\n対象領地、町グループ、そのテンプレート、領地の上書きを確認します。町外のプレイヤーなら領地・町の信頼と訪問者権限を確認します。グループ、役職、環境設定は異なる役割を持ちます。"
-      - "テンプレート変更が反映されない\n町がテンプレートモードか、そのプレイヤーのグループを編集したか、対象権限が継承かを確認します。ローカル許可・拒否はテンプレート変更後も維持されます。"
-      - "別サーバーで利用する\n領地一覧のサーバーとワールド名を確認してください。招待はサーバー間で利用でき、転送にはサーバー側の接続設定が必要です。他サーバーの保護設定は更新待ちになる場合があります。作成と範囲変更は対象のローカルワールドで行います。"
-      - "他の保護も確認する\n他の保護プラグインやワールド規則が操作を止める場合もあります。町の管理者に該当する権限設定の確認を依頼してください。"
+      - "ブロックを置けない\n今いる領地と所属グループを確認し、町長にグループの設置テンプレートや領地だけの禁止設定を見てもらいましょう。\n町メンバーでなければ、訪問者権限や適切な信頼を相談します。"
+      - "テンプレートが反映されない\n対象プレイヤーのグループを編集したか、領地の権限が継承かを確認します。\nローカル許可／禁止なら、継承に戻すか判断しましょう。古い町は町長によるモードのアップグレードが先です。"
+      - "町長だけ使える\n町長、領地管理者、サーバー管理者は直接の管理権限を持つことがあり、一般メンバーと同じ結果にはなりません。\n建築グループのチェスト権限を試すなら、そのグループの一般メンバーに試してもらいましょう。"
+      - "別サーバーで遊ぶ\n領地のサーバー名とワールド名を確認します。招待は接続されたサーバー間で使え、対応していれば領地一覧からサーバー間テレポートもできます。\n作成・範囲変更は対象ワールドで行います。別サーバーの権限更新には時間がかかることがあります。解決しなければ場所とメッセージを町長に伝えましょう。"
 dominion-text:
   loading-config: 設定を読み込んでいます...
   plugin-enabled: プラグインが有効になりました！
@@ -207,7 +258,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: ゲストフラグ {0} を {1} に設定しました。
   set-guest-flag-failed: 'ゲストフラグ {0} を {1} に設定するのに失敗しました。理由: {2}'
 member-provider-handler-text:
-  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
+  use-trust-for-town-outposts: "町のメンバーには「メンバー権限管理」、町外の友人には信頼設定を使ってください。"
   set-flag-success: '{1} の {2} にフラグ {0} を正常に設定しました。'
   owner-only: オーナーのみが管理メンバーを管理できます。
   group-already: このメンバーはグループ {0} に属しているため、個別に管理することはできません。
@@ -219,7 +270,7 @@ member-provider-handler-text:
   remove-member-success: '{0} を {1} から正常に削除しました。'
   remove-member-failed: 'メンバーの削除に失敗しました。理由: {0}'
 group-provider-handler-text:
-  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-outpost-no-custom-groups: "町の領地の権限グループは町で管理します。「町 → メンバー権限管理」で作成・割り当てしてください。"
   town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: オーナーのみが管理グループを管理できます。
   set-flag-success: グループ {0} のフラグ {1} を {2} に正常に設定しました。
@@ -234,7 +285,7 @@ group-provider-handler-text:
   add-member-failed: 'グループへのメンバー追加に失敗しました。理由: {0}'
   remove-member-success: メンバー {0} をグループ {1} から正常に削除しました。
   remove-member-failed: 'グループからメンバーを削除に失敗しました。理由: {0}'
-  town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
+  town-group-members-implicit: "独自グループに属さないメンバーは既定グループを使います。「町 → メンバー権限管理」で割り当てを変更してください。"
 select-point-events-handler-text:
   selection-tool-hint: '選択ツール: {0}。左クリックで1点目、右クリックで2点目を選択します。'
   first-point: 最初のポイントが {0}, {1}, {2} に選択されました。
@@ -781,7 +832,8 @@ town-manager-text:
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
   merge-member-trusted: '{0} exceeded max-memberships; converted to outpost trust on {1}.'
-  town-group-display-name: Town Members
+  town-group-display-name: "町メンバー（既定グループ）"
+  template-flag-updated: '{0} の町全体の既定権限 {1} を {2} に設定しました。'
 town-level-manager-text:
   member-only: '{0} のメンバーだけがレベル任務にアイテムを提出できます。'
   progression-closed: タウン {0} は現在レベル {1} です。メンバーによる昇格はレベル {2} まで開放されています。
@@ -802,47 +854,7 @@ town-command-text:
   dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: '&b/town help [章] [ページ] &7- ゲーム内の町の手引きを読む
-
-    &b/town create <name> &7- create a town (existing land stays personal; landless founders receive a free founding outpost)
-
-    &b/town invite <player> &7- invite a player (mayor/assistant)
-
-    &b/town join <town> [confirm] &7- join an invited town
-
-    &b/town rename <new name> &7- rename your town (mayor only)
-
-    &b/town leave &7- leave your town (land stays with the town)
-
-    &b/town kick <player> &7- kick a resident (mayor/assistant)
-
-    &b/town transfer <player> &7- transfer the mayor role
-
-    &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
-
-    &b/town disband [confirm] &7- disband the town (dissolves outposts)
-
-    &b/town deposit <amount> &7- deposit into the town bank
-
-    &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
-
-    &b/town outpost create <name> &7- create a remote outpost (selected points)
-
-    &b/town admin <outpost> [player] &7- set/clear the outpost admin
-
-    &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
-
-    &b/town level [submit] &7- 共同レベル任務の表示またはアイテム提出
-
-    &b/town level set <town> <level> &7- set town level (OP only)
-
-    &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
-
-    &b/town untrust <player> [town|outpost <name>]
-
-    &b/town info [town] &7- town information
-
-    &b/town list &7- list towns'
+  usage: "&b/town help [章] [ページ] &7- ゲーム内の町の手引きを読む\n&b/town create <name> &7- create a town (existing land stays personal; landless founders receive a founding outpost; see the creation quote)\n&b/town invite <player> &7- invite a player (mayor/assistant)\n&b/town join <town> [confirm] &7- join an invited town\n&b/town rename <new name> &7- rename your town (mayor only)\n&b/town leave &7- leave your town (land stays with the town)\n&b/town kick <player> &7- kick a resident (mayor/assistant)\n&b/town transfer <player> &7- transfer the mayor role\n&b/town promote|demote <player> &7- appoint assistant / set member role (mayor only)\n&b/town disband [confirm] &7- disband the town (dissolves outposts)\n&b/town deposit <amount> &7- deposit into the town bank\n&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n&b/town outpost create <name> &7- create a remote outpost (selected points)\n&b/town admin <outpost> [player] &7- set/clear the outpost admin\n&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n&b/town level [submit] &7- 共同レベル任務の表示またはアイテム提出\n&b/town level set <town> <level> &7- set town level (OP only)\n&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n&b/town untrust <player> [town|outpost <name>]\n&b/town info [town] &7- town information\n&b/town list &7- list towns"
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).

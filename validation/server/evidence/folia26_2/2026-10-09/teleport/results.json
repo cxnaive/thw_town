@@ -1,0 +1,480 @@
+{
+  "results": [
+    {
+      "name": "teleport-point event can read old default coordinates from another dimension",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 1000.5,
+        "y": 150,
+        "z": 1000.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 设置领地 TpAudit 的传送点失败，原因：设置的传送点不在领地 TpAudit 内"
+      ]
+    },
+    {
+      "name": "overworld -> overworld (custom)",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 100,
+        "y": 80,
+        "z": 100,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "the_nether -> overworld (custom)",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 100,
+        "y": 80,
+        "z": 100,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "the_end -> overworld (custom)",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 100,
+        "y": 80,
+        "z": 100,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "the_nether -> overworld (default)",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "overworld -> the_nether (custom)",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_nether",
+        "x": 100,
+        "y": 80,
+        "z": 100,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "overworld -> the_nether (default)",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_nether",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "overworld -> the_end (custom)",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 100,
+        "y": 80,
+        "z": 100,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "overworld -> the_end (default)",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "town GUI right-click crosses dimension and closes GUI",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "legacy GUI right-click crosses dimension",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "town TUI teleport button crosses dimension",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_nether",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "__/ Dominion主菜单 \\__",
+        "                                                               ",
+        "- ������->菜单->[ 切换箱子菜单 ������ ]",
+        "                                                               ",
+        "⌗ [创建小镇] - 创建小镇。现有个人领地保持不变，可之后使用 /town attach 选择贡献；无领地时会获得建镇属地。",
+        "⌗ [我的小镇] - 打开你的小镇（或创建一个）。",
+        "⌗ [小镇手册] - 从加入小镇开始，一步步了解建造、权限和属地。",
+        "⌗ [小镇列表] - 列出所有小镇。",
+        "⌗ [领地列表] - 列出你的所有领地（含可管理领地）。 - （个人领地）",
+        "⌗ [个人权限预设（旧领地）] - 保存旧领地成员的权限预设，手动套用时生效，不会同步修改小镇权限。",
+        "⌗ [文档链接] - 在浏览器中打开插件文档页面。",
+        "⌗ ",
+        "⌗ 以下内容仅管理员可见",
+        "⌗ [创建领地] - 在你的周围创建一个新的领地。",
+        "                                                               ",
+        "▸ [1/2][◀][▶]",
+        "                                                               ",
+        "     ",
+        "__/ 管理小镇属地 \\__",
+        "                                                               ",
+        "- ������->[返回原页面]->[手册目录]->[打开小镇首页]->[打开属地列表]",
+        "                                                               ",
+        "⌗ 怎样圈选新属地",
+        "⌗ 镇长或副镇长手持 ARROW，左键点一个方块、右键点另一个方块，选出同",
+        "⌗ 一世界里的两个对角。",
+        "⌗ 然后打开“小镇 → 创建小镇属地”，查看范围和费用，再确认。新建属",
+        "⌗ 地功能：已开启。",
+        "                                                               ",
+        "▸ 第 1/7 节 - [下一节]",
+        "                                                               ",
+        "     ",
+        "__/ TpAudit 的小镇属地 \\__",
+        "                                                               ",
+        "- ������->[小镇]->属地列表->[搜索]->[本页帮助]",
+        "                                                               ",
+        "⌗ [TpAudit] -  - world (建镇属地, 服务器 server (#1)) -  创建者：TpQA - [传送]",
+        "⌗ [the_nether] -  - world_nether (普通领地, 服务器 server (#1)) -  创建者：TpQA - [传送]",
+        "⌗ [the_end] -  - world_the_end (普通领地, 服务器 server (#1)) -  创建者：TpQA - [传送]",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "                                                               ",
+        "▸ [1/1][◀][▶]",
+        "                                                               ",
+        "     ",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "legacy TUI teleport button crosses dimension",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "__/ 你的领地列表 \\__",
+        "                                                               ",
+        "- ������->[菜单]->领地列表->[搜索]",
+        "                                                               ",
+        "⌗ [管理领地] - [TP] - TpAudit -  [TpAudit] -  创建者：TpQA",
+        "⌗ [管理领地] - [TP] - the_nether -  [TpAudit] -  创建者：TpQA",
+        "⌗ [管理领地] - [TP] - the_end -  [TpAudit] -  创建者：TpQA",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "⌗ ",
+        "                                                               ",
+        "▸ [1/1][◀][▶]",
+        "                                                               ",
+        "     ",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "missing world reports failure without charging cooldown",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[Server: Made TpQA no longer a server operator]",
+        "[领地] 将在 5 秒后传送 请勿移动...",
+        "[领地] 目标世界未加载，请联系管理员。",
+        "[领地] 将在 5 秒后传送 请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "successful arrival charges normal-player cooldown",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[领地] 请等待 10 秒后再尝试传送。"
+      ]
+    },
+    {
+      "name": "duplicate click is coalesced and movement cancels without cooldown",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_nether",
+        "x": 99.5,
+        "y": 80,
+        "z": 99.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[领地] 将在 5 秒后传送 请勿移动...",
+        "[领地] 已有传送正在处理，请稍候。",
+        "[领地] 因移动、切换世界或其他传送，已取消本次传送。",
+        "[领地] 将在 5 秒后传送 请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "empty high claim uses checked air fallback without granting flight",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 10013.5,
+        "y": 215,
+        "z": 10013.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Made TpQA a server operator]",
+        "Your game mode has been updated to Survival Mode",
+        "[Server: Set TpQA's game mode to Survival Mode]",
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成，目标为空中落点，请注意下落。",
+        "Your game mode has been updated to Creative Mode",
+        "[Server: Set TpQA's game mode to Creative Mode]"
+      ]
+    },
+    {
+      "name": "automatic search takes outdoor floor and excludes the cave underneath",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 408.5,
+        "y": 80,
+        "z": 408.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "explicit underground point is respected instead of the roof",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 408,
+        "y": 60,
+        "z": 408,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "blocked explicit point adjusts nearby without jumping to roof or deep cave",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 407.5,
+        "y": 60,
+        "z": 407.5,
+        "yaw": 1.5707963267948966,
+        "pitch": -0.43633231299858233
+      },
+      "messages": [
+        "[Server: Changed the block at 408, 60, 408]",
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "underground-only auto target cannot bypass sky filter through air fallback",
+      "status": "PASS",
+      "position": {
+        "dimension": "the_end",
+        "x": 1000.5,
+        "y": 150,
+        "z": 1000.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 未找到可用落点，请联系领地管理员设置传送点。"
+      ]
+    },
+    {
+      "name": "default landing follows the actual half-slab surface",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 504.5,
+        "y": 79.5,
+        "z": 504.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Teleported TpQA to 504.500000, 85.000000, 504.500000]",
+        "[Server: Successfully filled 441 block(s)]",
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    },
+    {
+      "name": "passable grass does not hide the outdoor ground",
+      "status": "PASS",
+      "position": {
+        "dimension": "overworld",
+        "x": 504.5,
+        "y": 80,
+        "z": 504.5,
+        "yaw": 3.141592653589793,
+        "pitch": 0
+      },
+      "messages": [
+        "[Server: Successfully filled 441 block(s)]",
+        "[Server: Successfully filled 441 block(s)]",
+        "[Server: Teleported TpQA to 1000.500000, 150.000000, 1000.500000]",
+        "[领地] 正在准备安全落点，请勿移动...",
+        "[领地] 传送完成。"
+      ]
+    }
+  ],
+  "shutdown": {
+    "code": 0,
+    "signal": null,
+    "forced": false
+  },
+  "issues": []
+}

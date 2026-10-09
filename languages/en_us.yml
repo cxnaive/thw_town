@@ -1,92 +1,146 @@
+player-display-text:
+  ordinary-land: Ordinary dominion
+  founding-land: Founding dominion
+  unknown-land: Dominion
+  town-scope: All town land
+  outpost-scope: This dominion only
+  allow: Allow
+  deny: Deny
+  enabled: Enabled
+  disabled: Disabled
+  chest-menu: Chest menu
+  chat-menu: Chat menu
+  trust-build: Build
+  trust-destroy: Destroy
+  trust-switch: Switches and containers
+  trust-item-use: Item use
+  no-additional-trust: None
+name-search-text:
+  button: "Search"
+  hint: "Enter part of a name. Ignore case; ordered characters and space-separated keywords also work. Example: Oak finds OakTown. Up to 64 characters."
+  description: "Search names in this list. Partial names and ordered characters work; English case is ignored."
+  town-title: "Search towns"
+  land-title: "Search dominions"
+  all-towns: "All towns"
+  own-land: "Your owned and managed dominions"
+  town-land: "Outposts of {0}"
+  admin-land: "All dominions on this server (admin)"
+  summary: "Search: {0} | Results: {1}"
+  empty: "No matching names. Try a shorter keyword."
+  too-long: "Use at most {0} characters."
+  back: "Back to list"
+  change: "Change search"
+  clear: "Clear search"
+  previous: "Previous page"
+  next: "Next page"
+  page: "Page {0}/{1}"
+  teleport: "Teleport"
+  town-details: "Mayor: {0} | Members: {1}"
+  town-owner: "Town: {0}"
+  personal-owner: "Owner: {0}"
+  location: "Server: {0} | World: {1}"
+  town-click: "Left-click: view town"
+  land-click: "Left-click: view / manage; right-click: teleport"
+  remote: "This dominion is on {0}, world {1}. Travel there to manage it; use Teleport to visit."
+  missing: "This result no longer exists. Search again to refresh the list."
+  town-usage: "/town search <keyword> [page] - search all town names"
+  land-usage: "/dom search <keyword> [page] - search your owned and managed dominions"
 town-guide-text:
   title: "Town Handbook"
   button: "HANDBOOK"
   page-help: "PAGE HELP"
-  description: "Learn about town roles, templates, trust and land management."
-  read: "Click to read; hover over each article card for its instructions."
+  description: "Start with joining a town, then learn about building, permissions and land."
+  read: "Click to start. Hover over the paper to read; use the arrows to continue."
   back: "Back"
   contents: "Contents"
-  previous-page: "Previous page"
-  next-page: "Next page"
-  page-info: "Page {0}/{1}"
+  previous-page: "Previous lesson"
+  next-page: "Next lesson"
+  next-chapter: "Next chapter"
+  page-info: "Lesson {0}/{1}"
   open-town: "Open town home"
-  open-groups: "Open town groups"
+  open-groups: "Open member permissions"
   open-outposts: "Open outposts"
   open-trusts: "Open town trusts"
   open-tasks: "Open shared level task"
-  context: "Town: {0} | Permission mode: {1}"
-  no-town: "You can read every chapter without joining a town."
-  template-mode: "Town templates"
-  legacy-mode: "Legacy per-outpost permissions"
+  context: "Town: {0}"
+  no-town: "You can read without joining a town. New here? Start with the first chapter."
   example-town: "OakTown"
+  stick: "Stick"
   enabled: "enabled"
   disabled: "disabled"
   unlimited: "unlimited"
   unknown-topic: "Unknown chapter: {0}. Showing the contents."
   task-line: "Level {0}: {1} x {2}"
-  no-tasks: "No item tasks are configured within the open level range."
-  dissolve-all: "All town outpost claims are deleted. Blocks and chest contents remain, but their claim protection is removed."
-  return-contributed: "Contributed land is returned to its contributor; other town outpost claims are deleted. Blocks and chest contents remain."
+  no-tasks: "There are no available level tasks."
+  dissolve-all: "All town outposts lose their claim protection. Buildings and chest contents remain."
+  return-contributed: "Contributed land returns to its contributor; other town outposts lose protection. Buildings and chest contents remain."
   start:
-    title: "Joining and creating"
-    summary: "Invitations, starter land and the selection tool."
+    title: "Getting started"
+    summary: "Join friends or start a town of your own."
     sections:
-      - "Accept an invitation\nAsk a town manager to invite you. Then enter /town join {town} (replace the example name if needed). Invitations can be accepted on another connected server. Joining does not automatically attach your personal land."
-      - "Create a town\nUse /town create <name>, or the create button in the main menu. Existing personal land stays personal. A landless founder receives a {founding_size} x {founding_size} x {founding_size} starter outpost around their location; its configured wallet cost is {founding_cost}. Follow the creation confirmation prompt."
-      - "Select a remote outpost\nHold {tool}: left-click one block and right-click another to select two corners in the same world. A mayor or assistant can then use Town → Create Outpost. Check the size and town-bank quote before confirming."
-      - "Creation restrictions\nRemote outpost creation is {remote_enabled}. Land cannot overlap other claims. Some worlds may prohibit creation for non-admins. Use /town to return to your town or the town list."
+      - "What is a town?\nA town is a team of players. An outpost is one of its protected areas, such as a neighborhood, farm or warehouse.\nA town can have several outposts; they do not need to touch. Use /town to open the menu."
+      - "Accept an invitation\nAsk a mayor or assistant to invite you, then enter the join command in the invitation.\nExample: /town join {town}\nYou can accept on another connected server. Joining does not give your personal land to the town."
+      - "Create your own town\nChoose Create Town in the main menu, or use /town create <name>.\nIf you have no land, you receive a {founding_size} x {founding_size} x {founding_size} starter outpost at your location for {founding_cost} from your wallet. Existing personal land is not attached automatically."
+      - "What next?\nMembers can ask their mayor for a place to live and suitable permissions. Mayors can start by inviting players and arranging groups.\nRead Managing Town Land to claim more space, or How Inheritance Works to learn about building permissions."
+      - "Find a town or dominion\nClick Search in a town or dominion list and enter part of its name. Example: Oak finds OakTown. English case does not matter.\nUse /town search <keyword> to find towns, or /dom search <keyword> for your owned and managed land. In a town's outpost list, search stays within that town."
   roles:
-    title: "Roles and groups"
-    summary: "Management roles are different from building permissions."
+    title: "Who can do what?"
+    summary: "Learn about town roles and member groups."
     sections:
-      - "Mayor and assistant\nBoth can manage members, groups and individual town outposts. Only the mayor (or a server administrator) can disband the town; assistants cannot. Ordinary permission groups never grant these management roles."
-      - "Member permissions\nAssign members through Town → Groups → select a group → Members. A custom group decides their action permissions; unassigned members use the built-in town-member group. Group creation example: builders Builders."
-      - "Outpost managers\nA contributor or appointed outpost administrator can manage certain settings on that outpost. That status alone does not authorize deleting or resizing town land, or disbanding the town. Mayors, assistants and server admins may delete an individual outpost."
-      - "Testing permissions\nServer admins and land managers may bypass action restrictions. Test with an ordinary member account. Environment settings (such as explosions) are separate from player-action permissions."
+      - "What is a permission?\nA permission decides whether someone can do a particular action. Placing blocks, breaking blocks and opening chests have their own settings.\nBeing allowed to build does not necessarily mean you can open chests."
+      - "Mayor, assistant and member\nMayors and assistants manage members, groups and individual outposts. A regular member's group decides what actions they can perform.\nOnly a mayor or server administrator can disband the whole town. Assistants cannot."
+      - "What is a group?\nA group gives several members the same permissions. For example, put your builders in a Builders group and allow that group to build.\nUnassigned members use Town Members (Default Group). Joining Builders does not make someone an assistant."
+      - "Assign members\nOpen Town → Member Permissions, create a group, then open its Members page and choose existing town members.\nExample group input: builders Builders\nThe first name is used in commands; the second is shown in menus."
+      - "Creator or contributor?\nLand created directly for the town shows its creator. Attached personal land shows its former owner as contributor.\nThey and appointed outpost admins can manage some settings on that land. Those titles alone do not allow deleting or resizing town land."
   templates:
-    title: "Templates and overrides"
-    summary: "Set town defaults, then make exceptions for one outpost."
+    title: "How inheritance works"
+    summary: "Town defaults first, then exceptions for one outpost."
     sections:
-      - "Town-wide defaults\nIn template mode, open Town → Groups → Town Member Template, or a custom group → Template. Changes affect that group's outposts which still inherit the changed permission. They do not automatically change visitor or environment settings."
-      - "Three outpost states\nInheritance follows the town template. Local allow and local deny replace it only on this outpost. In the GUI, left-click toggles the local value; right-click restores inheritance. The TUI provides explicit state buttons."
-      - "Example: protect a warehouse\nAllow placing blocks in the Builders town template. In the warehouse outpost's corresponding group, set placing blocks to local deny. Other inheriting outposts still allow building. Restore inheritance to follow the template again."
-      - "Older towns\nLegacy towns keep separate outpost settings until upgraded. The mayor can use Upgrade Permission Mode on the town home. This is a one-way reset of town-managed outpost group permissions to inheritance. Set and review the town templates afterwards; it cannot be switched back."
+      - "What are town-wide default permissions?\nTown-wide default permissions are a shared template for outposts. Each member group has its own template.\nAllow placing blocks in the Builders template to let builders work on several outposts without setting each one separately."
+      - "What does inherit mean?\nInherit means this outpost follows the town template.\nIf the template allows placing blocks, so does this outpost. Change the template to deny, and the outpost follows.\nInherit itself means neither allow nor deny: check the template's current setting."
+      - "Example: build in two places\nAlex belongs to Builders. The town has a neighborhood and a farm.\nAllow placing blocks in the Builders template and leave both outposts on inherit.\nAlex can now place blocks in both places."
+      - "Example: protect the warehouse\nThe town adds a warehouse where builders should not alter the building.\nIn the warehouse's Builders permissions, set placing blocks to local deny.\nThis is an override: a separate setting for this permission, this group and this outpost only."
+      - "What if the template changes?\nNow turn placing blocks off in the Builders template, then on again.\nThe neighborhood and farm follow each change. The warehouse still denies it.\nOther warehouse permissions left on inherit continue following the template."
+      - "Restore inheritance\nWhen builders can work on the warehouse again, restore inherit for placing blocks there.\nThe warehouse immediately follows the template's current value and will follow future changes too."
+      - "Where to change settings\nFor the whole town: Town → Member Permissions → Town Members (Default Group), or a custom group → Town-wide Default Permissions.\nFor one outpost: open its matching group permissions. In the chest menu, left-click toggles local allow/deny; right-click restores inherit. In chat, use the state buttons.\nVisitor and environment settings are separate."
+      - "Older towns\nIf the town home offers Upgrade Permission Mode, the mayor needs to upgrade once to use templates.\nThis clears the old outpost group settings and resets them to inherit. It cannot be undone. Discuss it with members first, then confirm and set each town template."
   trust:
-    title: "Visitors and trust"
-    summary: "Grant a non-member access without adding them to the town."
+    title: "Helping friends visit"
+    summary: "Give friends access without making them members."
     sections:
-      - "Choose the scope\nTrust is currently {trust_enabled}. Town Trust applies across the town; Outpost Trust applies to one outpost. Add a player, then enable the required categories. The four switches are independent."
-      - "Build and destroy\nBuild includes placing blocks, planting and spawning vehicles. Destroy includes breaking blocks, harvesting and destroying vehicles. Enable only what your friend needs."
-      - "Interact and item use\nInteract includes doors, buttons, containers and hoppers: it is broader than opening a chest. Item use includes crafting, trading, feeding, picking up and dropping items. These are category grants, not single-action switches."
-      - "Off is not a ban\nTrust adds permission for non-members. An off switch gives no extra grant; legacy member/group or visitor permissions may still allow the action. Trust does not override a town member group's denial."
-      - "Local trust takes precedence\nIf an outpost trust record exists, its whole record is used instead of town trust. Turning all four switches off does not restore town trust. Remove the outpost record to fall back to town trust."
-      - "Example: let a visitor open chests\nOpen the target Outpost → Trust, add your friend and enable Interact. This also grants the other interactions in that category. Review visitor permissions too if you need to restrict everyone else."
+      - "When to use trust\nTrust is for friends who want to help or collect supplies without joining your town.\nTown Trust applies across the town; Outpost Trust applies to one place. Trust is currently {trust_enabled}.\nFor town members, use their member group instead."
+      - "The four switches\nEach switch can be changed separately.\nBuild: placing, planting and placing vehicles.\nDestroy: breaking, harvesting and breaking vehicles.\nInteract: doors, buttons, chests and more.\nItem use: crafting, trading, feeding, picking up and dropping items."
+      - "Example: collecting supplies\nOpen Warehouse Outpost → Trust, add your friend and enable Interact.\nThis also allows doors, buttons and other interactions. Leave Build and Destroy off if you do not want to grant extra access to alter the building."
+      - "Why can they act with trust off?\nOff means trust gives no extra permission.\nIf visitors can already open doors, turning off a friend's Interact trust will not stop them. To restrict visitors in general, change the outpost's visitor permissions."
+      - "Trust in both places\nIf a friend has outpost trust, that outpost uses those settings without adding town trust.\nFor example, town trust allows building but warehouse trust allows only Interact. They do not receive building access from trust in the warehouse."
+      - "Use town trust again\nRemove the friend's trust entry on that outpost to use town trust again.\nTurning all four switches off still leaves a separate outpost setting in place."
   land:
-    title: "Managing land"
-    summary: "Creation, attachment, return and deletion have different effects."
+    title: "Managing town land"
+    summary: "Select land, contribute old claims and understand costs."
     sections:
-      - "Attach or return\nUse Town → Attach, or /town attach <land>, to contribute existing personal land. Leaving the town does not take that land back. The mayor may return eligible contributed, non-founding land with /town release <land>; follow its confirmation. OPs can arbitrate other non-founding outposts."
-      - "Delete one outpost\nMayors, assistants and server admins can use Delete Outpost in its management page, then confirm. Only the selected town claim and its permissions are removed. Child claims and the town remain; there is no refund. Blocks and items are not erased."
-      - "Disband a town\nOnly the mayor or a server administrator can do this, through the existing confirmation flow. Current server policy: {disband_policy} Review the preview before confirming."
-      - "Sizes and height\nEach horizontal edge may be at most {max_xz}; minimum X/Y/Z sizes are {min_x}/{min_height}/{min_z}. Configured Y bounds: {min_y} to {max_y}; maximum height: {max_height}. World bounds also apply. Historical excessive height may remain when resizing without changing the Y range."
-      - "Area pricing\nTown outpost tier pricing is {pricing_enabled}. It uses X × Z area, not height. The first 250000 square blocks are free; successive area bands up to 1000000 / 2250000 / 4000000 cost {price_1} / {price_2} / {price_3} per square block. Bands are added, not repriced as a whole."
-      - "Resize and refunds\nRemote creation and paid expansion charge the town bank. Contraction refunds only eligible tracked paid value, at rate {refund_rate}; historical unpaid area is not refunded. The creation/resize quote is authoritative, including any administrator exemption."
+      - "Select a new outpost\nA mayor or assistant holds {tool}, left-clicks one block and right-clicks another to select opposite corners in the same world.\nOpen Town → Create Outpost, review the area and quote, then confirm. New outpost creation is {remote_enabled}."
+      - "Where and how big?\nEach horizontal edge can be at most {max_xz} blocks. Minimum length and width: {min_x} and {min_z}; minimum height: {min_height}.\nY range: {min_y} to {max_y}; maximum height: {max_height}. World height limits also apply.\nClaims cannot overlap. Some worlds may forbid creation."
+      - "Creation and expansion costs\nTier pricing is {pricing_enabled}. It counts length x width, not height.\nThe first 250000 square blocks are free. The bands up to 1000000, 2250000 and 4000000 cost {price_1}, {price_2} and {price_3} coins per square block.\nNew outposts and expansion use the town bank. Review the quote before confirming."
+      - "Example: one square kilometer\n500 x 500 blocks is 250000 square blocks; 1000 x 1000 is one square kilometer.\nWith tier pricing enabled, the latter has 750000 square blocks above the free allowance, charged at {price_1} each.\nExpanding further does not reprice the entire claim at the higher rate."
+      - "Shrinking and refunds\nOnly recorded paid area can receive a {refund_rate} refund. Free area has nothing to refund.\nChanging height alone does not change the area price or refund. Old tall claims can keep their existing Y range while resizing length and width."
+      - "Contribute personal land\nChoose Town → Attach, or /town attach <land>. The claim becomes town land and its former owner is shown as contributor.\nLeaving the town does not take it back. A mayor can use /town release <land> for eligible contributed land and follow the confirmation. Founding land cannot be returned this way."
+      - "Delete land or disband?\nA mayor or assistant can delete one outpost from its management page after confirmation. No refund; buildings, chest contents, child claims and the town remain.\nOnly a mayor or server administrator can disband the town. Current result: {disband_policy}\nRead which claims are affected before confirming."
   levels:
-    title: "Levels and shared tasks"
-    summary: "Contribute together and unlock additional outposts."
+    title: "Level up together"
+    summary: "Share materials and unlock more outpost slots."
     sections:
-      - "Outpost limits\nLevel 1 allows {base_limit} total outposts and {base_world_limit} per world, with {per_level} additional slots per level where a limit exists. Founding and contributed land count too. Existing land is retained if a limit is reduced; new creation and attachment check the limit."
-      - "Shared contributions\nOpen Town → Town Level to see the current shared task. Members submit matching items from their inventory; contributions are consumed and accumulate for the entire town, including across servers. Completing the requirement advances the level."
-      - "Open levels\nMember progression is open through level {open_level}; the system maximum is {max_level}. An absent intermediate task blocks progression. OPs can set a level within the system maximum."
-      - "Configured item tasks\n{tasks}"
+      - "Why level up?\nHigher levels allow more outposts. Level 1 allows {base_limit} total and {base_world_limit} per world; each level adds {per_level} slots where a limit exists.\nFounding and contributed land count too. Existing outposts are not deleted for exceeding a limit."
+      - "Join a shared task\nOpen Town → Town Level to see the next requirement. Put the materials in your inventory and click Submit.\nSubmitted items are consumed. Progress belongs to the whole town, including across connected servers. Completing the task levels up the town."
+      - "Example: share the work\nSuppose a task needs 9 netherite ingots. You submit 4 and a friend submits 5 to complete it together.\nOne player does not need to provide everything at once. Check the task page for the required material and remaining amount."
+      - "Which levels are open?\nShared tasks currently reach level {open_level}. Afterwards, keep playing while you wait for more tasks.\nCurrent materials:\n{tasks}"
   faq:
-    title: "Troubleshooting"
-    summary: "What to check when settings seem ineffective."
+    title: "When something goes wrong"
+    summary: "Building problems, unchanged templates and other servers."
     sections:
-      - "A member cannot build\nCheck the affected outpost, their town group, its template and any local override. For non-members, check outpost/town trust and visitor permissions instead. Group permissions, management roles and environment settings serve different purposes."
-      - "A template change did nothing\nCheck that the town is in template mode, that you edited the player's group, and that this outpost inherits the flag. Local allow/deny is intentionally retained after template edits."
-      - "Working across servers\nCheck the server and world labels on outpost entries. Invitations can cross servers; remote teleportation requires the server's cross-server connection to be configured. Protection changes on another server may take time to refresh. Creation and resizing require the relevant local world."
-      - "Other restrictions\nAnother protection plugin or a world rule can also block an action. This handbook explains Dominion's rules; it does not diagnose the effective permission of a particular player. Ask a town manager to review the relevant settings."
+      - "Why can't I place blocks?\nCheck which outpost you are in and ask the mayor to check your group.\nFor templates, check placing blocks in your group template and any separate denial on this outpost.\nIf you are not a member, ask about visitor permissions or suitable trust."
+      - "Why did the template change nothing?\nCheck that you edited the player's group template and that the outpost permission says Inherit.\nLocal allow or deny stays separate until you restore inheritance. Older towns need their mayor to upgrade permission mode first."
+      - "The mayor can, but members cannot\nMayors, outpost managers and server administrators can have direct management access. Their actions do not show what regular members can do.\nTo test whether Builders can open chests, ask a regular member of Builders to try."
+      - "Playing on another server\nRead the server and world labels on the outpost. Invitations work across connected servers; use outpost teleport if the server supports cross-server travel.\nCreating or resizing requires the relevant world. Permission changes on other servers may take time. If an action still fails, tell your mayor the location and message."
 dominion-text:
   loading-config: Loading Configurations...
   plugin-enabled: Plugin Enabled!
@@ -207,7 +261,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: Set guest flag {0} to {1} success.
   set-guest-flag-failed: 'Set guest flag {0} to {1} failed, reason: {2}'
 member-provider-handler-text:
-  use-trust-for-town-outposts: This dominion belongs to a town; per-player grants are managed with /town trust instead of members.
+  use-trust-for-town-outposts: "For town members, use Town → Member Permissions. For visitors, use Trust."
   set-flag-success: Successfully set flag {0} for {1} in {2}.
   owner-only: Only owner can manage admin member.
   group-already: This member belong to group {0} so you can't manage it separately.
@@ -219,7 +273,7 @@ member-provider-handler-text:
   remove-member-success: Successfully removed {0} from {1}.
   remove-member-failed: 'Failed to remove member, reason: {0}'
 group-provider-handler-text:
-  town-outpost-no-custom-groups: Custom groups have no effect on town outposts; use the @town group or /town trust instead.
+  town-outpost-no-custom-groups: "Town land uses shared member permission groups. Open Town → Member Permissions to create and assign groups."
   town-group-reserved: The @town group is managed by the town system and cannot be deleted or renamed.
   owner-only: Only the owner can manage admin group.
   set-flag-success: Set group {0} flag {1} to {2} successfully.
@@ -234,7 +288,7 @@ group-provider-handler-text:
   add-member-failed: 'Failed to add member to group, reason: {0}'
   remove-member-success: Member {0} removed from group {1} successfully.
   remove-member-failed: 'Failed to remove member from group, reason: {0}'
-  town-group-members-implicit: Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.
+  town-group-members-implicit: "Members without a custom group use the default group. Open Town → Member Permissions to assign groups."
 select-point-events-handler-text:
   selection-tool-hint: 'Selection tool: {0}. Left-click the first block and right-click the second block.'
   first-point: First point selected at {0}, {1}, {2}.
@@ -781,12 +835,12 @@ town-manager-text:
   outpost-admin-cleared: Outpost admin of {0} cleared.
   outpost-admin-not-member: Outpost admin must be a member of town {0}.
   merge-member-trusted: Your membership of {1} was converted to a trust grant for that outpost (the land was attached to a town).
-  town-group-display-name: Town Members
+  town-group-display-name: "Town Members (Default Group)"
   template-mode-required: Town {0} has not upgraded to town template permission mode.
   template-mode-already-enabled: Town {0} already uses town template permission mode.
   template-mode-mayor-only: Only the mayor of {0} can perform this irreversible upgrade.
   template-mode-upgrade-success: Town {0} upgraded to template permission mode. {1} outpost(s) now inherit town templates. Please review the templates now.
-  template-flag-updated: Set town template {0} flag {1} to {2}.
+  template-flag-updated: Set {0} town-wide default permission {1} to {2}.
   outpost-override-cleared: Flag {0} on group {1} now inherits the town template.
   release-admin-only: Only an OP may use administrator town arbitration.
   release-mayor-contributed-only: Only the mayor may return contributed outposts of their own town; town-created outposts cannot be returned.
@@ -810,49 +864,7 @@ town-command-text:
   dominion-not-exist: Dominion {0} does not exist.
   disband-confirm-contributors: 'Contributed land of these players will be dissolved: {0}.'
   only-player: This command can only be executed by a player.
-  usage: '&b/town help [chapter] [page] &7- read the in-game handbook
-
-    &b/town create <name> &7- create a town (existing land stays personal; landless founders receive a free founding outpost)
-
-    &b/town invite <player> &7- invite a player (mayor/assistant)
-
-    &b/town join <town> [confirm] &7- join an invited town
-
-    &b/town rename <new name> &7- rename your town (mayor only)
-
-    &b/town leave &7- leave your town (land stays with the town)
-
-    &b/town kick <player> &7- kick a resident (mayor/assistant)
-
-    &b/town transfer <player> &7- transfer the mayor role
-
-    &b/town promote|demote <player> &7- set assistant/resident role (mayor/assistant)
-
-    &b/town disband [confirm] &7- disband the town (dissolves outposts)
-
-    &b/town deposit <amount> &7- deposit into the town bank
-
-    &b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)
-
-    &b/town outpost create <name> &7- create a remote outpost (selected points)
-
-    &b/town admin <outpost> [player] &7- set/clear the outpost admin
-
-    &b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)
-
-    &b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)
-
-    &b/town level [submit] &7- view the shared level task or submit inventory items
-
-    &b/town level set <town> <level> &7- set town level (OP only)
-
-    &b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>
-
-    &b/town untrust <player> [town|outpost <name>]
-
-    &b/town info [town] &7- town information
-
-    &b/town list &7- list towns'
+  usage: "&b/town help [chapter] [page] &7- read the in-game handbook\n&b/town create <name> &7- create a town (existing land stays personal; landless founders receive a founding outpost; see the creation quote)\n&b/town invite <player> &7- invite a player (mayor/assistant)\n&b/town join <town> [confirm] &7- join an invited town\n&b/town rename <new name> &7- rename your town (mayor only)\n&b/town leave &7- leave your town (land stays with the town)\n&b/town kick <player> &7- kick a resident (mayor/assistant)\n&b/town transfer <player> &7- transfer the mayor role\n&b/town promote|demote <player> &7- appoint assistant / set member role (mayor only)\n&b/town disband [confirm] &7- disband the town (dissolves outposts)\n&b/town deposit <amount> &7- deposit into the town bank\n&b/town withdraw <amount> &7- withdraw from the town bank (mayor/assistant)\n&b/town outpost create <name> &7- create a remote outpost (selected points)\n&b/town admin <outpost> [player] &7- set/clear the outpost admin\n&b/town upgrade [confirm] &7- one-way upgrade to town permission templates (mayor only)\n&b/town release <outpost> [confirm] &7- mayor returns contributed land (OP arbitration)\n&b/town level [submit] &7- view the shared level task or submit inventory items\n&b/town level set <town> <level> &7- set town level (OP only)\n&b/town trust <player> <town|outpost <name>> <build> <destroy> <switch> <item_use>\n&b/town untrust <player> [town|outpost <name>]\n&b/town info [town] &7- town information\n&b/town list &7- list towns"
   unknown-sub-command: 'Unknown town command: {0}'
   no-invite: You need an invite from the mayor or an assistant of {0} to join.
   invite-sent: Invited {0} to join {1} (valid for 5 minutes).

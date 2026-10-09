@@ -29,7 +29,7 @@ public abstract class ListViewButton extends PermissionButton {
                 function(getArgumentValue(0));
             }
         }.dynamic().register();
-        this.action = ClickEvent.Action.RUN_COMMAND;
+        this.action = ClickEvent::runCommand;
         this.clickExecute = CommandManager.getRootCommand() + " tui_page_btn_future_" + uuid;
     }
 

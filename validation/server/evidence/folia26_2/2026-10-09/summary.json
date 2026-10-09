@@ -1,0 +1,142 @@
+{
+  "plugin": "build/libs/Dominion-5.2.5-release-full.jar",
+  "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+  "suites": {
+    "native": {
+      "passed": 41,
+      "originalRunDirectory": "/tmp/dominion-native26-RQl4hZ",
+      "environment": {
+        "server": "26.2-build7",
+        "serverHash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+        "pluginVersion": "5.2.5",
+        "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+        "fixtureHash": "76d4c9ffe5eb596878f0d1ed9e38bdfecea1507319ffa7a38f0b89297f45e205",
+        "clientHash": "c1a4a80f30b74e93c97b89f5e9c407e7c55bd8fbd8257b93453827f366a52f64",
+        "client": "MCProtocolLib 26.2-20260907.143312-19",
+        "protocol": 776,
+        "protocolTranslation": false,
+        "port": 25687
+      },
+      "normalShutdown": true,
+      "logIssues": []
+    },
+    "guide": {
+      "passed": 26,
+      "originalRunDirectory": "/tmp/dominion-guide-folia26_2-eEZBGf",
+      "environment": {
+        "server": "folia26_2",
+        "serverVersion": "26.2-build7",
+        "clientVersion": "1.21.11",
+        "protocolTranslation": [
+          "viaversion26",
+          "viabackwards26"
+        ],
+        "version": "1.21.11",
+        "pluginVersion": "5.2.5",
+        "serverHash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+        "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+        "port": 25686,
+        "node": "v24.3.0",
+        "database": "isolated SQLite",
+        "language": "omitted to test default"
+      },
+      "normalShutdown": true,
+      "logIssues": []
+    },
+    "teleport": {
+      "passed": 23,
+      "originalRunDirectory": "/tmp/dominion-teleport-folia26_2-twsrwA",
+      "environment": {
+        "server": "folia26_2",
+        "serverVersion": "26.2-build7",
+        "clientVersion": "1.21.11",
+        "protocolTranslation": [
+          "viaversion26",
+          "viabackwards26"
+        ],
+        "version": "1.21.11",
+        "pluginVersion": "5.2.5",
+        "serverHash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+        "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+        "port": 25686,
+        "node": "v24.3.0",
+        "database": "isolated SQLite"
+      },
+      "normalShutdown": true,
+      "logIssues": []
+    },
+    "legacy": {
+      "passed": 26,
+      "originalRunDirectory": "/tmp/dominion-guide-folia-OulOWs",
+      "environment": {
+        "server": "folia",
+        "serverVersion": "1.21.11-build14",
+        "clientVersion": "1.21.11",
+        "protocolTranslation": [],
+        "version": "1.21.11",
+        "pluginVersion": "5.2.5",
+        "serverHash": "f52c408490a0225611e67907a3ca19f7e6da2c6bc899e715d5f46844e7103c39",
+        "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+        "port": 25686,
+        "node": "v24.3.0",
+        "database": "isolated SQLite",
+        "language": "omitted to test default"
+      },
+      "normalShutdown": true,
+      "logIssues": []
+    }
+  },
+  "unitTests": {
+    "passed": 86,
+    "suites": [
+      {
+        "suite": "cn.lunadeer.dominion.misc.CreationWorldPolicyTest",
+        "tests": 3
+      },
+      {
+        "suite": "cn.lunadeer.dominion.utils.NameQueryTest",
+        "tests": 6
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.DominionTransferManagerTest",
+        "tests": 6
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.teleport.TeleportRequestTest",
+        "tests": 7
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.teleport.TeleportHandoffDialectTest",
+        "tests": 1
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.teleport.SafeLandingResolverTest",
+        "tests": 24
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest",
+        "tests": 4
+      },
+      {
+        "suite": "cn.lunadeer.dominion.uis.town.TownGuideTest",
+        "tests": 8
+      },
+      {
+        "suite": "cn.lunadeer.dominion.utils.XVersionManagerTest",
+        "tests": 3
+      },
+      {
+        "suite": "cn.lunadeer.dominion.managers.TownDisbandManagerTest",
+        "tests": 18
+      },
+      {
+        "suite": "cn.lunadeer.dominion.cache.server.DominionCacheSnapshotTest",
+        "tests": 5
+      },
+      {
+        "suite": "cn.lunadeer.dominion.uis.NameSearchTextTest",
+        "tests": 1
+      }
+    ]
+  }
+}

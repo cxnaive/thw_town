@@ -88,7 +88,7 @@ class TownGuideTest {
         Configuration.town.trustEnabled = false;
         Configuration.town.disbandPolicy = "return-contributed";
         Map<String, String> values = TownGuide.configurationTokens();
-        assertEquals("STICK", values.get("tool"));
+        assertEquals("Stick (STICK)", values.get("tool"));
         assertEquals("unlimited", values.get("base_limit"));
         assertEquals("7", values.get("base_world_limit"));
         assertEquals("4", values.get("per_level"));
@@ -120,10 +120,10 @@ class TownGuideTest {
     void replacementsAreSinglePassAndPreserveUntrustedNamesLiterally() {
         assertEquals("Join $\\{price_1}; price 2", TownGuide.render("Join {town}; price {price_1}",
                 Map.of("town", "$\\{price_1}", "price_1", "2")));
-        assertTrue(TownGuide.renderedSections(TownGuide.Topic.START, "桃花镇").get(0)
-                .contains("/town join 桃花镇"));
-        assertTrue(TownGuide.renderedSections(TownGuide.Topic.START, null).get(0)
-                .contains("/town join " + Language.townGuideText.exampleTown));
+        assertTrue(TownGuide.renderedSections(TownGuide.Topic.START, "桃花镇").stream()
+                .anyMatch(section -> section.contains("/town join 桃花镇")));
+        assertTrue(TownGuide.renderedSections(TownGuide.Topic.START, null).stream()
+                .anyMatch(section -> section.contains("/town join " + Language.townGuideText.exampleTown)));
     }
 
     @Test
@@ -148,6 +148,33 @@ class TownGuideTest {
         assertEquals(4, TownGuide.boundedPage("2147483647", 32, 8));
         assertEquals(1, TownGuide.boundedPage("2", 0, 8));
         assertEquals(2, TownGuide.boundedPage("2", 32, 8));
+    }
+
+    @Test
+    void lessonsCanBeReadInOrderWithoutSkippingOrLosingTheWayBack() {
+        for (TownGuide.Topic topic : TownGuide.Topic.values()) {
+            if (topic == TownGuide.Topic.CONTENTS) continue;
+            var sections = TownGuide.article(topic).sections;
+            for (int page = 1; page <= sections.size(); page++) {
+                var links = TownGuide.readingLinks(topic, page);
+                var previous = links.stream().filter(TownGuide.ReadingLink::previous).toList();
+                assertEquals(page > 1 ? 1 : 0, previous.size());
+                if (page > 1) {
+                    assertEquals(topic, previous.get(0).topic());
+                    assertEquals(page - 1, previous.get(0).page());
+                }
+                var next = links.stream().filter(link -> !link.previous()).toList();
+                if (page < sections.size()) {
+                    assertEquals(1, next.size());
+                    assertEquals(topic, next.get(0).topic());
+                    assertEquals(page + 1, next.get(0).page());
+                    assertTrue(sections.get(page).startsWith(next.get(0).heading() + "\n"));
+                } else if (topic != TownGuide.Topic.FAQ) {
+                    assertEquals(TownGuide.Topic.values()[topic.ordinal() + 1], next.get(0).topic());
+                    assertEquals(1, next.get(0).page());
+                } else assertTrue(next.isEmpty());
+            }
+        }
     }
 
     private static YamlConfiguration load(String locale) throws Exception {

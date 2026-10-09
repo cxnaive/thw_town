@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.utils.NameQueryTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:54.084Z" hostname="DESKTOP-L5R1PDQ" time="0.05">
+  <properties/>
+  <testcase name="matchesUnicodeCodePointsAndDoesNotReuseCharacters()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.005"/>
+  <testcase name="normalizesFullWidthCaseAndWhitespaceWithoutDependingOnServerLocale()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.001"/>
+  <testcase name="ranksExactBeforePrefixBeforeSubstringBeforeOrderedCharacters()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.001"/>
+  <testcase name="handlesTenThousandNamesWithStableResultOrdering()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.04"/>
+  <testcase name="multipleKeywordsAllHaveToMatchAndSymbolsStayLiteral()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.001"/>
+  <testcase name="boundsInputAndLeavesCandidateCollectionsUnchanged()" classname="cn.lunadeer.dominion.utils.NameQueryTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

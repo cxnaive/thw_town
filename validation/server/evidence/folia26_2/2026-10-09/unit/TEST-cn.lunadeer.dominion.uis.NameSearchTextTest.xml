@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.uis.NameSearchTextTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:53.881Z" hostname="DESKTOP-L5R1PDQ" time="0.099">
+  <properties/>
+  <testcase name="everyLocaleHasStringValuesForAllSearchMessages()" classname="cn.lunadeer.dominion.uis.NameSearchTextTest" time="0.099"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

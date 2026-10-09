@@ -1,0 +1,14 @@
+{
+  "server": "folia",
+  "serverVersion": "1.21.11-build14",
+  "clientVersion": "1.21.11",
+  "protocolTranslation": [],
+  "version": "1.21.11",
+  "pluginVersion": "5.2.5",
+  "serverHash": "f52c408490a0225611e67907a3ca19f7e6da2c6bc899e715d5f46844e7103c39",
+  "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+  "port": 25686,
+  "node": "v24.3.0",
+  "database": "isolated SQLite",
+  "language": "omitted to test default"
+}

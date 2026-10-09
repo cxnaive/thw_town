@@ -1,3 +1,62 @@
+outpost-trusts-cui:
+  trust-item-button:
+    lore:
+      - §7この領地のみ
+      - "§7追加で許可: §b{0}"
+      - §8他の権限は元の設定に従います。
+      - ""
+      - §a▶ クリックして4種類の権限を個別に設定
+town-groups-cui:
+  title: §6✦ §e{0} - メンバー権限グループ §6✦
+  create-button:
+    symbol: A
+    material: LIME_DYE
+    name: §a権限グループを作成
+    lore:
+      - §7メンバーで領地の操作権限を共有します。
+      - '§7入力例：§fbuilders 建築係'
+      - §a▶ クリックして名前を入力
+  default-template-button:
+    symbol: i
+    material: WRITABLE_BOOK
+    name: §e町メンバー（既定グループ）
+    lore:
+      - §7独自グループに所属しないメンバー用。
+      - §7町全体の既定権限
+      - §7各領地はここでの設定を使います。
+      - §7領地ごとに別の設定にもできます。
+      - ""
+      - §e▶ クリックして権限を編集
+town-group-manage-cui:
+  title: "§6✦ §eメンバー権限グループ: {0} §6✦"
+  back-button:
+    name: §c« メンバー権限グループに戻る
+  template-button:
+    symbol: T
+    material: WRITABLE_BOOK
+    name: §e町全体の既定権限
+    lore:
+      - §7各領地はここでの設定を使います。
+      - §7領地ごとに別の設定にもできます。
+      - §e▶ クリックして権限を編集
+  delete-button:
+    name: §c権限グループを削除
+    lore:
+      - §7メンバーは町の既定グループに戻ります。
+      - §c▶ もう一度クリックして確認
+town-template-flags-cui:
+  title: "§6✦ §e町全体の既定権限: {0} §6✦"
+  back-button:
+    name: §c« メンバー権限グループに戻る
+  flag-item-lore:
+    - §7町の既定値：{0}
+    - §7{1}
+    - §7{2}
+    - ""
+    - §e▶ クリックで切り替え
+town-group-member-selector-cui:
+  back-button:
+    name: §c« メンバー権限グループに戻る
 main-menu-cui:
   title: §b✦ §6§lドミニオン メインメニュー §b✦
   admin-layout:
@@ -445,7 +504,7 @@ dominion-list-cui:
     name: §6🏰 §e{0}
     lore:
     - '§7Town: §b{0}'
-    - §7Contributor: §e{1}
+    - '§7寄贈者：§e{1}'
     - §8Your land belongs to a town now.
     - ''
     - '§b▶ Left Click: info/manage'
@@ -453,13 +512,26 @@ dominion-list-cui:
     - ''
     - '§7Status: §6Contributed to town'
     material: BROWN_BANNER
+  native-dominion-button:
+    symbol: i
+    name: "§6🏰 §e{0}"
+    lore:
+    - "§7タウン：§b{0}"
+    - "§7作成者：§e{1}"
+    - "§8町のために直接作った領地です。"
+    - ""
+    - "§b▶ 左クリック：情報/管理"
+    - "§b▶ 右クリック：テレポート"
+    - ""
+    - "§7状態：§6町の新設領地"
+    material: BROWN_BANNER
   town-managed-button:
     symbol: i
     name: §3⛨ §b{0}
     lore:
     - '§7Town: §b{0}'
     - '§7Server: §b{1}'
-    - §7Contributor: §e{2}
+    - '{2}'
     - ''
     - '§b▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (all servers)'
@@ -1123,14 +1195,10 @@ group-manage-cui:
   - §8  デフォルトグループに戻ります
   town-group-hint-button:
     symbol: i
-    name: §6⛨ §eImplicit Town Membership
+    name: "§6⛨ §e既定のメンバー権限"
     lore:
-    - §7Every member of the town holds this
-    - §7group's permissions on this outpost.
-    - §7No member list exists — membership
-    - §7is implicit in being a town member.
-    - ''
-    - §8Managed by the town system.
+    - §7独自グループに属さないメンバーが使う権限です。
+    - §7「町 → メンバー権限管理」でグループを割り当てます。
     material: BOOK
 group-setting-cui:
   title: §6✦ §9§lグループ {0} 設定 §6✦
@@ -1546,6 +1614,14 @@ town-info-cui:
     lore:
     - §e▶ Click to go back
     material: RED_STAINED_GLASS_PANE
+  groups-button:
+    symbol: i
+    material: CHEST
+    name: §eメンバー権限管理
+    lore:
+      - §7町の領地でのメンバーの建築・破壊・
+      - §7チェスト利用などの権限を設定します。
+      - §e▶ クリックして権限を編集
 town-members-cui:
   title: §6✦ §eMembers of {0} §6✦
   list-configuration:
@@ -1636,11 +1712,11 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - §7範囲：§b町の全拠点
-    - §7権限：§b{0}
-    - §8B 建築 · D 破壊 · S 操作 · I アイテム使用
-    - ''
-    - §a▶ クリックして4項目を個別設定
+    - §7町全体
+    - "§7追加で許可: §b{0}"
+    - §8他の権限は元の設定に従います。
+    - ""
+    - §a▶ クリックして4種類の権限を個別に設定
     material: PLAYER_HEAD
   add-item-button:
     symbol: A
@@ -1798,7 +1874,7 @@ town-outposts-cui:
     - '§7World: §b{0}'
     - '§7Kind: §b{1}'
     - '§7Server: §b{2}'
-    - §7Contributor: §e{3}
+    - '{3}'
     - ''
     - '§a▶ Left Click: manage (this server)'
     - '§b▶ Right Click: teleport (this server)'
@@ -1810,7 +1886,7 @@ town-outposts-cui:
     - '§7ワールド：§b{0}'
     - '§7種類：§b{1}'
     - '§7サーバー：§b{2}'
-    - §7寄贈者：§e{3}
+    - '{3}'
     - ''
     - §e▶ 左クリック：場所と管理先を表示
     - §b▶ 右クリック：サーバー間テレポート
@@ -1836,7 +1912,7 @@ town-trust-editor-cui:
     material: PLAYER_HEAD
   build-button:
     symbol: B
-    name: §e建築 (B)
+    name: "§e建築"
     lore:
     - '§7状態: {0}'
     - §7{1}
@@ -1845,7 +1921,7 @@ town-trust-editor-cui:
     material: BRICKS
   destroy-button:
     symbol: D
-    name: §e破壊 (D)
+    name: "§e破壊"
     lore:
     - '§7状態: {0}'
     - §7{1}
@@ -1854,7 +1930,7 @@ town-trust-editor-cui:
     material: DIAMOND_PICKAXE
   switch-button:
     symbol: S
-    name: §e操作 (S)
+    name: "§eスイッチとコンテナ"
     lore:
     - '§7状態: {0}'
     - §7{1}
@@ -1863,15 +1939,15 @@ town-trust-editor-cui:
     material: LEVER
   item-use-button:
     symbol: I
-    name: §eアイテム使用 (I)
+    name: "§eアイテム使用"
     lore:
     - '§7状態: {0}'
     - §7{1}
     - ''
     - '{2}'
     material: CRAFTING_TABLE
-  enabled-state: §a有効
-  disabled-state: §c無効
+  enabled-state: "§a追加で許可"
+  disabled-state: "§7追加の許可なし"
   toggle-hint: §a▶ クリックして切り替え
   read-only-hint: §8読み取り専用：この信頼権限は編集できません
   build-description: ブロックの設置、種まき、乗り物の生成。
@@ -1892,3 +1968,4 @@ town-trust-editor-cui:
     - §c▶ 2回クリックして確認
     material: BARRIER
   remove-confirm: '§c5秒以内にもう一度「信頼を削除」をクリックすると、{0}を削除します。'
+  trust-unavailable: この信頼設定は削除されました。一覧を開き直してください。

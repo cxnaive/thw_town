@@ -1,0 +1,17 @@
+{
+  "server": "folia26_2",
+  "serverVersion": "26.2-build7",
+  "clientVersion": "1.21.11",
+  "protocolTranslation": [
+    "viaversion26",
+    "viabackwards26"
+  ],
+  "version": "1.21.11",
+  "pluginVersion": "5.2.5",
+  "serverHash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+  "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+  "port": 25686,
+  "node": "v24.3.0",
+  "database": "isolated SQLite",
+  "language": "omitted to test default"
+}

@@ -8,12 +8,15 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
+import java.util.function.Function;
+
 public class Button {
 
     private String prefix = "[";
     private String suffix = "]";
     protected String text = "";
-    protected ClickEvent.Action action = null;
+    // Factory methods retain their binary signatures across Adventure 4 and 5.
+    protected Function<String, ClickEvent> action = null;
     private String hoverText = "";
     protected String clickExecute = "";
     TextColor color = ViewStyles.ACTION;
@@ -27,7 +30,7 @@ public class Button {
         builder.append(Component.text(text, color));
         builder.append(Component.text(suffix, color));
         if (action != null && !clickExecute.isEmpty() && disabledText == null) {
-            builder.clickEvent(ClickEvent.clickEvent(action, clickExecute));
+            builder.clickEvent(action.apply(clickExecute));
         }
         if (disabledText != null) {
             builder.hoverEvent(Component.text(disabledText)).style(Style.style(TextDecoration.STRIKETHROUGH));

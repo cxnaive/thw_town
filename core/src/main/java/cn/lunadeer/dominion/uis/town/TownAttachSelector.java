@@ -168,7 +168,7 @@ public class TownAttachSelector extends AbstractUI {
                 Line line = Line.create()
                         .append(formatString(TextUserInterface.townAttachSelectorTuiText.dominionLine,
                                 mark, dominion.getName(),
-                                dominion.getClaimKind(),
+                                cn.lunadeer.dominion.misc.DisplayNames.claimKind(dominion.getClaimKind()),
                                 locationLabel(dominion)));
 
                 line.append(new FunctionalButton(TextUserInterface.townAttachSelectorTuiText.toggleButton) {
@@ -292,7 +292,7 @@ public class TownAttachSelector extends AbstractUI {
                 };
                 btn = btn.setDisplayNameArgs(dominion.getName());
                 btn = btn.setLoreArgs(
-                        dominion.getClaimKind(),
+                        cn.lunadeer.dominion.misc.DisplayNames.claimKind(dominion.getClaimKind()),
                         locationLabel(dominion));
                 view = view.addItem(btn);
             }

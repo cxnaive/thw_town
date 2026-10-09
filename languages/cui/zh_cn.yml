@@ -31,84 +31,62 @@ main-menu-cui:
     symbol: B
     name: §b📋 §f管理我的领地
     lore:
-    - §7查看你的领地
-    - §7列表。
-    - ''
+    - §7查看你拥有或可管理的领地。
+    - ""
     - §b▶ 点击查看列表
-    - ''
-    - '§8包括: 你的领地和'
-    - §8你是管理员的领地！
-    - ''
-    - §c⚠ 旧系统——请尽快创建或加入小镇
-    - §c并将领地迁移为镇属地
     material: BOOKSHELF
   title-button:
     symbol: C
-    name: §6👑 §e群组头衔
+    name: §6👑 §e权限组称号
     lore:
-    - §7浏览和装备你所在群组的头衔。
-    - ''
-    - §e▶ 点击浏览头衔
-    - ''
-    - §8炫耀你的排名和
-    - §8成员身份状态！
+    - §7查看并使用可用的权限组称号。
+    - ""
+    - §e▶ 点击打开
     material: NAME_TAG
   template-button:
     symbol: D
-    name: §a📝 §f模板管理器
+    name: "§a📝 §f个人权限预设（旧领地）"
     lore:
-    - §7创建和管理权限模板
-    - §7以快速设置。
-    - ''
-    - §a▶ 点击管理模板
-    - ''
-    - §8在设置新领地时节省时间！
+    - §7保存旧领地成员的权限预设。
+    - §7手动套用时生效，
+    - §7不会同步修改小镇权限。
+    - ""
+    - §a▶ 点击管理预设
     material: WRITABLE_BOOK
   migrate-button:
     symbol: E
     name: §d🔄 §f从Residence迁移
     lore:
-    - §7将你现有的Residence
-    - §7图块转换为领地格式。
-    - ''
+    - §7把 Residence 的领地转换为 Dominion 领地。
+    - ""
     - §d▶ 点击开始迁移
-    - ''
-    - §c⚠ 请确保先备份！
-    - §8此过程不可逆转。
+    - §c迁移前请先备份数据。
     material: ENDER_PEARL
   all-button:
     symbol: F
-    name: §c💎 §f所有服务器领地
+    name: "§c💎 §f本服务器全部领地"
     lore:
-    - §7§l仅限管理员§r
-    - §7查看整个服务器的所有领地。
-    - ''
-    - §c▶ 点击查看所有领地
-    - ''
-    - §8适用于服务器管理
-    - §8和监督目的。
+    - §7仅限服务器管理员。
+    - §7查看本服务器的全部领地。
+    - ""
+    - §c▶ 点击查看
     material: DIAMOND
   switch-tui-button:
     symbol: S
-    name: §e§l切换到TUI
+    name: §e§l切换聊天菜单
     lore:
-    - §7切换到基于文本的TUI
-    - §7以获得不同的用户界面。
-    - ''
-    - §e▶ 点击切换到TUI
-    - ''
-    - §8如果你更喜欢基于文本的体验，请使用此选项！
+    - §7在聊天栏中点击按钮管理小镇和领地。
+    - ""
+    - §e▶ 切换聊天菜单
     material: COMPASS
   my-town-button:
     symbol: G
     name: §6⛨ §e我的小镇
     lore:
     - §7打开你的小镇管理页，
-    - §7或创建一个新小镇。
-    - ''
+    - §7未加入小镇时可创建小镇。
+    - ""
     - §e▶ 点击打开
-    - ''
-    - §8镇时代的土地归属于小镇。
     material: BEACON
   town-list-button:
     symbol: H
@@ -119,7 +97,7 @@ main-menu-cui:
     - §b▶ 点击浏览
     material: MAP
 all-dominion-cui:
-  title: §6✦ §c§l所有领地 §6✦
+  title: "§6✦ §c§l本服务器全部领地 §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -163,7 +141,7 @@ all-dominion-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 title-list-cui:
-  title: §6✦ §d§l头衔列表 §6✦
+  title: §6✦ §d§l称号列表 §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -190,7 +168,7 @@ title-list-cui:
     lore:
     - '§7来自领地: §b{0}'
     - ''
-    - §e▶ 点击装备此头衔
+    - §e▶ 点击装备此称号
     - §8  向所有人展示！
     - ''
     - '§7状态: §c未激活'
@@ -201,10 +179,10 @@ title-list-cui:
     lore:
     - '§7来自领地: §b{0}'
     - ''
-    - §a✓ 这是你当前的头衔
+    - §a✓ 这是你当前的称号
     - §8  每个人都能看到！
     - ''
-    - §c▶ 点击移除此头衔
+    - §c▶ 点击移除此称号
     - ''
     - '§7状态: §a已激活'
     material: GOLDEN_HELMET
@@ -267,7 +245,7 @@ migrate-list-cui:
     - §c⚠️ 中断过程。
     material: DIAMOND
 template-list-cui:
-  title: §6✦ §d§l模板管理 §6✦
+  title: "§6✦ §d§l个人权限预设（旧领地） §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -292,21 +270,19 @@ template-list-cui:
     symbol: i
     name: §6✦ §f{0} §6✦
     lore:
-    - §7用于快速管理权限的模板
-    - §8和访问控制。
-    - ''
-    - §e▶ 点击编辑模板
+    - §7保存一套旧领地成员权限，
+    - §7需要时手动套用一次。
+    - ""
+    - §e▶ 点击编辑预设
     material: PAPER
   create-template-button:
     symbol: i
-    name: §a+ 创建新模板
+    name: "§a+ 创建新预设"
     lore:
-    - §7创建一个新的权限模板
-    - §8以快速设置成员权限。
-    - ''
-    - §e▶ 点击创建模板
-    - ''
-    - '§7操作: §a创建模板'
+    - §7创建个人权限预设，用于旧领地成员。
+    - §7预设修改后，需要重新手动套用。
+    - ""
+    - §e▶ 点击创建预设
     material: LIME_DYE
   back-button:
     symbol: <
@@ -318,7 +294,7 @@ template-list-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 template-setting-cui:
-  title: '§6✦ §3§l模板: {0} §6✦'
+  title: "§6✦ §3§l个人权限预设：{0} §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -341,33 +317,33 @@ template-setting-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回模板列表
+    name: "§c« 返回预设列表"
     lore:
-    - §7返回模板
+    - "§7返回预设"
     - §7列表菜单。
     - ''
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
   rename-button:
     symbol: R
-    name: §e重命名模板
+    name: "§e重命名预设"
     lore:
-    - §7重命名此模板。
+    - "§7重命名此预设。"
     - ''
-    - §e▶ 点击重命名此模板
+    - "§e▶ 点击重命名此预设"
     material: NAME_TAG
   delete-button:
     symbol: D
-    name: §c删除模板
+    name: "§c删除预设"
     lore:
-    - §7删除此模板。
+    - "§7删除此预设。"
     - §7此操作无法撤销。
     - ''
-    - §e▶ 点击删除此模板
+    - "§e▶ 点击删除此预设"
     material: RED_DYE
   flag-item-name: §6⚙️ §e{0}
-  flag-item-state-true: §a§l✓ 已启用
-  flag-item-state-false: §c§l✗ 已禁用
+  flag-item-state-true: "§a§l✓ 允许"
+  flag-item-state-false: "§c§l✗ 禁止"
   flag-item-lore:
   - '§7状态: {0}'
   - ''
@@ -376,7 +352,7 @@ template-setting-cui:
   - §f{2}
   - ''
   - §e▶ 点击切换此设置
-  - §8将在下次应用模板时生效。
+  - "§8将在下次应用预设时生效。"
 dominion-list-cui:
   title: §6✦ §b§l领地列表 §6✦
   list-configuration:
@@ -447,18 +423,31 @@ dominion-list-cui:
     - ''
     - §7状态：§6已贡献给小镇
     material: BROWN_BANNER
+  native-dominion-button:
+    symbol: i
+    name: "§6🏰 §e{0}"
+    lore:
+    - "§7小镇：§b{0}"
+    - "§7创建者：§e{1}"
+    - "§8直接为小镇创建的属地。"
+    - ""
+    - "§b▶ 左键：查看/管理"
+    - "§b▶ 右键：传送"
+    - ""
+    - "§7状态：§6小镇自建属地"
+    material: BROWN_BANNER
   town-managed-button:
     symbol: i
     name: §3⛨ §b{0}
     lore:
     - §7小镇：§b{0}
     - §7服务器：§b{1}
-    - §7贡献者：§e{2}
+    - '{2}'
     - ''
     - §b▶ 左键：管理（限本服务器）
     - §b▶ 右键：传送（支持跨服）
     - ''
-    - §7状态：§3你管理的镇属地
+    - §7状态：§3你管理的小镇属地
     material: BEACON
 dominion-manage-cui:
   delete-outpost-button:
@@ -549,13 +538,13 @@ dominion-manage-cui:
     material: PLAYER_HEAD
   group-list-button:
     symbol: i
-    name: §d📦 §5群组管理
+    name: §d📦 §5权限组管理
     lore:
-    - §7创建和管理具有自定义权限的成员群组。
+    - §7创建和管理具有自定义权限的成员权限组。
     - ''
-    - §5▶ 点击管理群组
+    - §5▶ 点击管理权限组
     - ''
-    - §8创建等级、设置头衔...
+    - §8创建等级、设置称号...
     material: CHEST
   teleport-button:
     symbol: i
@@ -625,7 +614,7 @@ dominion-manage-cui:
     - ''
     - §3▶ 点击访问复制菜单
     - ''
-    - §8使用模板节省时间！
+    - "§8使用预设节省时间！"
     material: GLASS
   delete-button:
     symbol: i
@@ -640,18 +629,18 @@ dominion-manage-cui:
     material: RED_DYE
   trusts-button:
     symbol: i
-    name: §6🏷 §e信任授权
+    name: "§e属地信任"
     lore:
-    - §7管理此镇属地的
-    - §7玩家信任授权。
-    - ''
-    - §e▶ 点击管理授权
+    - §7给镇外朋友设置
+    - §7仅在此属地生效的额外权限。
+    - ""
+    - §e▶ 点击管理
     material: NAME_TAG
   outpost-admin-button:
     symbol: i
     name: §6👑 §e属地管理员
     lore:
-    - §7任命或清除此镇属地
+    - §7任命或清除此小镇属地
     - §7的管理员。
     - ''
     - §e▶ 点击编辑
@@ -712,11 +701,11 @@ copy-menu-cui:
     material: PLAYER_HEAD
   group-copy-button:
     symbol: P
-    name: §d📦 §5群组复制
+    name: §d📦 §5权限组复制
     lore:
-    - §7从其他领地复制群组设置。
+    - §7从其他领地复制权限组设置。
     - ''
-    - §5▶ 点击复制群组设置
+    - §5▶ 点击复制权限组设置
     - ''
     - §8权限组和角色...
     material: CHEST
@@ -831,7 +820,7 @@ guest-setting-cui:
     material: RED_STAINED_GLASS_PANE
   flag-item-name: §6🚪 §e{0}
   flag-item-state-true: §a§l✓ 允许
-  flag-item-state-false: §c§l✗ 拒绝
+  flag-item-state-false: "§c§l✗ 禁止"
   flag-item-lore:
   - '§7访客权限: {0}'
   - ''
@@ -966,7 +955,7 @@ set-size-cui:
     - §c▶ 点击收缩
     material: RED_DYE
 group-list-cui:
-  title: §6✦ §5§l群组列表 {0} §6✦
+  title: §6✦ §5§l权限组列表 {0} §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -997,12 +986,12 @@ group-list-cui:
     material: RED_STAINED_GLASS_PANE
   new-group-button:
     symbol: i
-    name: §a➕ §2创建新群组
+    name: §a➕ §2创建新权限组
     lore:
-    - §7创建一个新的权限群组
+    - §7创建一个新的权限组
     - §7用于组织你的成员。
     - ''
-    - §2▶ 点击创建群组
+    - §2▶ 点击创建权限组
     - ''
     - §8适用于等级和角色！
     material: LIME_DYE
@@ -1012,13 +1001,13 @@ group-list-cui:
     lore:
     - '§7成员: §a{0}'
     - ''
-    - §e▶ 点击管理此群组
+    - §e▶ 点击管理此权限组
     - §8  编辑权限、添加成员...
     - ''
-    - '§7类型: §6权限群组'
+    - '§7类型: §6权限组'
     material: CHEST
 group-manage-cui:
-  title: §6✦ §d§l管理群组 {0} §6✦
+  title: §6✦ §d§l管理权限组 {0} §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -1041,18 +1030,18 @@ group-manage-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回群组列表
+    name: §c« 返回权限组列表
     lore:
-    - §7返回群组列表
-    - §7以管理其他群组。
+    - §7返回权限组列表
+    - §7以管理其他权限组。
     - ''
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
   group-flags-button:
     symbol: P
-    name: §6📋 §e§l群组权限
+    name: §6📋 §e§l权限组权限
     lore:
-    - §7配置此群组在领地内的
+    - §7配置此权限组在领地内的
     - §7可做和不可做的事情。
     - ''
     - §e▶ 点击编辑权限
@@ -1062,24 +1051,24 @@ group-manage-cui:
     material: BAMBOO_SIGN
   rename-group-button:
     symbol: R
-    name: §b✏ §3§l重命名群组
+    name: §b✏ §3§l重命名权限组
     lore:
-    - §7更改此权限群组的显示名称。
+    - §7更改此权限组的显示名称。
     - ''
-    - §3▶ 点击重命名群组
+    - §3▶ 点击重命名权限组
     - §8  选择一个新的创意名称！
     - ''
     - '§7当前: §f{0}'
     material: NAME_TAG
   delete-group-button:
     symbol: D
-    name: §c💥 §4§l删除群组
+    name: §c💥 §4§l删除权限组
     lore:
     - §c⚠ §7此操作无法撤销！
     - §7所有成员将自动移至
-    - §7默认群组。
+    - §7默认权限组。
     - ''
-    - §4▶ 点击删除群组
+    - §4▶ 点击删除权限组
     - ''
     - §8在继续之前请三思...
     material: TNT
@@ -1088,41 +1077,37 @@ group-manage-cui:
     name: §a➕ §2§l添加成员
     lore:
     - §7从你的领地中选择一个成员
-    - §7添加到此群组。
+    - §7添加到此权限组。
     - ''
     - §2▶ 点击选择玩家
-    - §8  授予他们群组权限！
+    - §8  授予他们权限组权限！
     - ''
-    - '§7操作: §a添加到群组'
+    - '§7操作: §a添加到权限组'
     material: LIME_DYE
   player-head-item-lore:
-  - §7此权限群组的成员
+  - §7此权限组的成员
   - ''
-  - §c▶ 点击移除出群组
-  - §8  他们将返回默认群组
+  - §c▶ 点击移除出权限组
+  - §8  他们将返回默认权限组
   town-group-hint-button:
     symbol: i
-    name: §6⛨ §e隐式镇成员组
+    name: "§e默认成员权限"
     lore:
-    - §7小镇的全体成员自动拥有
-    - §7此组在本属地的权限。
-    - §7没有成员列表——成员身份
-    - §7即小镇成员身份。
-    - ''
-    - §8由小镇系统托管。
+    - §7未分配自定义组的成员使用此组。
+    - §7成员分组请到小镇的
+    - §7“成员权限管理”页面调整。
     material: BOOK
   town-group-mirror-hint-button:
     symbol: i
-    name: §6⛨ §e小镇托管组
+    name: "§e小镇成员权限组"
     lore:
-    - §7成员分配由小镇统一管理，
-    - §7不能在此前哨中修改。
-    - §7请到小镇组页面分配成员。
-    - ''
-    - §8你仍可在此独立设置权限。
+    - §7成员分组由小镇统一管理。
+    - §7请到“成员权限管理”调整成员。
+    - ""
+    - §7这里可以单独设置本属地的权限。
     material: BOOK
 group-setting-cui:
-  title: §6✦ §9§l群组 {0} 设置 §6✦
+  title: §6✦ §9§l权限组 {0} 设置 §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -1147,30 +1132,29 @@ group-setting-cui:
     symbol: <
     name: 返回
     lore:
-    - 返回到
-    - 访客管理。
+    - §7返回本属地的权限组管理。
     material: RED_STAINED_GLASS_PANE
-  flag-item-name: '&7标志: &9{0}'
-  flag-item-state-true: '&a&l[已启用]'
-  flag-item-state-false: '&c&l[已禁用]'
+  flag-item-name: '&7权限： &9{0}'
+  flag-item-state-true: "&a&l[允许]"
+  flag-item-state-false: "&c&l[禁止]"
   flag-item-lore:
   - '&7状态: {0}'
   - '&7描述: &f{1}'
   - '       &f{2}'
   - ''
-  - '&7点击切换此标志。'
-  override-inherited: '&e&l[继承：{0}]'
-  override-allow: '&a&l[覆盖：允许]'
-  override-deny: '&c&l[覆盖：拒绝]'
+  - '&7点击切换此权限项。'
+  override-inherited: "&e&l[跟随全镇设置：{0}]"
+  override-allow: '&a&l[单独允许]'
+  override-deny: '&c&l[单独禁止]'
   override-lore:
-  - '&7状态：{0}'
-  - '&7描述：&f{1}'
-  - '       &f{2}'
-  - ''
-  - '&e左键：切换属地覆盖'
-  - '&b右键：恢复继承'
+  - "&7状态：{0}"
+  - "&7说明：&f{1}"
+  - "       &f{2}"
+  - ""
+  - "&e左键：切换本属地的允许／禁止"
+  - "&b右键：恢复继承全镇默认权限"
 select-member-cui:
-  title: §6✦ §5§l选择成员用于群组 {0} §6✦
+  title: §6✦ §5§l选择成员用于权限组 {0} §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -1193,22 +1177,22 @@ select-member-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回群组管理
+    name: §c« 返回权限组管理
     lore:
-    - §7返回群组管理
+    - §7返回权限组管理
     - §7而不选择成员。
     - ''
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
   member-item-name: §a➕ §2{0}
   member-item-lore:
-  - §7将此成员添加到群组。
+  - §7将此成员添加到权限组。
   - ''
   - '§7玩家: §e{0}'
   - ''
-  - §2▶ 点击添加到群组
+  - §2▶ 点击添加到权限组
   - ''
-  - §8此成员不在任何群组中。
+  - §8此成员不在任何权限组中。
 member-list-cui:
   title: §6✦ §3§l成员列表 {0} §6✦
   list-configuration:
@@ -1251,7 +1235,7 @@ member-list-cui:
     - §8授予他们访问你领地的权限！
     material: LIME_DYE
   normal-member: §a普通成员
-  admin-member: §b管理员成员
+  admin-member: "§b属地管理员"
   ban-member: §c被禁止的成员
   player-head-item-lore:
   - §e▶ 左键：点击管理权限
@@ -1263,7 +1247,7 @@ member-list-cui:
   - '§7状态: {0}'
   player-head-item-lore-disable:
   - '&c此玩家属于'
-  - '&c一个群组，无法'
+  - '&c一个权限组，无法'
   - '&c单独管理。'
 member-setting-cui:
   title: §6✦ §f§l成员 {0} 设置 §6✦
@@ -1296,22 +1280,22 @@ member-setting-cui:
     material: RED_STAINED_GLASS_PANE
   template-button:
     symbol: T
-    name: §e✏ §6选择模板
+    name: "§e✏ §6选择预设"
     lore:
-    - §7选择一个模板应用于
+    - "§7选择一个预设应用于"
     - §7此成员的权限。
     - ''
-    - §6▶ 点击选择模板
+    - "§6▶ 点击选择预设"
     material: PAPER
-  flag-item-name: '&7标志: &9{0}'
-  flag-item-state-true: '&a&l[已启用]'
-  flag-item-state-false: '&c&l[已禁用]'
+  flag-item-name: '&7权限： &9{0}'
+  flag-item-state-true: "&a&l[允许]"
+  flag-item-state-false: "&c&l[禁止]"
   flag-item-lore:
   - '&7状态: {0}'
   - '&7描述: &f{1}'
   - '       &f{2}'
   - ''
-  - '&7点击切换此标志。'
+  - '&7点击切换此权限项。'
 select-player-cui:
   title: §6✦ §5§l选择玩家用于 {0} §6✦
   list-configuration:
@@ -1362,7 +1346,7 @@ select-player-cui:
   - ''
   - §2▶ 点击添加成员
 select-template-cui:
-  title: §6✦ §5§l选择模板用于 {0} §6✦
+  title: "§6✦ §5§l选择预设用于 {0} §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -1388,7 +1372,7 @@ select-template-cui:
     name: §c« 返回成员设置
     lore:
     - §7返回成员设置
-    - §7而不应用模板。
+    - "§7而不应用预设。"
     - ''
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
@@ -1396,12 +1380,12 @@ select-template-cui:
     symbol: i
     name: §a⚙ §2{0}
     lore:
-    - §7将此权限模板应用于
+    - "§7将此权限预设应用于"
     - §7成员 {0}。
     - ''
-    - '§7模板: §e{1}'
+    - "§7预设: §e{1}"
     - ''
-    - §2▶ 点击应用模板
+    - "§2▶ 点击应用预设"
     - ''
     - §8这将覆盖成员当前的权限。
     material: WRITABLE_BOOK
@@ -1419,13 +1403,13 @@ town-list-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   town-item-button:
     symbol: i
@@ -1457,13 +1441,13 @@ town-info-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   members-button:
     symbol: i
@@ -1474,21 +1458,23 @@ town-info-cui:
     material: PLAYER_HEAD
   trusts-button:
     symbol: i
-    name: §e信任授权
+    name: "§e镇外玩家权限（信任）"
     lore:
-    - §7查看并管理信任授权。
-    - §a▶ 点击打开
+    - §7给镇外朋友额外权限，
+    - §7可按全镇或单块属地设置。
+    - ""
+    - §a▶ 点击管理
     material: NAME_TAG
   bank-button:
     symbol: i
-    name: §e小镇银行
+    name: "§e小镇金库"
     lore:
     - §7余额：§b{0}
     - §a▶ 点击打开
     material: GOLD_INGOT
   outposts-button:
     symbol: i
-    name: §e镇属地
+    name: "§e属地列表"
     lore:
     - §7总数：§b{0}
     - §a▶ 点击打开
@@ -1498,13 +1484,13 @@ town-info-cui:
     name: §e小镇等级
     lore:
     - §7等级：§b{0}§7/§b{1}
-    - §7全服镇属地上限：§b{2}
-    - §7单世界镇属地上限：§b{3}
-    - §a▶ 点击查看共同任务
+    - §7本镇属地总上限：§b{2} 个（跨服合计）
+    - §7单世界上限：§b{3} 个
+    - §a▶ 查看共同升级任务
     material: EXPERIENCE_BOTTLE
   create-outpost-button:
     symbol: i
-    name: §a创建镇属地
+    name: "§a创建小镇属地"
     lore:
     - §7使用当前选中的两个点。
     - §7点击后会显示准确报价。
@@ -1519,11 +1505,12 @@ town-info-cui:
     material: LEAD
   groups-button:
     symbol: i
-    name: §e小镇组
-    lore:
-    - §7管理所有镇属前哨共享的组。
-    - §a▶ 点击管理
     material: CHEST
+    name: §e成员权限管理
+    lore:
+      - §7设置成员在小镇属地中的
+      - §7建造、破坏、开箱等权限。
+      - §e▶ 点击编辑权限
   invite-button:
     symbol: i
     name: §a邀请
@@ -1555,13 +1542,13 @@ town-info-cui:
     material: TNT
   upgrade-button:
     symbol: i
-    name: §6升级权限模式
+    name: §6启用全镇默认权限（一次性）
     lore:
-    - §7重置全部镇属领地的小镇组权限。
-    - §7所有附属领地将继承小镇模板。
-    - §c此操作不可撤销。
-    - ''
-    - §6▶ 连续点击两次确认升级
+    - §7一次性清空各属地的成员组权限。
+    - §7全部改为继承全镇默认权限。
+    - §c此操作不可撤回。
+    - ""
+    - §6▶ 连续点击两次确认
     material: ENCHANTED_BOOK
   back-button:
     symbol: <
@@ -1583,13 +1570,13 @@ town-members-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   resident-item-button:
     symbol: i
@@ -1634,7 +1621,7 @@ town-members-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 town-trusts-cui:
-  title: §6✦ §e{0} 的信任授权 §6✦
+  title: "§6✦ §e{0} 的小镇信任 §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -1647,27 +1634,27 @@ town-trusts-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   trust-item-button:
     symbol: i
     name: §e{0}
     lore:
-    - §7范围：§b小镇全部属地
-    - §7权限：§b{0}
-    - §8B 建造 · D 破坏 · S 交互 · I 物品使用
-    - ''
-    - §a▶ 点击独立设置四项权限
+    - §7范围：§b全镇属地
+    - §7额外允许：§b{0}
+    - §8未列出的权限仍按原有设置判断。
+    - ""
+    - §a▶ 点击分别设置四类权限
     material: PLAYER_HEAD
   add-item-button:
     symbol: A
-    name: §a添加授权
+    name: "§a添加信任玩家"
     lore:
     - §7授权一名玩家（小镇范围）。
     - §a▶ 点击添加
@@ -1676,7 +1663,7 @@ town-trusts-cui:
     symbol: i
     name: §e{0}
     lore:
-    - §7管理该属地的授权。
+    - §7管理仅在该属地生效的信任。
     - §a▶ 点击打开
     material: GRASS_BLOCK
   back-button:
@@ -1686,7 +1673,7 @@ town-trusts-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 outpost-trusts-cui:
-  title: §6✦ §e授权：{0} §6✦
+  title: "§6✦ §e{0} 的属地信任 §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -1700,14 +1687,14 @@ outpost-trusts-cui:
     name: §e{0}
     lore:
     - §7范围：§b仅此属地
-    - §7权限：§b{0}
-    - §8B 建造 · D 破坏 · S 交互 · I 物品使用
-    - ''
-    - §a▶ 点击独立设置四项权限
+    - §7额外允许：§b{0}
+    - §8未列出的权限仍按原有设置判断。
+    - ""
+    - §a▶ 点击分别设置四类权限
     material: PLAYER_HEAD
   add-item-button:
     symbol: A
-    name: §a添加授权
+    name: "§a添加信任玩家"
     lore:
     - §7授权一名玩家（仅此属地）。
     - §a▶ 点击添加
@@ -1734,7 +1721,7 @@ town-level-tasks-cui:
     lore:
     - '§7当前：§b{0}§7/§b{1}'
     - '§7成员晋升开放至：§b{2} 级'
-    - '§7镇属地上限：§b全服 {3} 个 / 单世界 {4} 个'
+    - '§7小镇属地上限：§b跨服合计 {3} 个 / 单世界 {4} 个'
     material: EXPERIENCE_BOTTLE
   task-item:
     symbol: i
@@ -1778,7 +1765,7 @@ town-level-tasks-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 town-bank-cui:
-  title: §6✦ §e{0} 的银行 §6✦
+  title: §6✦ §e{0} 的小镇金库 §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -1791,19 +1778,19 @@ town-bank-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   balance-item:
     symbol: i
     name: §6余额：§e{0}
     lore:
-    - §7小镇银行余额。
+    - "§7小镇金库余额。"
     material: GOLD_BLOCK
   deposit-item:
     symbol: i
@@ -1826,7 +1813,7 @@ town-bank-cui:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
 town-outposts-cui:
-  title: §6✦ §e{0} 的镇属地 §6✦
+  title: §6✦ §e{0} 的小镇属地 §6✦
   list-configuration:
     item-symbol: i
     layout:
@@ -1839,13 +1826,13 @@ town-outposts-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   outpost-item-button:
     symbol: i
@@ -1854,7 +1841,7 @@ town-outposts-cui:
     - §7世界：§b{0}
     - §7类型：§b{1}
     - §7服务器：§b{2}
-    - §7贡献者：§e{3}
+    - '{3}'
     - ''
     - §a▶ 左键：管理（限本服务器）
     - §b▶ 右键：传送（限本服务器）
@@ -1866,7 +1853,7 @@ town-outposts-cui:
     - §7世界：§b{0}
     - §7类型：§b{1}
     - §7服务器：§b{2}
-    - §7贡献者：§e{3}
+    - '{3}'
     - ''
     - §e▶ 左键：查看位置及管理服务器
     - §b▶ 右键：跨服传送
@@ -1891,13 +1878,13 @@ town-attach-selector-cui:
       symbol: p
       name: <<<
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRiZWIwZmJjNWU2NjAxZmU1MDQ3MDJjYWZmZGFhYzBlOGVhMTllMTFiY2FkZmJlZTBkMThjODlmNDZiYzFmZCJ9fX0=
     next-button:
       symbol: n
       name: '>>>'
       lore:
-      - 'Page: {0}/{1}'
+      - '页码： {0}/{1}'
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   selected-item-button:
     symbol: i
@@ -1934,7 +1921,7 @@ town-attach-selector-cui:
     - §c▶ 点击取消
     material: RED_CONCRETE
 town-groups-cui:
-  title: §6✦ §e{0} 的小镇组 §6✦
+  title: "§6✦ §e{0} - 成员权限组 §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -1963,12 +1950,12 @@ town-groups-cui:
     material: RED_STAINED_GLASS_PANE
   create-button:
     symbol: A
-    name: §a创建小镇组
-    lore:
-    - §7创建会同步到所有镇属前哨的组。
-    - '§7输入示例：§fbuilders 建筑组'
-    - §a▶ 点击输入内部名和显示名
     material: LIME_DYE
+    name: §a创建权限组
+    lore:
+      - §7让一批成员共用领地操作权限。
+      - '§7输入示例：§fbuilders 建筑组'
+      - §a▶ 点击输入内部名和显示名
   group-item-button:
     symbol: i
     name: §e{0}
@@ -1980,15 +1967,17 @@ town-groups-cui:
     material: CHEST
   default-template-button:
     symbol: i
-    name: §e小镇成员权限模板
-    lore:
-    - §7内部名：§f@town
-    - §7未分组的小镇成员继承此模板。
-    - ''
-    - §e▶ 点击编辑权限
     material: WRITABLE_BOOK
+    name: §e小镇成员（默认组）
+    lore:
+      - §7未分配自定义组的成员使用此组。
+      - §7全镇默认权限
+      - §7各属地默认使用这里的设置。
+      - §7可以为某块属地单独调整。
+      - ""
+      - §e▶ 点击编辑权限
 town-group-manage-cui:
-  title: §6✦ §e小镇组：{0} §6✦
+  title: "§6✦ §e成员权限组: {0} §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -2011,7 +2000,7 @@ town-group-manage-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回小镇组
+    name: "§c« 返回成员权限组"
     lore:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
@@ -2031,24 +2020,25 @@ town-group-manage-cui:
     material: NAME_TAG
   template-button:
     symbol: T
-    name: §e权限模板
-    lore:
-    - §7所有附属领地默认继承的镇级权限。
-    - §e▶ 点击编辑
     material: WRITABLE_BOOK
+    name: §e全镇默认权限
+    lore:
+      - §7各属地默认使用这里的设置。
+      - §7可以为某块属地单独调整。
+      - §e▶ 点击编辑权限
   delete-button:
     symbol: D
-    name: §c删除小镇组
+    name: "§c删除权限组"
     lore:
-    - §7成员将恢复使用 @town。
+    - §7成员将恢复使用小镇成员（默认组）。
     - §c▶ 再次点击确认
     material: TNT
   member-lore:
-  - §7已分配到此小镇组。
+  - §7已分配到此成员权限组。
   - ''
   - §c▶ 点击移除
 town-template-flags-cui:
-  title: §6✦ §e小镇权限模板：{0} §6✦
+  title: "§6✦ §e全镇默认权限: {0} §6✦"
   list-configuration:
     item-symbol: i
     layout:
@@ -2071,18 +2061,18 @@ town-template-flags-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回小镇组
+    name: "§c« 返回成员权限组"
     lore:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
   flag-item-name: §7权限：§e{0}
   flag-state-true: §a§l[允许]
-  flag-state-false: §c§l[拒绝]
+  flag-state-false: "§c§l[禁止]"
   flag-item-lore:
-  - §7模板值：{0}
+  - §7全镇默认值：{0}
   - §7{1}
   - §7{2}
-  - ''
+  - ""
   - §e▶ 点击切换
 town-group-member-selector-cui:
   title: §6✦ §e为 {0} 选择成员 §6✦
@@ -2108,7 +2098,7 @@ town-group-member-selector-cui:
       material: PLAYER_HEAD;B64;eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWI5Y2VjYzIxZDY3MGMxZmYyNzc4MTc2MjI1ZTI4NTBlMmVlMmY3Y2Y1NDEzYmIxNTY2N2Q5OGRiYjNjZjhiNSJ9fX0=
   back-button:
     symbol: <
-    name: §c« 返回小镇组
+    name: "§c« 返回成员权限组"
     lore:
     - §e▶ 点击返回
     material: RED_STAINED_GLASS_PANE
@@ -2120,8 +2110,8 @@ town-group-member-selector-cui:
   - §a▶ 点击分配到当前组
   - §8若成员已在其他组，将移动到当前组。
 town-trust-editor-cui:
-  town-title: '§6✦ §e{0} 的信任权限 §6✦'
-  outpost-title: '§6✦ §e属地 {0} 的信任权限 §6✦'
+  town-title: "§6✦ §e小镇信任：{0} §6✦"
+  outpost-title: "§6✦ §e属地信任：{0} §6✦"
   layout:
   - <###P###R
   - '#########'
@@ -2134,7 +2124,7 @@ town-trust-editor-cui:
     material: PLAYER_HEAD
   build-button:
     symbol: B
-    name: §e建造 (B)
+    name: "§e建造"
     lore:
     - '§7状态：{0}'
     - §7{1}
@@ -2143,7 +2133,7 @@ town-trust-editor-cui:
     material: BRICKS
   destroy-button:
     symbol: D
-    name: §e破坏 (D)
+    name: "§e破坏"
     lore:
     - '§7状态：{0}'
     - §7{1}
@@ -2152,7 +2142,7 @@ town-trust-editor-cui:
     material: DIAMOND_PICKAXE
   switch-button:
     symbol: S
-    name: §e交互 (S)
+    name: "§e机关与容器"
     lore:
     - '§7状态：{0}'
     - §7{1}
@@ -2161,21 +2151,21 @@ town-trust-editor-cui:
     material: LEVER
   item-use-button:
     symbol: I
-    name: §e物品使用 (I)
+    name: "§e物品使用"
     lore:
     - '§7状态：{0}'
     - §7{1}
     - ''
     - '{2}'
     material: CRAFTING_TABLE
-  enabled-state: §a已开启
-  disabled-state: §c已关闭
+  enabled-state: "§a额外允许"
+  disabled-state: "§7不额外授权"
   toggle-hint: §a▶ 点击切换
   read-only-hint: §8只读：你无法编辑此信任权限
   build-description: 放置方块、播种和生成载具。
   destroy-description: 破坏方块、收获和摧毁载具。
   switch-description: 使用门、按钮、容器和其他开关。
-  item-use-description: 合成、交易、使用物品以及与实体互动。
+  item-use-description: "合成、交易、喂养、拾取和丢弃等。"
   back-button:
     symbol: <
     name: §c« 返回
@@ -2186,7 +2176,9 @@ town-trust-editor-cui:
     symbol: R
     name: §c移除信任
     lore:
-    - §7移除该玩家的全部信任权限。
+    - §7移除本范围内的信任设置。
+    - §7删除属地信任后，会重新使用小镇信任。
     - §c▶ 再次点击确认
     material: BARRIER
   remove-confirm: §c请在5秒内再次点击“移除信任”，以移除 {0}。
+  trust-unavailable: 这条信任记录已不存在，请重新打开列表。

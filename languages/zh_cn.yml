@@ -1,92 +1,146 @@
+player-display-text:
+  ordinary-land: 普通领地
+  founding-land: 建镇属地
+  unknown-land: 领地
+  town-scope: 全镇
+  outpost-scope: 仅此属地
+  allow: 允许
+  deny: 禁止
+  enabled: 已开启
+  disabled: 已关闭
+  chest-menu: 箱子菜单
+  chat-menu: 聊天菜单
+  trust-build: 建造
+  trust-destroy: 破坏
+  trust-switch: 机关与容器
+  trust-item-use: 物品使用
+  no-additional-trust: 无
+name-search-text:
+  button: "搜索"
+  hint: "输入名称的一部分，例如“黄金”或“黄城”可找“黄金城”。英文不区分大小写，可用空格分开多个关键词，最多 64 个字。"
+  description: "在当前列表中搜索名称；支持部分名称、按顺序省略字，英文不区分大小写。"
+  town-title: "搜索小镇"
+  land-title: "搜索领地"
+  all-towns: "范围：所有小镇"
+  own-land: "范围：我拥有或可管理的领地"
+  town-land: "范围：{0} 的属地"
+  admin-land: "范围：本服务器所有领地（管理员）"
+  summary: "关键词：{0} | 找到 {1} 项"
+  empty: "没有找到匹配的名称，试试更短的关键词。"
+  too-long: "关键词最多 {0} 个字。"
+  back: "返回列表"
+  change: "修改关键词"
+  clear: "清除搜索"
+  previous: "上一页"
+  next: "下一页"
+  page: "第 {0}/{1} 页"
+  teleport: "传送"
+  town-details: "镇长：{0} | 成员：{1}"
+  town-owner: "所属小镇：{0}"
+  personal-owner: "领地主人：{0}"
+  location: "区服：{0} | 世界：{1}"
+  town-click: "左键：查看小镇"
+  land-click: "左键：查看／管理；右键：传送"
+  remote: "该领地位于 {0}，世界 {1}。管理请先前往该区服；可以使用传送前往。"
+  missing: "这条结果已不存在，请重新搜索刷新列表。"
+  town-usage: "/town search <关键词> [页码] - 按名称搜索所有小镇"
+  land-usage: "/dom search <关键词> [页码] - 搜索自己拥有或可管理的领地"
 town-guide-text:
   title: "小镇手册"
   button: "小镇手册"
   page-help: "本页帮助"
-  description: "了解小镇身份、权限模板、信任与属地管理。"
-  read: "点击进入章节；悬停在文章卡片上阅读步骤。"
+  description: "从加入小镇开始，一步步了解建造、权限和属地。"
+  read: "点击开始阅读；将鼠标放到纸张上看内容，箭头翻页。"
   back: "返回原页面"
   contents: "手册目录"
-  previous-page: "上一页"
-  next-page: "下一页"
-  page-info: "第 {0}/{1} 页"
+  previous-page: "上一节"
+  next-page: "下一节"
+  next-chapter: "下一章"
+  page-info: "第 {0}/{1} 节"
   open-town: "打开小镇首页"
-  open-groups: "打开小镇权限组"
+  open-groups: "打开成员权限管理"
   open-outposts: "打开属地列表"
-  open-trusts: "打开小镇信任"
+  open-trusts: "打开镇外玩家权限（信任）"
   open-tasks: "打开共同升级任务"
-  context: "小镇：{0} | 权限模式：{1}"
-  no-town: "未加入小镇也可以阅读全部章节。"
-  template-mode: "小镇模板"
-  legacy-mode: "旧版逐属地权限"
+  context: "小镇：{0}"
+  no-town: "未加入小镇也可以阅读。初次游玩，建议从第一章开始。"
   example-town: "橡树镇"
-  enabled: "已启用"
+  stick: "木棍"
+  enabled: "已开启"
   disabled: "已关闭"
   unlimited: "不限"
   unknown-topic: "没有章节 {0}，已打开手册目录。"
   task-line: "{0} 级：{1} × {2}"
-  no-tasks: "当前开放等级范围内没有配置物品任务。"
-  dissolve-all: "删除该镇全部属地的领地记录。方块和箱内物品保留，但对应的领地保护会消失。"
-  return-contributed: "贡献领地归还贡献者，其余镇属地的领地记录删除。方块和箱内物品保留。"
+  no-tasks: "当前没有可提交的升级任务。"
+  dissolve-all: "所有小镇属地都会失去领地保护。建筑和箱内物品不会被删除。"
+  return-contributed: "贡献的领地归还贡献者，其他小镇属地失去保护。建筑和箱内物品不会被删除。"
   start:
-    title: "加入与创建"
-    summary: "如何接受邀请、获得建镇属地、使用圈选工具。"
+    title: "开始玩小镇"
+    summary: "认识属地，加入朋友的小镇，或自己建镇。"
     sections:
-      - "接受邀请\n请镇管理者邀请你，然后输入 /town join {town}（示例名称请换成受邀小镇名）。可以在另一个互通子服接受邀请。加入小镇不会自动挂靠你的个人领地。"
-      - "创建小镇\n输入 /town create <小镇名>，或点击主菜单的创建小镇。已有个人领地保持个人状态；没有领地的创建者会在当前位置获得 {founding_size} × {founding_size} × {founding_size} 的建镇属地，配置费用为 {founding_cost}，从个人钱包支付。按创建提示确认。"
-      - "圈选新属地\n手持 {tool}，左键点击第一个方块、右键点击第二个方块，选出同一世界中的两个对角点。镇长或副镇长再进入“小镇 → 创建属地”，核对尺寸及金库报价后确认。"
-      - "创建限制\n远程新建属地功能：{remote_enabled}。领地不能与已有领地重叠；部分世界可能禁止非管理员创建。输入 /town 可以回到自己的小镇或小镇列表。"
+      - "小镇和属地是什么\n小镇是大家一起生活的团队。“属地”是属于小镇的一块领地，可以是住宅区、农场或仓库。\n同一个小镇可以有多块属地，不必连在一起。输入 /town 打开小镇菜单。"
+      - "接受朋友的邀请\n先请镇长或副镇长邀请你，再按邀请消息输入加入命令。\n例如：/town join {town}\n互通子服之间也能接受邀请。加入小镇不会自动把你的个人领地交给小镇。"
+      - "自己创建小镇\n在主菜单点击“创建小镇”，或输入 /town create <小镇名>。\n如果你还没有领地，会在当前位置创建一块 {founding_size} × {founding_size} × {founding_size} 的建镇属地，费用为 {founding_cost}，从个人钱包支付。已有个人领地不会自动挂靠。"
+      - "接下来做什么\n普通成员可以先请镇长安排住处和权限；镇长可以从添加成员、设置权限组开始。\n想扩大活动范围，就阅读“管理小镇属地”。想知道为什么不能建造，就阅读“权限怎么继承”。"
+      - "找小镇和领地\n在小镇或领地列表点击“搜索”，输入名字的一部分。例如“黄金”或“黄城”都能找到“黄金城”，英文不区分大小写。\n也可用 /town search <关键词> 找小镇，或 /dom search <关键词> 找自己拥有或可管理的领地。在小镇属地列表搜索时，只找这个小镇的属地。"
   roles:
-    title: "身份与权限组"
-    summary: "管理小镇的身份，不等于放置方块等操作权限。"
+    title: "谁能做什么"
+    summary: "先认识管理身份，再认识成员权限组。"
     sections:
-      - "镇长与副镇长\n两者都可以管理成员、权限组和单块镇属地。解散小镇仅限镇长或服务器管理员，副镇长无权操作。普通权限组不会赋予这些管理身份。"
-      - "成员权限\n进入“小镇 → 权限组 → 选择组 → 成员”分配已有成员。分配了自定义组的成员按该组判断操作权限；未分组的成员使用内置小镇成员组。创建组输入样例：builders 建筑组。"
-      - "属地管理员与贡献者\n贡献者或被任命的属地管理员可以管理该属地的部分设置，但仅凭此身份不能删除、调整镇属地大小或解散小镇。镇长、副镇长及服务器管理员可以删除单块属地。"
-      - "测试权限时注意\n服务器管理员和领地管理者可能直接绕过操作限制，建议用普通成员账号验证。爆炸等环境设置与玩家操作权限是分开的。"
+      - "权限是什么\n权限就是“能不能做某件事”。例如放置方块、破坏方块、打开箱子，都有各自的设置。\n允许建造不一定允许开箱子；需要什么操作，就查看对应的权限。"
+      - "镇长、副镇长和成员\n镇长和副镇长都能管理成员、权限组及单块属地。普通成员在属地里能做什么，由自己的权限组决定。\n解散整个小镇只允许镇长或服务器管理员操作，副镇长不能解散。"
+      - "权限组是什么\n权限组让一批成员共用同一套操作权限。例如把负责建房的玩家放进“建筑组”，统一允许建造。\n没有分配自定义组的成员，使用“小镇成员（默认组）”。加入建筑组不会变成副镇长。"
+      - "如何分配成员\n进入“小镇 → 成员权限管理”，创建组后打开它的成员页面，从已有小镇成员中选择玩家。\n创建组示例：builders 建筑组\n前面的 builders 是输入命令时使用的名字，后面的“建筑组”是界面里显示的名字。"
+      - "创建者与贡献者\n为小镇直接新建的属地显示“创建者”；个人领地挂靠到小镇后，原主人显示为“贡献者”。\n他们和被任命的属地管理员可以管理这块地的部分设置，但仅凭这些身份不能删除或调整小镇属地大小。"
   templates:
-    title: "小镇模板与属地覆盖"
-    summary: "统一设置全镇默认权限，再为单块属地设置例外。"
+    title: "权限怎么继承"
+    summary: "从全镇共用设置，到一块属地的例外。"
     sections:
-      - "修改全镇默认值\n模板模式下，进入“小镇 → 权限组 → 小镇成员权限模板”，或“自定义组 → 模板”。修改只影响该组仍在继承此项权限的属地，不会自动修改访客权限或环境设置。"
-      - "属地的三种状态\n“继承”跟随小镇模板；“本地允许”和“本地禁止”只覆盖当前属地。GUI 左键切换本地值，右键恢复继承；TUI 使用对应状态按钮。"
-      - "示例：建筑组不能改仓库\n先在建筑组的小镇模板允许放置方块，再到仓库属地的对应权限组，将放置方块设为本地禁止。其他继承模板的属地仍可建造。恢复继承后，仓库也会重新跟随模板。"
-      - "旧小镇的一次性升级\n旧模式小镇在升级前保留逐属地设置。镇长可在小镇首页点击“升级权限模式”，将镇管理的属地组权限重置为继承。此操作不可逆，升级后需要设置并检查小镇模板，不能再切回旧模式。"
+      - "全镇默认权限是什么\n“全镇默认权限”就是一份全镇共用的权限模板。每个成员组都有自己的模板。\n例如“建筑组”的模板允许放置方块，就可以让这个组在多块属地里建造，不必每块地都设置一遍。"
+      - "继承是什么意思\n“继承”就是这块属地跟着小镇模板走。\n模板允许放置方块，这里就允许；模板改成禁止，这里也跟着禁止。\n所以“继承”本身不等于允许，也不等于禁止，要看模板现在怎么设置。"
+      - "例子一：大家都能建造\n小明属于“建筑组”，小镇有住宅区和农场两块属地。\n把建筑组模板里的“放置方块”设为允许，两块地都保持继承。\n结果：小明在住宅区和农场都能放置方块。"
+      - "例子二：仓库单独禁止\n现在多了一块仓库属地，希望建筑组能在别处建造，但不能改动仓库。\n在仓库的建筑组权限里，将“放置方块”单独设为禁止。\n这叫“覆盖”：只让这一块地、这个组的这一项权限使用自己的设置。"
+      - "之后修改模板会怎样\n接着上面的例子：把建筑组模板改为禁止，再改回允许。\n住宅区和农场一直跟着变化；仓库仍然禁止。\n仓库其他保持继承的权限，还是会跟着模板变化。"
+      - "如何恢复继承\n如果仓库也可以建造了，把仓库的“放置方块”恢复为继承即可。\n它会立即按模板当前的值决定允许或禁止，以后模板再改，它也会跟着改。"
+      - "到哪里设置\n全镇统一设置：小镇 → 成员权限管理 → 小镇成员（默认组），或自定义组 → 全镇默认权限。\n只改一块地：打开该属地的对应组权限。箱子界面左键切换单独允许／禁止，右键恢复继承；聊天界面点击对应状态按钮。\n访客和爆炸等环境设置另行管理。"
+      - "旧小镇如何开始使用\n如果小镇首页还有“启用全镇默认权限（一次性）”，需要镇长进行一次性升级。\n升级会清空原来各属地的组权限设置，全部改为继承，不能撤回。先和成员商量，再确认升级，并设置好各组的小镇模板。"
   trust:
-    title: "访客与信任"
-    summary: "让镇外朋友获得操作权限，无需加入小镇。"
+    title: "让镇外朋友来帮忙"
+    summary: "不用加入小镇，也能给朋友需要的权限。"
     sections:
-      - "先选择授权范围\n信任功能：{trust_enabled}。小镇信任作用于全镇，属地信任只作用于一块属地。添加玩家后，再分别开启所需权限，四个开关可以独立设置。"
-      - "建造与破坏\n建造包含放置方块、播种及生成载具；破坏包含破坏方块、收获及破坏载具。按朋友实际需要开启。"
-      - "交互与物品使用\n交互包含门、按钮、容器、漏斗等，范围比“只开箱子”更大。物品使用包含合成、交易、喂养、拾取、丢弃等。这些开关授权一类行为，不是单个行为。"
-      - "关闭不等于禁止\n信任用于给非镇成员额外授权。某项关闭表示不额外授予，仍可能由旧成员／组或访客权限允许。信任不能绕过小镇成员组已经作出的拒绝。"
-      - "属地记录优先\n存在属地信任记录时，使用整条属地记录，不与小镇信任逐项合并。四项全部关闭不会恢复小镇信任；删除该属地记录才会回到小镇信任。"
-      - "示例：让朋友在一块地开箱\n进入“目标属地 → 信任”，添加镇外朋友并开启交互。它同时授予该类别的其他交互行为。如需限制其他访客，还应检查这块属地的访客权限。"
+      - "什么时候用信任\n朋友只是来帮你盖房或取东西，不想加入小镇，可以给他“信任”。\n小镇信任适用于全镇，属地信任只适用于一块地。当前信任功能：{trust_enabled}。\n已经是小镇成员的玩家，请通过成员权限组安排权限。"
+      - "四个开关分别管什么\n四项可以独立开关。\n建造：放置方块、播种、放置载具等。\n破坏：拆方块、收获、破坏载具等。\n机关与容器：开门、按按钮、打开箱子等。\n物品使用：合成、交易、喂养、拾取和丢弃等。"
+      - "例子：朋友来取材料\n只想让朋友使用仓库时，打开“仓库属地 → 属地信任”，添加朋友，开启“机关与容器”。\n这也会允许他开门、按按钮等交互行为。建造和破坏可以保持关闭，不额外给他改动建筑的权限。"
+      - "关闭后为什么还能操作\n信任的关闭，表示不通过信任额外给权限。\n例如访客本来就能开门，关掉某人的“机关与容器”信任，他仍能开门。想限制所有路人，需要到属地的访客权限中设置。"
+      - "同一个人在两处都设了信任\n给朋友设置了属地信任后，在这块地只使用这份设置，不再叠加小镇信任。\n例如小镇信任允许建造，但仓库的属地信任只开“机关与容器”，他在仓库就不会通过信任获得建造权限。"
+      - "怎样重新跟随小镇信任\n删除这个人在该属地的信任设置，才会重新使用小镇信任。\n只把四个开关全部关闭，仍然是在使用这块属地的单独设置。"
   land:
-    title: "属地管理与计费"
-    summary: "新建、挂靠、归还、删除与解散分别会发生什么。"
+    title: "管理小镇属地"
+    summary: "圈选新地、贡献旧地，以及费用与删除。"
     sections:
-      - "挂靠与归还\n通过“小镇 → 挂靠领地”或 /town attach <领地名> 贡献个人领地。退出小镇不会自动取回它。镇长可用 /town release <领地名> 归还符合条件的非建镇贡献领地，再按提示确认；OP 可仲裁其他非建镇属地。"
-      - "删除单块属地\n镇长、副镇长及服务器管理员可在管理页点击“删除属地”，再次确认。只删除选中镇属地及其权限记录，子领地和小镇保留，不退款，也不会删除方块或箱内物品。"
-      - "解散整个小镇\n仅镇长或服务器管理员可操作，并需要按现有流程确认。当前子服配置：{disband_policy} 请确认预览中的影响范围。"
-      - "尺寸与高度\nX、Z 每条边最大 {max_xz}，X/Y/Z 最小尺寸为 {min_x}/{min_height}/{min_z}。配置 Y 范围为 {min_y} 到 {max_y}，最大高度为 {max_height}，同时受世界高度限制。历史超高领地在 Y 范围不变时可保留原高度调整。"
-      - "按面积阶梯计费\n镇属地阶梯计费：{pricing_enabled}。只计算 X × Z 面积，不按高度收费。前 250000 平方格免费；之后至 1000000／2250000／4000000 的各段单价分别为 {price_1}／{price_2}／{price_3} 每平方格，分段累加，不是整块地按最高单价算。"
-      - "扩缩地与退款\n远程新建和付费扩地从小镇金库扣款。缩地只退有付费记录且符合条件的部分，退款比例为 {refund_rate}；历史未付费面积不会退款。具体金额以创建／调整时的报价为准，也会考虑管理员免计费等情况。"
+      - "怎样圈选新属地\n镇长或副镇长手持 {tool}，左键点一个方块、右键点另一个方块，选出同一世界里的两个对角。\n然后打开“小镇 → 创建小镇属地”，查看范围和费用，再确认。新建属地功能：{remote_enabled}。"
+      - "多大、在哪里能创建\n每条水平边最长 {max_xz} 格。最小长、宽为 {min_x}、{min_z} 格，最小高度为 {min_height} 格。\n允许的 Y 范围为 {min_y} 到 {max_y}，最大高度为 {max_height}，也不能超出世界高度。\n不能与已有领地重叠；部分世界可能不允许创建。"
+      - "创建和扩地怎么收费\n阶梯计费：{pricing_enabled}。只按长 × 宽算面积，高度不影响价格。\n前 250000 平方格免费；之后到 1000000、2250000、4000000 平方格，各段单价为 {price_1}、{price_2}、{price_3} 金币／平方格。\n新建和扩地费用由小镇金库支付，确认前会显示报价。"
+      - "例子：从免费范围扩到一平方公里\n500 × 500 格是 250000 平方格；1000 × 1000 格是一平方公里。\n启用阶梯计费时，后者超出免费范围 750000 平方格，这部分按每平方格 {price_1} 金币计算。\n继续扩大时，已有面积不会全部改按更贵的一档收费。"
+      - "缩地会退钱吗\n缩地只对有付费记录的部分按 {refund_rate} 退款，原本免费的面积不退钱。\n只改变高度，不会增加面积费用或产生面积退款。旧领地即使超出现在的高度限制，只要 Y 范围不变，也可以保留原高度调整长宽。"
+      - "把个人领地贡献给小镇\n在“小镇 → 挂靠领地”选择旧个人领地，或使用 /town attach <领地名>。挂靠后成为小镇属地，原主人显示为贡献者。\n退出小镇不会自动取回这块地。镇长可用 /town release <领地名> 归还符合条件的贡献领地，并按提示确认；建镇属地不能这样归还。"
+      - "删除一块地和解散小镇\n镇长或副镇长可在属地管理中删除单块属地，需要再次确认；不退款，建筑、箱内物品、下级领地和小镇保留。\n解散整个小镇只限镇长或服务器管理员。当前解散结果：{disband_policy}\n操作前请看清确认提示中的领地范围。"
   levels:
-    title: "等级与共同任务"
-    summary: "全镇共同提交物品，解锁更多属地名额。"
+    title: "一起升级小镇"
+    summary: "全镇一起交材料，解锁更多属地名额。"
     sections:
-      - "等级与属地上限\n1 级总属地上限为 {base_limit}，单世界上限为 {base_world_limit}；存在上限时，每升一级增加 {per_level} 个名额。建镇属地和贡献领地也计入。降低上限不会删除已有属地，新建和挂靠会检查上限。"
-      - "一起提交任务\n进入“小镇 → 小镇等级”查看当前共同任务。成员从背包提交符合要求的物品，物品会被消耗，进度全镇共享，也支持跨服累计。达到要求后晋升。"
-      - "当前开放等级\n成员任务开放到 {open_level} 级，系统最大等级为 {max_level}。缺少中间等级的任务时不能继续晋升。OP 可以在系统上限内设置等级。"
-      - "当前配置的物品任务\n{tasks}"
+      - "升级有什么用\n等级越高，可以拥有的属地越多。1 级全镇上限为 {base_limit}，单世界上限为 {base_world_limit}；有上限时，每升一级增加 {per_level} 个名额。\n建镇属地和贡献领地也占名额，已经存在的属地不会因为超限被删除。"
+      - "怎样参加共同任务\n打开“小镇 → 小镇等级”，查看下一等级需要的物品，把材料放进背包后点击提交。\n提交的物品会被消耗，进度由全镇共享，在互通子服也能累计。材料交齐后小镇升级。"
+      - "例子：几个人一起完成\n假设任务需要 9 个下界合金锭，你交 4 个，朋友再交 5 个，就能一起完成。\n不要求一个人一次交齐。提交前先看任务页面显示的材料和剩余数量。"
+      - "目前可以升到哪一级\n共同任务目前开放到 {open_level} 级。达到后可以继续游玩，等待后续任务开放。\n当前升级材料：\n{tasks}"
   faq:
-    title: "常见问题"
-    summary: "不能操作、模板不生效、跨服使用时如何排查。"
+    title: "遇到问题怎么办"
+    summary: "找不到权限、模板没变化、跨服使用。"
     sections:
-      - "成员为什么不能建造\n先确认是哪块属地，再检查玩家的小镇权限组、该组模板和属地覆盖。非镇成员应检查属地／小镇信任及访客权限。权限组、管理身份、环境设置各自解决不同问题。"
-      - "改了模板却没变化\n确认小镇已进入模板模式、改的是该玩家所在组、该属地的权限是继承。本地允许／禁止会在模板修改后继续保留。"
-      - "在不同子服使用\n留意属地条目的区服与世界名称。邀请可以跨服；跨服传送需要服务器配置好对应的连接。其他子服的保护设置可能要等待刷新才生效；创建和调整范围需要在对应的本地世界操作。"
-      - "其他保护也可能生效\n其他保护插件或世界规则也可能阻止操作。请联系小镇管理者检查对应权限设置。"
+      - "为什么我不能放方块\n先确认你在小镇的哪块属地，再请镇长查看你所属的权限组。\n如果使用模板，检查模板的“放置方块”，以及这块地有没有单独禁止。\n如果你没加入小镇，请镇长查看访客权限或给你合适的信任。"
+      - "为什么改了模板没变化\n确认改的是这个玩家所属组的模板，再看目标属地这项权限是否为“继承”。\n如果显示单独允许或单独禁止，就先决定是否恢复继承。旧模式小镇则需要镇长先启用全镇默认权限（一次性）。"
+      - "镇长能用，成员不能用\n镇长、属地管理者和服务器管理员可能有直接管理权限，不能仅靠他们能否操作来判断普通成员的设置。\n例如测试建筑组是否能开箱，应请建筑组里的普通成员实际试一次。"
+      - "不在同一个子服怎么办\n先看属地上显示的区服和世界。邀请可以在互通子服接受；跨服传送需服务器支持，可从属地列表点击传送。\n创建和调整范围要去对应的世界操作。其他子服的权限变化可能稍后生效；如果仍不能操作，联系镇长并说明地点和提示。"
 dominion-text:
   loading-config: 正在加载配置...
   plugin-enabled: 启动完成！
@@ -130,8 +184,8 @@ converts-text:
   must-be-player: 此指令/操作无法通过控制台执行
   must-be-online: 玩家 {0} 必须在线
   world-not-exist: 世界 {0} 不存在
-  unknown-env-flag: 未知的环境配置flag：{0}
-  unknown-pre-flag: 未知的权限flag：{0}
+  unknown-env-flag: 未知的环境设置项：{0}
+  unknown-pre-flag: 未知的权限项：{0}
   unknown-dominion: 未找到领地： {0}
   invalid-number-format: 参数 {0} 应当为数字
   invalid-boolean-format: 参数错误：{0}，应当为 true 或 false
@@ -144,34 +198,34 @@ converts-text:
   not-member: 玩家 {0} 不是领地 {1} 的成员
   no-group-found: 在领地 {1} 中没有找到权限组 {0}
 others-text:
-  no-permission-for-flag: 你没有权限：{0}({1})
+  no-permission-for-flag: "这里不允许你进行此操作：{0}"
 vault-connect-text:
   vault-unavailable: 缺少经济前置，请安装 Vault 或 VaultUnlock 以及经济插件以使用经济功能。
   economy-unavailable: 缺少经济插件，请至少安装一个经济插件以使用经济功能。
   insufficient-funds: 余额不足，需要 {0} {1}，但是你只有 {2} {1}
 dominion-provider-handler-text:
-  personal-delete-confirm: '执行 /dom delete {0} confirm 确认删除以下个人领地：{1}。镇属领地及其整条下级分支都会保留。'
-  personal-delete-preserved: '已保留以下镇属领地及其整条下级分支：{0}。'
+  personal-delete-confirm: '执行 /dom delete {0} confirm 确认删除以下个人领地：{1}。小镇属地及其整条下级分支都会保留。'
+  personal-delete-preserved: '已保留以下小镇属地及其整条下级分支：{0}。'
   delete-refund-failed: '领地 {0} 已删除，但退款失败：{1}。请联系管理员核对款项，不要重复删除。'
-  outpost-delete-denied: '只有该镇的镇长、副镇长或服务器管理员可以删除镇属领地。'
+  outpost-delete-denied: '只有该镇的镇长、副镇长或服务器管理员可以删除小镇属地。'
   outpost-delete-changed: '该属地已被删除或归属已变更，请重新打开管理界面后操作。'
   outpost-delete-confirm: '确认只删除属地 {0}？删除后失去领地保护并清除该地权限，不退款；方块、下级领地及小镇保留。执行 /dom delete {0} confirm 确认。'
   outpost-delete-success: '已删除并归档属地 {0}。该地保护已解除，不退款；方块、下级领地及小镇均保留。'
   give-force-admin-only: 只有 OP 或拥有 dominion.admin 权限的管理员可使用 give force；普通转交请使用 confirm。
   give-force-success: 已将 {0} 强制转交给 {1}，旧小镇关联已解除，共处理 {2} 块领地。
   give-result-refresh-failed: 领地 {0} 的转交已提交，但读取最新状态失败，尚未尝试自动挂靠；请先查看领地状态，不要直接重复转交。原因：{1}
-  give-confirm-command: 请执行 /dom give {0} {1} confirm 确认转交个人领地及其个人子领地。管理员可使用 /dom give {0} {1} force 解除镇属地关联并强制转交。
+  give-confirm-command: 请执行 /dom give {0} {1} confirm 确认转交个人领地及其个人子领地。管理员可使用 /dom give {0} {1} force 解除小镇属地关联并强制转交。
   create-success: 成功创建领地 {0}
   create-failed: 创建领地 {0} 失败，原因：{1}
-  personal-creation-disabled: 个人领地已不可新建。请创建或加入城镇（/town create）。
+  personal-creation-disabled: 个人领地已不可新建。请创建或加入小镇（/town create）。
   sub-creation-disabled: 子领地已不可新建。
   legacy-resize-disabled: 本服务器已禁止调整旧领地大小。
   legacy-delete-disabled: 本服务器已禁止删除领地。
-  town-outpost-no-delete: 领地 {0} 属于城镇财产，个人无法删除。可由城镇解散或管理员释放。
-  town-outpost-no-transfer: 领地 {0} 属于城镇财产，不可转让。
-  auto-attached-to-town: 领地 {0} 已挂靠至城镇 {1}（新主人是城镇成员）。
-  auto-attach-failed: 领地 {0} 已成功转让，但无法自动挂靠至城镇 {1}：{2}。它将保留为新主人的个人领地。
-  auto-attach-refresh-failed: 领地 {0} 已成功转交并挂靠至城镇 {1}，但刷新状态或发送通知失败：{2}。请勿重复转交。
+  town-outpost-no-delete: "只有本镇镇长、副镇长或服务器管理员可以删除小镇属地。"
+  town-outpost-no-transfer: "小镇属地不能按个人领地转让。镇长可归还贡献领地；服务器管理员可使用强制转交。"
+  auto-attached-to-town: 领地 {0} 已挂靠至小镇 {1}（新主人是小镇成员）。
+  auto-attach-failed: 领地 {0} 已成功转让，但无法自动挂靠至小镇 {1}：{2}。它将保留为新主人的个人领地。
+  auto-attach-refresh-failed: 领地 {0} 已成功转交并挂靠至小镇 {1}，但刷新状态或发送通知失败：{2}。请勿重复转交。
   expand-success: 成功扩张领地 {0}
   expand-failed: 扩张领地 {0} 失败，原因：{1}
   contract-success: 成功缩小领地 {0}
@@ -207,7 +261,7 @@ dominion-provider-handler-text:
   set-guest-flag-success: 设置领地访客权限 {0} 为 {1} 成功
   set-guest-flag-failed: 设置领地访客权限 {0} 为 {1} 失败，原因：{2}
 member-provider-handler-text:
-  use-trust-for-town-outposts: 该领地属于城镇，单人授权请使用 /town trust 而非成员。
+  use-trust-for-town-outposts: "小镇成员请到“小镇 → 成员权限管理”分配权限；镇外朋友请使用“镇外玩家权限（信任）”。"
   set-flag-success: 成功修改领地 {2} 成员 {1} 的权限配置 {0}
   owner-only: 只有领地所有者可以管理领地管理员
   group-already: 该成员属于权限组 {0}，无法单独管理
@@ -219,9 +273,9 @@ member-provider-handler-text:
   remove-member-success: 成功将成员 {0} 移出领地 {1}
   remove-member-failed: 移除成员失败，原因：{0}
 group-provider-handler-text:
-  town-outpost-no-custom-groups: 自定义权限组在城镇前哨上不生效，请使用 @town 组或 /town trust。
-  town-group-reserved: '@town 组由城镇系统管理，不能删除或重命名。'
-  town-group-mirror-reserved: 小镇镜像组不能在此前哨删除、重命名或修改成员；请从小镇页面管理。
+  town-outpost-no-custom-groups: "小镇属地的成员权限组由小镇统一管理，请到“小镇 → 成员权限管理”创建和分配。"
+  town-group-reserved: "小镇成员（默认组）由小镇统一管理，不能删除或重命名。"
+  town-group-mirror-reserved: "成员分组由小镇统一管理，请到“小镇 → 成员权限管理”修改组名和成员。"
   owner-only: 只有领地所有者可以配置管理员权限组
   set-flag-success: 设置权限组 {0} 的权限 {1} 为 {2} 成功
   set-flag-failed: 配置权限组失败，原因：{0}
@@ -235,14 +289,14 @@ group-provider-handler-text:
   add-member-failed: 添加成员到权限组失败，原因：{0}
   remove-member-success: 成功将成员 {0} 移出权限组 {1}
   remove-member-failed: 移除成员失败，原因：{0}
-  town-group-members-implicit: 小镇成员组的权限由镇成员身份隐式持有，不能向其中添加或移除成员。
+  town-group-members-implicit: "未分配自定义组的成员使用小镇成员（默认组）。请到“小镇 → 成员权限管理”调整成员分组。"
 select-point-events-handler-text:
   selection-tool-hint: '选点工具：{0}。左键选择第一个方块，右键选择第二个方块。'
   first-point: 第一个选点坐标：{0}, {1}, {2}
   second-point: 第二个选点坐标：{0}, {1}, {2}
   not-same-world: 两个选点不在同一世界
   price: 预计个人领地花费：{0} {1}
-  town-outpost-price: 小镇附属领地预计花费：{0} {1}
+  town-outpost-price: "小镇属地预计花费：{0} {1}"
   size: 尺寸：{0} x {1} x {2}
   square: 面积：{0}
   volume: 体积：{0}
@@ -275,7 +329,7 @@ administrator-command-text:
   import-description: 导入数据库备份文件。
   update-language-description: 从插件内置语言文件重新生成语言文件。
   update-language-confirm: 这将覆盖你当前的语言文件，请在指令末尾加上 confirm 以确认操作。
-  town-release-description: 将城镇前哨释放并返还给贡献者（仲裁）。
+  town-release-description: "将小镇属地释放并返还给贡献者（仲裁）。"
   fix-uuid-description: 修复玩家 UUID 不匹配（正版/离线模式切换导致，需要玩家在线）
   town-attach-description: 将领地挂靠到小镇（管理员仲裁）
 migration-command-text:
@@ -287,24 +341,24 @@ migration-command-text:
   migrate-description: 从 Residence 迁移领地到 Dominion。
   migrate-all-description: 迁移所有 residence 领地到 Dominion。
 template-command-text:
-  name-not-valid: 模板名称（{0}）不能包含空格
-  template-name-exist: 模板名称 {0} 已存在
-  create-template-fail: 创建模板失败，原因：{0}
-  create-template-success: 成功创建模板 {0}
-  template-not-exist: 模板 {0} 不存在
-  delete-template-success: 成功删除模板 {0}
-  delete-template-fail: 删除模板失败，原因：{0}
-  apply-template-success: 成功应用模板 {0} 到成员 {1}
-  apply-template-fail: 应用模板失败，原因：{0}
-  set-flag-success: 成功配置模板 {1} 的权限 {0} 为 {2}
-  set-flag-fail: 配置模板失败，原因：{0}
-  rename-template-success: 成功将模板重命名为 {0}
-  rename-template-fail: 重命名模板失败，原因：{0}
-  create-template-description: 创建一个新的权限模板。
-  delete-template-description: 删除一个权限模板。
-  set-template-flag-description: 设置权限模板的权限。
-  member-apply-template-description: 将权限模板应用到领地成员。
-  rename-template-description: 重命名一个权限模板。
+  name-not-valid: "预设名称（{0}）不能包含空格"
+  template-name-exist: "预设名称 {0} 已存在"
+  create-template-fail: "创建预设失败，原因：{0}"
+  create-template-success: "成功创建预设 {0}"
+  template-not-exist: "预设 {0} 不存在"
+  delete-template-success: "成功删除预设 {0}"
+  delete-template-fail: "删除预设失败，原因：{0}"
+  apply-template-success: "成功应用预设 {0} 到成员 {1}"
+  apply-template-fail: "应用预设失败，原因：{0}"
+  set-flag-success: "成功配置预设 {1} 的权限 {0} 为 {2}"
+  set-flag-fail: "配置预设失败，原因：{0}"
+  rename-template-success: "成功将预设重命名为 {0}"
+  rename-template-fail: "重命名预设失败，原因：{0}"
+  create-template-description: "创建一个新的权限预设。"
+  delete-template-description: "删除一个权限预设。"
+  set-template-flag-description: "设置权限预设的权限。"
+  member-apply-template-description: "将个人权限预设手动套用一次到旧领地成员。"
+  rename-template-description: "重命名一个权限预设。"
 group-title-command-text:
   group-not-belonging: 你不属于权限组 {0}
   using-title-success: 成功使用称号 {0}
@@ -334,8 +388,8 @@ limitation-text:
   load-world-setting-failed: 加载 {0} 设置失败，原因：{1}
   load-world-settings-success: 成功加载了 {0} 个世界设置：{1}
 database-manager-text:
-  import-drops-town-data: 该备份早于城镇时代：本次恢复将清除全部现有城镇数据（镇、成员、信托）。
-  import-drops-town-group-data: 该备份早于小镇分组系统：本次恢复将清除现有的小镇组定义。
+  import-drops-town-data: "该备份早于小镇时代：本次恢复将清除全部现有小镇数据（镇、成员、信任设置）。"
+  import-drops-town-group-data: 该备份早于小镇分组系统：本次恢复将清除现有的成员权限组定义。
   import-drops-town-permission-data: 该备份早于小镇权限模板系统：本次恢复将清除现有模板与属地覆盖，恢复后的小镇使用旧权限模式。
   exporting-database-tables: 正在导出数据库备份...
   export-table-fail: 导出数据库备份失败，原因：{0}
@@ -450,7 +504,7 @@ flags:
     display-name: 怪物移动
     description: 是否可以在（向）领地内移动
   admin:
-    display-name: 管理员
+    display-name: "属地管理员"
     description: 管理领地内的其他成员权限
   crafter:
     display-name: 合成器
@@ -648,8 +702,8 @@ edit-message-inputter-text:
   leave-description: 玩家离开领地时显示的消息。
   leave-hint: 输入新的离开消息
 create-template-inputter-text:
-  button: 创建模板
-  hint: 请输入新模板名称
+  button: "创建预设"
+  hint: "请输入新预设名称"
 rename-group-inputter-text:
   button: 重命名权限组
   hint: 请输入新的权限组名称
@@ -680,9 +734,9 @@ inputter-text:
   cancel: ' 【发送大写 C 取消输入】'
   inputter-cancelled: 输入已取消。
 rename-template-inputter-text:
-  button: 重命名模板
-  hint: 请输入新的模板名称
-  description: 重命名此权限模板。
+  button: "重命名预设"
+  hint: "请输入新的预设名称"
+  description: "重命名此权限预设。"
 dominion-operate-command-text:
   resize-description: 使用指定大小和方向调整领地尺寸。
   easy-expand-description: 根据玩家当前位置轻松扩大领地尺寸。
@@ -715,7 +769,7 @@ member-command-text:
   set-member-privilege-description: 设置领地成员的权限配置。
   remove-member-description: 从领地中移除成员。
 console-text:
-  in-game-only: 此UI仅限游戏内使用。
+  in-game-only: "此菜单只能在游戏中打开。"
   page-info: §7 页码 {0}/{1} - 共有 {2} 条
   desc-prefix: §7      - §f{0}
 ui-commands-description:
@@ -734,91 +788,91 @@ town-manager-text:
   use-transfer-for-mayor: 镇长一职只能通过 /town transfer 转让。
   only-mayor-can-set-role: 只有镇长能提拔或降级成员。
   confirm-kick: §c5秒内再次点击确认踢出 {0}。
-  confirm-promote: §a5秒内再次点击确认提拔 {0} 为管理员。
-  confirm-demote: §c5秒内再次点击确认降级 {0} 为居民。
+  confirm-promote: "§a5 秒内再次点击确认任命 {0} 为副镇长。"
+  confirm-demote: "§c5 秒内再次点击确认将 {0} 设为普通成员。"
   confirm-transfer: §6§l5秒内再次点击确认转让镇长给 {0}。此操作不可撤销！
   set-role-notify: 你在小镇 {1} 的角色已变为 {0}。
   set-role-success: 已将 {0} 在小镇 {2} 的角色设为 {1}。
   only-mayor-can-transfer: 只有 {0} 的现任镇长可以转让镇长。
-  town-name-should-not-empty: 城镇名称不能为空。
+  town-name-should-not-empty: 小镇名称不能为空。
   town-name-invalid: 镇名不能包含空格、点、§、&、~ 或逗号。
-  town-name-exist: 城镇名称 {0} 已存在。
+  town-name-exist: 小镇名称 {0} 已存在。
   town-name-unchanged: 小镇当前已经叫做 {0}。
   only-mayor-can-rename: 只有 {0} 的镇长可以修改小镇名称。
   rename-success: 小镇 {0} 已重命名为 {1}。
-  town-not-exist: 城镇 {0} 不存在。
-  already-in-town: 你已经是城镇 {0} 的成员。
-  not-in-town: 你不是城镇 {0} 的成员。
-  not-town-manager: 只有 {0} 的镇长或助理可以执行此操作。
-  max-memberships-reached: 你已加入 {0} 个城镇，服务器上限为 {1}。
+  town-not-exist: 小镇 {0} 不存在。
+  already-in-town: 你已经是小镇 {0} 的成员。
+  not-in-town: 你不是小镇 {0} 的成员。
+  not-town-manager: 只有 {0} 的镇长或副镇长可以执行此操作。
+  max-memberships-reached: 你已加入 {0} 个小镇，服务器上限为 {1}。
   create-success: 小镇 {0} 已创建。
-  create-success-founding: 小镇 {0} 已创建，并生成一块建国属地。
-  disband-success: 小镇 {0} 已解散，{1} 块前哨已解散并归档。
-  disband-success-return: 小镇 {0} 已解散：{1} 块前哨已归还贡献者，{2} 块已解散。
+  create-success-founding: "小镇 {0} 已创建，并生成一块建镇属地。"
+  disband-success: 小镇 {0} 已解散，{1} 块小镇属地已解散并归档。
+  disband-success-return: 小镇 {0} 已解散：{1} 块小镇属地已归还贡献者，{2} 块已解散。
   disband-enclave-dissolved: 你的领地 {0} 已随小镇 {1} 一同解散。
   join-success: 你已加入小镇 {0}。个人领地没有自动挂靠；可使用 /town attach 选择要贡献的领地。
   attach-hint: 你有 {0} 块领地可以挂靠到小镇。使用 /town attach 选择。
-  town-group-name-invalid: 小镇组名只能包含小写字母、数字、下划线和连字符。
-  town-group-name-too-long: 小镇组内部名不能超过 32 个字符。
-  town-group-display-too-long: 小镇组显示名不能超过 64 个字符。
-  town-group-exists: 小镇组 {0} 已存在于 {1}。
-  town-group-not-exist: 小镇组 {0} 不存在于 {1}。
-  town-group-created: 已在 {1} 创建小镇组 {0}。
-  town-group-display-updated: 已将小镇组 {0} 的显示名改为 {1}。
-  town-group-deleted: 已从 {1} 删除小镇组 {0}；已分配成员恢复使用 @town。
-  town-group-member-assigned: 已将 {0} 分配到小镇组 {1}。
-  town-group-member-removed: 已取消 {0} 的小镇组分配；现在使用 @town。
-  town-group-mirror-reserved: 小镇管理的镜像组不能在此删除、重命名或修改成员；请从小镇页面管理成员。
+  town-group-name-invalid: "成员权限组内部名只能包含小写字母、数字、下划线和连字符；显示名可以使用中文。"
+  town-group-name-too-long: 成员权限组内部名不能超过 32 个字符。
+  town-group-display-too-long: 成员权限组显示名不能超过 64 个字符。
+  town-group-exists: 成员权限组 {0} 已存在于 {1}。
+  town-group-not-exist: 成员权限组 {0} 不存在于 {1}。
+  town-group-created: 已在 {1} 创建成员权限组 {0}。
+  town-group-display-updated: 已将成员权限组 {0} 的显示名改为 {1}。
+  town-group-deleted: 已从 {1} 删除成员权限组 {0}；已分配成员恢复使用小镇成员（默认组）。
+  town-group-member-assigned: 已将 {0} 分配到成员权限组 {1}。
+  town-group-member-removed: 已取消 {0} 的成员权限组分配；现在使用小镇成员（默认组）。
+  town-group-mirror-reserved: "成员分组由小镇统一管理，请到“小镇 → 成员权限管理”调整分组。"
   town-group-mirror-tag: ' §7[来自小镇]'
-  template-mode-required: 小镇 {0} 尚未升级到“小镇模板权限模式”。
-  template-mode-already-enabled: 小镇 {0} 已经在使用“小镇模板权限模式”。
+  template-mode-required: "小镇 {0} 尚未启用全镇默认权限。"
+  template-mode-already-enabled: "小镇 {0} 已启用全镇默认权限。"
   template-mode-mayor-only: 只有 {0} 的镇长可以执行这项不可逆升级。
-  template-mode-upgrade-success: 小镇 {0} 已升级到模板权限模式；{1} 块附属领地现在全部继承小镇模板。请立即检查并设置模板。
-  template-flag-updated: 已将小镇模板 {0} 的权限 {1} 设为 {2}。
-  outpost-override-cleared: 权限 {0}（组 {1}）已恢复继承小镇模板。
-  leave-success: 你已离开城镇 {0}，你的领地将保留在城镇中。
-  mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散城镇。
-  kick-success: 已将 {0} 踢出城镇 {1}。
-  cannot-kick-manager: 你不能踢出镇长或助理。
-  only-mayor-can-disband: 只有城镇 {0} 的镇长可以解散城镇。
-  transfer-success: 城镇 {0} 的镇长已转让给 {1}。
-  target-not-member: '{0} 不是城镇 {1} 的成员。'
+  template-mode-upgrade-success: "小镇 {0} 已启用全镇默认权限，{1} 块小镇属地已恢复继承。请进入“成员权限管理”设置各组的全镇默认权限。"
+  template-flag-updated: 已将 {0} 的全镇默认权限 {1} 设为 {2}。
+  outpost-override-cleared: "权限 {0}（组 {1}）已恢复继承全镇默认权限。"
+  leave-success: "你已离开小镇 {0}，已贡献给小镇的领地不会自动归还。"
+  mayor-cannot-leave: 镇长不能退出，请先转让镇长或解散小镇。
+  kick-success: 已将 {0} 踢出小镇 {1}。
+  cannot-kick-manager: 你不能踢出镇长或副镇长。
+  only-mayor-can-disband: 只有小镇 {0} 的镇长可以解散小镇。
+  transfer-success: 小镇 {0} 的镇长已转让给 {1}。
+  target-not-member: '{0} 不是小镇 {1} 的成员。'
   trust-success: 已在 {1}（范围 {2}）上信任 {0}。
   untrust-success: 已移除 {0} 在 {1}（范围 {2}）上的信任。
   trust-disabled: 本服务器已关闭信任系统。
-  trust-target-outpost-not-in-town: 前哨 {0} 不属于城镇 {1}。
-  deposit-success: 已向 {1} 的城镇金库存入 {0}，当前余额：{2}。
-  withdraw-success: 已从 {1} 的城镇金库取出 {0}，当前余额：{2}。
-  insufficient-town-funds: 城镇 {0} 的金库无法支付 {1}（当前余额：{2}）。
+  trust-target-outpost-not-in-town: 小镇属地 {0} 不属于小镇 {1}。
+  deposit-success: 已向 {1} 的小镇金库存入 {0}，当前余额：{2}。
+  withdraw-success: 已从 {1} 的小镇金库取出 {0}，当前余额：{2}。
+  insufficient-town-funds: 小镇 {0} 的金库无法支付 {1}（当前余额：{2}）。
   invalid-amount: 无效的金额：{0}。
-  outpost-create-success: 已为城镇 {1} 创建前哨 {0}，从金库扣除 {2} {3}。
-  outpost-remote-disabled: 远程前哨已禁用，城镇只能扩建现有前哨。
-  outpost-amount-exceeded: 小镇 {0} 已达到 {1} 级镇属地上限（{2} 个）。
+  outpost-create-success: "已为小镇 {1} 创建小镇属地 {0}，从金库扣除 {2} {3}。"
+  outpost-remote-disabled: "本服务器未开放新建小镇属地，可调整已有属地的范围。"
+  outpost-amount-exceeded: 小镇 {0} 已达到 {1} 级小镇属地上限（{2} 个）。
   town-level-admin-only: 只有 OP 可以设置小镇等级。
   town-level-invalid: 小镇等级必须在 1 到 {0} 之间。
-  town-level-set: 已将小镇 {0} 设置为 {1} 级，镇属地上限为全服 {2} 个 / 单世界 {3} 个。
-  outpost-attach-unavailable: 镇属地 {0} 已无法挂靠，请刷新后重试。
-  founding-required: 你名下没有领地：创建城镇需要一个建国前哨位置。
-  release-success: 前哨 {0} 已从城镇 {1} 释放，返还给贡献者 {2}。
-  release-not-outpost: 领地 {0} 不是城镇前哨。
-  release-founding-denied: 建国前哨不可被释放，它随城镇一同消亡。
+  town-level-set: "已将小镇 {0} 设置为 {1} 级，本镇属地总上限为 {2} 个（跨服合计），单世界上限为 {3} 个。"
+  outpost-attach-unavailable: 小镇属地 {0} 已无法挂靠，请刷新后重试。
+  founding-required: "你名下没有领地：创建小镇需要一个建镇属地位置。"
+  release-success: "已解除属地 {0} 与小镇 {1} 的关联，归还给贡献者 {2}。"
+  release-not-outpost: "领地 {0} 不是小镇属地。"
+  release-founding-denied: "建镇属地不能归还；解散小镇时会解除它的领地保护。"
   release-admin-only: 只有 OP 可以使用小镇管理员仲裁操作。
-  release-mayor-contributed-only: 只有本镇镇长可以归还贡献领地；小镇自行创建的附属领地不可归还。
+  release-mayor-contributed-only: 只有本镇镇长可以归还贡献领地；小镇自行创建的小镇属地不可归还。
   only-member-can-deposit: 只有 {0} 的成员才能向其金库存款。
-  outpost-admin-set: 已将前哨 {0} 的次级管理员设为 {1}。
-  outpost-admin-cleared: 已清除前哨 {0} 的次级管理员。
-  outpost-admin-not-member: 次级管理员必须是城镇 {0} 的成员。
-  merge-member-trusted: 你在 {1} 的成员身份已转为该属地的 Trust 授权（该领地已挂靠小镇）。
-  town-group-display-name: 小镇成员
+  outpost-admin-set: 已将小镇属地 {0} 的属地管理员设为 {1}。
+  outpost-admin-cleared: 已清除小镇属地 {0} 的属地管理员。
+  outpost-admin-not-member: 属地管理员必须是小镇 {0} 的成员。
+  merge-member-trusted: 你在 {1} 的成员身份已转为该属地的 信任设置（该领地已挂靠小镇）。
+  town-group-display-name: "小镇成员（默认组）"
 town-level-manager-text:
   member-only: 只有 {0} 的小镇成员可以为等级任务提交物品。
-  progression-closed: 小镇 {0} 当前为 {1} 级，成员晋升目前只开放到 {2} 级。
+  progression-closed: "小镇 {0} 当前为 {1} 级，共同任务目前开放到 {2} 级。"
   requirement-missing: 尚未配置晋升到小镇 {0} 级的共同任务。
   no-items: 你的背包中没有可提交的 {0}。
   contribution-accepted: 已向 {2} 的 {3} 级任务提交 {0} x {1}（共同进度 {4}/{5}）。
   contribution-failed-refunded: 提交进度保存失败，已返还扣除的物品：{0}
   contribution-changed: 提交期间小镇任务已发生变化，物品已返还。
-  level-up: 小镇 {0} 已升到 {1} 级！镇属地上限：全服 {2} 个 / 单世界 {3} 个。
+  level-up: "小镇 {0} 已升到 {1} 级！本镇属地总上限：{2} 个（跨服合计），单世界：{3} 个。"
   dropped-refund: 你的背包空间不足，返还的 {0} 个物品已掉落在脚下。
   netherite-ingot: 下界合金锭
   sculk-catalyst: 幽匿催发体
@@ -826,72 +880,26 @@ town-level-manager-text:
   heavy-core: 沉重核心
 town-command-text:
   disband-confirm-contributors-return: 以下玩家贡献的领地将归还给本人：{0}。
-  disband-confirm-return: 解散 {0} 将归还贡献领地并解散城镇自建前哨（共 {1} 个）：{2}。确认请再次执行并加 confirm。
+  disband-confirm-return: 解散 {0} 将归还贡献领地并解散小镇自建属地（共 {1} 个）：{2}。确认请再次执行并加 confirm。
   dominion-not-exist: 领地 {0} 不存在。
   disband-confirm-contributors: 以下玩家贡献的领地将被解散：{0}。
   only-player: 该命令只能由玩家执行。
-  usage: '&b/town help [章节] [页码] &7- 阅读游戏内小镇手册
-
-    &b/town create <名称> &7- 创建城镇（现有领地保持个人状态；无领地时获得免费建国属地）
-
-    &b/town invite <玩家> &7- 邀请玩家（镇长/助理）
-
-    &b/town join <城镇> [confirm] &7- 加入被邀请的城镇
-
-    &b/town rename <新名称> &7- 修改本镇名称（仅镇长）
-
-    &b/town leave &7- 离开城镇（领地留在城镇）
-
-    &b/town attach [领地|all] &7- 挂靠个人领地（无参数时打开选择界面）
-
-    &b/town group <create|rename|delete|list|info|add|remove> ... &7- 管理小镇权限组
-
-    &b/town kick <玩家> &7- 踢出居民（镇长/助理）
-
-    &b/town transfer <玩家> &7- 转让镇长
-
-    &b/town promote|demote <玩家> &7- 任命/降级助理（镇长/助理）
-
-    &b/town disband [confirm] &7- 解散城镇（前哨一并解散）
-
-    &b/town deposit <金额> &7- 向城镇金库存款
-
-    &b/town withdraw <金额> &7- 从城镇金库取款（镇长/助理）
-
-    &b/town outpost create <名称> &7- 新建远程前哨（需要先选点）
-
-    &b/town admin <前哨> [玩家] &7- 设置/清除前哨次级管理员
-
-    &b/town upgrade [confirm] &7- 一次性升级到小镇权限模板（仅镇长）
-
-    &b/town release <领地> [confirm] &7- 镇长归还贡献领地（OP 可仲裁）
-
-    &b/town level [submit] &7- 查看共同等级任务或提交背包物品
-
-    &b/town level set <小镇> <等级> &7- 设置小镇等级（仅 OP）
-
-    &b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>
-
-    &b/town untrust <玩家> [town|outpost <名称>]
-
-    &b/town info [城镇] &7- 城镇信息
-
-    &b/town list &7- 城镇列表'
-  unknown-sub-command: 未知的城镇命令：{0}
-  no-invite: 需要 {0} 的镇长或助理邀请才能加入。
+  usage: "&b/town help [章节] [页码] &7- 阅读游戏内小镇手册\n&b/town create <名称> &7- 创建小镇（现有领地保持个人状态；无领地时获得建镇属地，费用以创建提示为准）\n&b/town invite <玩家> &7- 邀请玩家（镇长/副镇长）\n&b/town join <小镇> [confirm] &7- 加入被邀请的小镇\n&b/town rename <新名称> &7- 修改本镇名称（仅镇长）\n&b/town leave &7- 离开小镇（领地留在小镇）\n&b/town attach [领地|all] &7- 挂靠个人领地（无参数时打开选择界面）\n&b/town group <create|rename|delete|list|info|add|remove> ... &7- 管理成员权限组\n&b/town kick <玩家> &7- 踢出成员（镇长/副镇长）\n&b/town transfer <玩家> &7- 转让镇长\n&b/town promote|demote <玩家> &7- 任命副镇长/设为普通成员（仅镇长）\n&b/town disband [confirm] &7- 解散小镇（小镇属地一并解散）\n&b/town deposit <金额> &7- 向小镇金库存款\n&b/town withdraw <金额> &7- 从小镇金库取款（镇长/副镇长）\n&b/town outpost create <名称> &7- 新建小镇属地（需要先选点）\n&b/town admin <小镇属地> [玩家] &7- 设置/清除属地管理员\n&b/town upgrade [confirm] &7- 启用全镇默认权限（一次性，仅镇长）\n&b/town release <领地> [confirm] &7- 镇长归还贡献领地（OP 可仲裁）\n&b/town level [submit] &7- 查看共同等级任务或提交背包物品\n&b/town level set <小镇> <等级> &7- 设置小镇等级（仅 OP）\n&b/town trust <玩家> <town|outpost <名称>> <build> <destroy> <switch> <item_use>\n&b/town untrust <玩家> [town|outpost <名称>]\n&b/town info [小镇] &7- 小镇信息\n&b/town list &7- 小镇列表"
+  unknown-sub-command: 未知的小镇命令：{0}
+  no-invite: 需要 {0} 的镇长或副镇长邀请才能加入。
   invite-sent: 已邀请 {0} 加入 {1}（5 分钟内有效）。
-  no-invite-remote: 需要 {0} 的镇长或助理邀请才能加入。
+  no-invite-remote: 需要 {0} 的镇长或副镇长邀请才能加入。
   invite-received: 你被邀请加入 {0}（5 分钟内有效）。可在任意子服执行 /town join {0} confirm 接受邀请。
   invite-not-local: '邀请已保存给 {0}，对方上线后会收到提示。'
-  join-confirm: 加入 {0} 后你将成为居民；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town join {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
-  join-confirm-no-land: 加入 {0} 后你将成为居民；个人领地不会自动挂靠。请执行 /town join {0} confirm 确认。
+  join-confirm: 加入 {0} 后你将成为成员；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town join {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
+  join-confirm-no-land: 加入 {0} 后你将成为成员；个人领地不会自动挂靠。请执行 /town join {0} confirm 确认。
   create-confirm: 创建小镇 {0} 后你将成为镇长；你的 {1} 块个人领地会保持个人状态：{2}。请执行 /town create {0} confirm 确认。如需贡献领地，请之后使用 /town attach 手动选择。
-  attach-member-note: 被挂靠领地的成员列表将归档保存；原成员会按原旗子获得该属地的 Trust 授权，并会收到通知。
-  disband-confirm: 解散 {0} 将解散其 {1} 块前哨：{2}。加 'confirm' 重新执行以确认。
-  no-town: 你不属于任何城镇。
-  no-managed-town: 你不是任何城镇的镇长或助理。
-  town-info: '&b{0} &7（镇长：{1}，成员：{2}，镇属地：{3}，金库：{4}）'
-  town-level-info: '&7小镇等级：&b{0}&7/{1}，镇属地上限：&b全服 {2} 个 / 单世界 {3} 个'
+  attach-member-note: "挂靠后，原领地成员的权限会转换为该属地的信任设置，原成员会收到通知。"
+  disband-confirm: 解散 {0} 将解散其 {1} 块小镇属地：{2}。加 'confirm' 重新执行以确认。
+  no-town: 你不属于任何小镇。
+  no-managed-town: 你不是任何小镇的镇长或副镇长。
+  town-info: '&b{0} &7（镇长：{1}，成员：{2}，小镇属地：{3}，金库：{4}）'
+  town-level-info: "&7小镇等级：&b{0}&7/{1}，本镇属地总上限：&b{2} 个（跨服合计）&7 / 单世界 &b{3} 个"
   level-usage: '&b/town level set <小镇> <1-{0}> &7- 设置小镇等级（仅 OP）'
   level-task-usage: '&b/town level [submit] &7- 查看共同任务或提交背包中的匹配物品'
   town-list-entry: '{0}（镇长：{1}）'
@@ -901,8 +909,8 @@ town-command-text:
   attach-all-success: 已将 {0} 块领地挂靠到小镇 {1}。
   attach-one-success: 已将领地 {0} 挂靠到小镇 {1}。
   attach-not-owned: 你没有名为 {0} 的个人领地。
-  upgrade-confirm: 升级 {0} 会重置所有镇属领地的小镇组权限，并让全部领地继承新模板。此操作不可撤销。执行 /town upgrade confirm 继续。
-  release-confirm: 归还贡献领地 {0} 会将其交还给 {1}，并删除该属地的 Trust 及全部小镇组镜像。执行 /town release {0} confirm 继续。
+  upgrade-confirm: "为 {0} 启用全镇默认权限，会重置所有小镇属地的成员权限组设置，并将它们全部改为继承。此操作不可撤销。执行 /town upgrade confirm 继续，之后请设置各组的全镇默认权限。"
+  release-confirm: "归还属地 {0} 会将它交还给 {1}，解除小镇关联，清除这块地的小镇成员权限和信任设置。执行 /town release {0} confirm 确认。"
   town-group-usage: '&b/town group create <名称> [显示名]
 
     &b/town group rename <内部名> <显示名>
@@ -916,24 +924,24 @@ town-command-text:
     &b/town group add <玩家> <组名>
 
     &b/town group remove <玩家>'
-  town-group-list-header: '{0} 的小镇组：'
+  town-group-list-header: '{0} 的成员权限组：'
   town-group-list-entry: '&6{0} &7（内部名：{1}，成员：{2}）'
   town-group-list-empty: 小镇 {0} 尚未创建自定义组。
   town-group-info: '&6{0} &7（内部名：{1}，成员：{2}）'
   town-group-members: '成员：{0}'
 migration-text:
-  town-data-dropped: 源服务器包含城镇数据；镇结构不随合并迁移，导入的领地将变为无镇。
+  town-data-dropped: 源服务器包含小镇数据；镇结构不随合并迁移，导入的领地将变为无镇。
 town-create-inputter-text:
   button: 创建小镇
   hint: 请输入新小镇的名称。
   confirm-hint: 输入 confirm 确认创建小镇；上述个人领地不会自动挂靠。
-  description: 创建小镇。现有个人领地保持不变，可之后使用 /town attach 选择贡献；无领地时会获得建国属地。
+  description: "创建小镇。现有个人领地保持不变，可之后使用 /town attach 选择贡献；无领地时会获得建镇属地。"
 town-outpost-admin-inputter-text:
-  button: 次级管理员
+  button: 属地管理员
   hint: 输入玩家名任命，输入 clear 移除。
-  description: 任命或清除此前哨的次级管理员。
+  description: 任命或清除此小镇属地的属地管理员。
 town-outpost-create-inputter-text:
-  hint: 请输入新镇属地名称，将使用当前选中的两个点。
+  hint: 请输入新小镇属地名称，将使用当前选中的两个点。
 town-rename-inputter-text:
   button: 重命名小镇
   hint: 请输入新的小镇名称（不允许空格）。

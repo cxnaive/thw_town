@@ -15,6 +15,8 @@ import cn.lunadeer.dominion.managers.TownManager;
 import cn.lunadeer.dominion.managers.TownLevelManager;
 import cn.lunadeer.dominion.managers.TownInviteManager;
 import cn.lunadeer.dominion.misc.Others;
+import cn.lunadeer.dominion.uis.NameSearch;
+import cn.lunadeer.dominion.utils.NameQuery;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.VaultConnect.VaultConnect;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -146,6 +148,8 @@ public class TownCommand implements TabExecutor {
             switch (args[0].toLowerCase()) {
                 case "help", "guide" -> cn.lunadeer.dominion.uis.town.TownGuide.show(sender,
                         args.length > 1 ? args[1] : "contents", args.length > 2 ? args[2] : "1");
+                case "search" -> new NameSearch(NameSearch.Scope.TOWNS, null, null).search(sender,
+                        args.length > 1 ? args[1] : "", args.length > 2 ? args[2] : "1");
                 case "create" -> handleCreate(sender, args);
                 case "rename" -> handleRename(sender, args);
                 case "disband" -> handleDisband(sender, args);
@@ -800,7 +804,7 @@ public class TownCommand implements TabExecutor {
     // ------------------------------------------------------------------
     private static final List<String> SUB_COMMANDS = List.of("create", "rename", "disband", "invite", "join", "leave",
             "attach", "kick", "transfer", "promote", "demote", "trust", "untrust", "deposit", "withdraw", "outpost",
-            "admin", "upgrade", "release", "level", "group", "info", "list", "help", "guide");
+            "admin", "upgrade", "release", "level", "group", "info", "list", "help", "guide", "search");
     private static final List<String> GROUP_SUB_COMMANDS = List.of(
             "create", "rename", "delete", "list", "info", "add", "remove");
 
@@ -821,6 +825,11 @@ public class TownCommand implements TabExecutor {
             switch (args[0].toLowerCase()) {
                 case "help", "guide" -> filter(cn.lunadeer.dominion.uis.town.TownGuide.topics(), args[1], suggestions);
                 case "join", "info" -> filter(townNames(), args[1], suggestions);
+                case "search" -> {
+                    try {
+                        suggestions.addAll(new NameQuery(args[1]).find(townNames(), name -> name).stream().limit(20).toList());
+                    } catch (IllegalArgumentException ignored) { }
+                }
                 case "rename" -> {
                     // For OP arbitration the first argument is the current
                     // town name; ordinary mayors type the new name freely.

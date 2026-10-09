@@ -1,0 +1,215 @@
+{
+  "results": [
+    {
+      "name": "native 26.2 protocol 776 login without translation",
+      "status": "PASS",
+      "elapsedMs": 0
+    },
+    {
+      "name": "native GUI handbook navigation and create a town",
+      "status": "PASS",
+      "elapsedMs": 2226
+    },
+    {
+      "name": "native 26.2 TUI commands and clickable chapter links",
+      "status": "PASS",
+      "elapsedMs": 2066
+    },
+    {
+      "name": "native block and item display packets include 26.2 sulfur",
+      "status": "PASS",
+      "elapsedMs": 103
+    },
+    {
+      "name": "native placement and breaking protect new sulfur and cinnabar blocks",
+      "status": "PASS",
+      "elapsedMs": 22931
+    },
+    {
+      "name": "deny guest CHEST",
+      "status": "PASS",
+      "elapsedMs": 754
+    },
+    {
+      "name": "deny guest TRAPPED_CHEST",
+      "status": "PASS",
+      "elapsedMs": 756
+    },
+    {
+      "name": "deny guest BARREL",
+      "status": "PASS",
+      "elapsedMs": 754
+    },
+    {
+      "name": "deny guest SHULKER_BOX",
+      "status": "PASS",
+      "elapsedMs": 757
+    },
+    {
+      "name": "deny guest WHITE_SHULKER_BOX",
+      "status": "PASS",
+      "elapsedMs": 855
+    },
+    {
+      "name": "deny guest COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 853
+    },
+    {
+      "name": "deny guest EXPOSED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 854
+    },
+    {
+      "name": "deny guest WEATHERED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 854
+    },
+    {
+      "name": "deny guest OXIDIZED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 857
+    },
+    {
+      "name": "deny guest WAXED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 753
+    },
+    {
+      "name": "deny guest WAXED_EXPOSED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 753
+    },
+    {
+      "name": "deny guest WAXED_WEATHERED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 756
+    },
+    {
+      "name": "deny guest WAXED_OXIDIZED_COPPER_CHEST",
+      "status": "PASS",
+      "elapsedMs": 755
+    },
+    {
+      "name": "allow guest CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 707
+    },
+    {
+      "name": "allow guest TRAPPED_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 758
+    },
+    {
+      "name": "allow guest BARREL and inventory click",
+      "status": "PASS",
+      "elapsedMs": 759
+    },
+    {
+      "name": "allow guest SHULKER_BOX and inventory click",
+      "status": "PASS",
+      "elapsedMs": 758
+    },
+    {
+      "name": "allow guest WHITE_SHULKER_BOX and inventory click",
+      "status": "PASS",
+      "elapsedMs": 605
+    },
+    {
+      "name": "allow guest COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 605
+    },
+    {
+      "name": "allow guest EXPOSED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 608
+    },
+    {
+      "name": "allow guest WEATHERED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 709
+    },
+    {
+      "name": "allow guest OXIDIZED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 755
+    },
+    {
+      "name": "allow guest WAXED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 761
+    },
+    {
+      "name": "allow guest WAXED_EXPOSED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 757
+    },
+    {
+      "name": "allow guest WAXED_WEATHERED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 604
+    },
+    {
+      "name": "allow guest WAXED_OXIDIZED_COPPER_CHEST and inventory click",
+      "status": "PASS",
+      "elapsedMs": 605
+    },
+    {
+      "name": "both chest halves obey permissions across a claim boundary",
+      "status": "PASS",
+      "elapsedMs": 4235
+    },
+    {
+      "name": "shelf OAK_SHELF obeys container access",
+      "status": "PASS",
+      "elapsedMs": 7761
+    },
+    {
+      "name": "shelf BAMBOO_SHELF obeys container access",
+      "status": "PASS",
+      "elapsedMs": 7608
+    },
+    {
+      "name": "shelf PALE_OAK_SHELF obeys container access",
+      "status": "PASS",
+      "elapsedMs": 7774
+    },
+    {
+      "name": "sulfur cube block absorption deny then allow",
+      "status": "PASS",
+      "elapsedMs": 6261
+    },
+    {
+      "name": "sulfur cube extraction obeys shear permissions",
+      "status": "PASS",
+      "elapsedMs": 3778
+    },
+    {
+      "name": "sulfur cube bucket capture obeys break permissions",
+      "status": "PASS",
+      "elapsedMs": 9169
+    },
+    {
+      "name": "sulfur cube attack obeys animal killing permissions",
+      "status": "PASS",
+      "elapsedMs": 3780
+    },
+    {
+      "name": "explosive sulfur cube preserves protected blocks and destroys allowed blocks",
+      "status": "PASS",
+      "elapsedMs": 3494
+    },
+    {
+      "name": "copper golem cannot take protected items across claim boundary",
+      "status": "PASS",
+      "elapsedMs": 18010
+    }
+  ],
+  "shutdown": {
+    "code": 0,
+    "signal": null,
+    "forced": false
+  },
+  "issues": []
+}

@@ -132,7 +132,7 @@ public class TownManager {
         public String templateModeAlreadyEnabled = "Town {0} already uses town template permission mode.";
         public String templateModeMayorOnly = "Only the mayor of {0} can perform this irreversible upgrade.";
         public String templateModeUpgradeSuccess = "Town {0} upgraded to template permission mode. {1} outpost(s) now inherit town templates. Please review the templates now.";
-        public String templateFlagUpdated = "Set town template {0} flag {1} to {2}.";
+        public String templateFlagUpdated = "Set {0} town-wide default permission {1} to {2}.";
         public String outpostOverrideCleared = "Flag {0} on group {1} now inherits the town template.";
         public String leaveSuccess = "You left town {0}. Your land stays with the town.";
         public String mayorCannotLeave = "The mayor cannot leave; transfer the mayor role or disband the town first.";
@@ -177,7 +177,7 @@ public class TownManager {
         public String outpostAdminCleared = "Outpost admin of {0} cleared.";
         public String outpostAdminNotMember = "Outpost admin must be a member of town {0}.";
         public String mergeMemberTrusted = "Your membership of {1} was converted to a trust grant for that outpost (the land was attached to a town).";
-        public String townGroupDisplayName = "Town Members";
+        public String townGroupDisplayName = "Town Members (Default Group)";
     }
 
     /**
@@ -589,14 +589,22 @@ public class TownManager {
         return requireTownGroup(town, groupName).getId();
     }
 
+    public static @NotNull String townTemplateGroupDisplayName(@NotNull TownDOO town,
+                                                               @NotNull String groupName) throws DominionException {
+        return TOWN_MEMBER_GROUP_NAME.equalsIgnoreCase(groupName)
+                ? Language.townManagerText.townGroupDisplayName
+                : requireTownGroup(town, groupName).getDisplayName();
+    }
+
     public static void setTownTemplateFlag(@NotNull Player operator, @NotNull TownDOO town,
                                            @NotNull String groupName, @NotNull PriFlag flag,
                                            boolean value) throws Exception {
         assertManager(operator, town);
         int groupKey = townTemplateGroupKey(town, groupName);
+        String displayName = townTemplateGroupDisplayName(town, groupName);
         TownPermissionManager.setTemplateFlag(town, groupKey, flag, value);
         Notification.info(operator, Language.townManagerText.templateFlagUpdated,
-                groupName, flag.getDisplayName(), value);
+                displayName, flag.getDisplayName(), cn.lunadeer.dominion.misc.DisplayNames.permission(value));
     }
 
     /** Route an existing Boolean group write to a sparse local override. */
@@ -1078,7 +1086,7 @@ public class TownManager {
                 operator.getUniqueId());
         cache().reloadNow();
         Notification.info(operator, Language.townManagerText.trustSuccess,
-                CacheManager.instance.getPlayerName(target), town.getName(), scope.name());
+                CacheManager.instance.getPlayerName(target), town.getName(), cn.lunadeer.dominion.misc.DisplayNames.trustScope(scope));
     }
 
     public static void untrust(@NotNull Player operator, @NotNull TownDOO town, @NotNull UUID target,
@@ -1097,7 +1105,7 @@ public class TownManager {
         TownTrustDOO.delete(town.getId(), target, scope, scopeId);
         cache().reloadNow();
         Notification.info(operator, Language.townManagerText.untrustSuccess,
-                CacheManager.instance.getPlayerName(target), town.getName(), scope.name());
+                CacheManager.instance.getPlayerName(target), town.getName(), cn.lunadeer.dominion.misc.DisplayNames.trustScope(scope));
     }
 
     // ------------------------------------------------------------------

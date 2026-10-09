@@ -35,8 +35,8 @@ public class GroupProviderHandler extends GroupProvider {
 
         public String townGroupReserved = "The @town group is managed by the town system and cannot be deleted or renamed.";
         public String townGroupMirrorReserved = "Town-managed group mirrors cannot be deleted, renamed, or have members edited here; manage them from the town.";
-        public String townGroupMembersImplicit = "Town members hold the @town group's permissions implicitly; members cannot be added to or removed from it.";
-        public String townOutpostNoCustomGroups = "Custom groups have no effect on town outposts; use the @town group or /town trust instead.";
+        public String townGroupMembersImplicit = "Members without a custom group use the default group. Open Town → Member Permissions to assign groups.";
+        public String townOutpostNoCustomGroups = "Town land uses shared member permission groups. Open Town → Member Permissions to create and assign groups.";
         public String deleteGroupSuccess = "Group {0} deleted successfully.";
         public String deleteGroupFailed = "Failed to delete group, reason: {0}";
 
@@ -82,7 +82,8 @@ public class GroupProviderHandler extends GroupProvider {
                     groupModified = event.getGroup().setFlagValue(event.getFlag(), event.getNewValue());
                 }
                 Notification.info(event.getOperator(), Language.groupProviderHandlerText.setFlagSuccess,
-                        groupModified.getNamePlain(), event.getFlag().getDisplayName(), event.getNewValue());
+                        TownManager.groupDisplayName(groupModified), event.getFlag().getDisplayName(),
+                        cn.lunadeer.dominion.misc.DisplayNames.permission(event.getNewValue()));
                 return groupModified;
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.groupProviderHandlerText.setFlagFailed, e.getMessage());
@@ -101,8 +102,8 @@ public class GroupProviderHandler extends GroupProvider {
         return event.getFutureToComplete().completeAsync(() -> {
             try {
                 assertDominionManage(event.getOperator(), event.getDominion());
-                // on town outposts only the built-in @town group takes
-                // effect (§5.1) — a custom group would be dead weight
+                // Town group creation belongs to the town-wide management page;
+                // block creating independent legacy groups from this entry.
                 if (event.getDominion() instanceof cn.lunadeer.dominion.doos.DominionDOO doo
                         && doo.isTownOutpost()
                         && event.getOperator() instanceof org.bukkit.entity.Player operatorPlayer

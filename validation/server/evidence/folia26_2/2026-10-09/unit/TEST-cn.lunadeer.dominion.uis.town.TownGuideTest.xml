@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.uis.town.TownGuideTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:53.981Z" hostname="DESKTOP-L5R1PDQ" time="0.102">
+  <properties/>
+  <testcase name="lessonsCanBeReadInOrderWithoutSkippingOrLosingTheWayBack()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.005"/>
+  <testcase name="pageInputsAreBoundedWithoutOverflow()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.001"/>
+  <testcase name="englishResourceMatchesCodeDefaults()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.017"/>
+  <testcase name="wrappingPreservesTextAndDoesNotSplitUnicodePairs()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.003"/>
+  <testcase name="tasksFollowTheConfiguredMaterialsAmountsAndOpenLevels()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.002"/>
+  <testcase name="everyLocaleHasTheWholeSchemaAndResolvablePlaceholders()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.071"/>
+  <testcase name="customConfigurationIsReadFreshInsteadOfHardcoded()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.001"/>
+  <testcase name="replacementsAreSinglePassAndPreserveUntrustedNamesLiterally()" classname="cn.lunadeer.dominion.uis.town.TownGuideTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -54,7 +54,7 @@ public class TownGroupMemberSelector extends AbstractUI {
         public ListViewConfiguration listConfiguration = new ListViewConfiguration(
                 'i', List.of("<########", "#iiiiiii#", "#iiiiiii#", "#iiiiiii#", "p#######n"));
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
-                '<', Material.RED_STAINED_GLASS_PANE, "§c« Back to Town Group",
+                '<', Material.RED_STAINED_GLASS_PANE, "§c« Back to Member Permission Group",
                 List.of("§e▶ Click to go back"));
         public String memberItemName = "§a➕ §e{0}";
         public List<String> memberItemLore = List.of(

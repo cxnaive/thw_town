@@ -22,9 +22,10 @@ export async function readVerified(directory, artifact) {
 }
 
 export async function downloadArtifacts(server, directory) {
-  if (!["folia", "leaf"].includes(server)) throw new Error("Use folia or leaf");
+  if (!["folia", "leaf", "folia26_2"].includes(server)) throw new Error("Use folia, leaf or folia26_2");
   await mkdir(directory, { recursive: true });
-  for (const artifact of [artifacts[server], artifacts.mojang]) {
+  for (const artifact of [artifacts[server], artifacts[artifacts[server].mojang ?? "mojang"],
+    ...(artifacts[server].plugins ?? []).map(name => artifacts[name])]) {
     try {
       await readVerified(directory, artifact);
     } catch (error) {

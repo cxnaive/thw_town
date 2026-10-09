@@ -1,0 +1,12 @@
+{
+  "server": "26.2-build7",
+  "serverHash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+  "pluginVersion": "5.2.5",
+  "pluginHash": "9484a1748ffbd50955ceb2ed444dc03ea6469ae35aed984a7ed935b044b5b796",
+  "fixtureHash": "76d4c9ffe5eb596878f0d1ed9e38bdfecea1507319ffa7a38f0b89297f45e205",
+  "clientHash": "c1a4a80f30b74e93c97b89f5e9c407e7c55bd8fbd8257b93453827f366a52f64",
+  "client": "MCProtocolLib 26.2-20260907.143312-19",
+  "protocol": 776,
+  "protocolTranslation": false,
+  "port": 25687
+}

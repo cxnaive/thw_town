@@ -207,6 +207,8 @@ public class Language extends ConfigurationFile {
     public static SelectPointEventsHandler.SelectPointEventsHandlerText selectPointEventsHandlerText = new SelectPointEventsHandler.SelectPointEventsHandlerText();
 
     // Inputter
+    public static cn.lunadeer.dominion.misc.DisplayNames.PlayerDisplayText playerDisplayText = new cn.lunadeer.dominion.misc.DisplayNames.PlayerDisplayText();
+    public static cn.lunadeer.dominion.uis.NameSearchText nameSearchText = new cn.lunadeer.dominion.uis.NameSearchText();
     public static CreateDominionInputter.CreateDominionInputterText createDominionInputterText = new CreateDominionInputter.CreateDominionInputterText();
     public static CreateGroupInputter.CreateGroupInputterText createGroupInputterText = new CreateGroupInputter.CreateGroupInputterText();
     public static RenameDominionInputter.RenameDominionInputterText renameDominionInputterText = new RenameDominionInputter.RenameDominionInputterText();

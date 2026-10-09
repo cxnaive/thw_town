@@ -9,6 +9,18 @@ public class XVersionManager {
     public static ImplementationVersion GetVersion(JavaPlugin plugin) {
         String version = plugin.getServer().getBukkitVersion();
         XLogger.debug("API version: {0}", version);
+        ImplementationVersion resolved = resolveVersion(version);
+        if (resolved == null) {
+            XLogger.error("Unsupported API version: {0}", version);
+            plugin.getServer().getPluginManager().disablePlugin(plugin);
+        }
+        return resolved;
+    }
+
+    public static ImplementationVersion resolveVersion(String version) {
+        if (version.matches("26\\.2(?:[.-].*)?")) {
+            return ImplementationVersion.v26_2;
+        }
         if (version.contains("1.21")) {
             if (version.contains("1.21.9")
                     || version.contains("1.21.10")
@@ -32,12 +44,11 @@ public class XVersionManager {
                 || version.contains("1.20.6")) {
             return ImplementationVersion.v1_20_1;
         }
-        XLogger.error("Unsupported API version: {0}", version);
-        plugin.getServer().getPluginManager().disablePlugin(plugin);
         return null;
     }
 
     public enum ImplementationVersion {
+        v26_2,
         v1_21_9,
         v1_21_8,
         v1_21_6,

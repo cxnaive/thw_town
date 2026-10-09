@@ -22,6 +22,7 @@ public class Container implements Listener {
             return;
         }
         if (event.getClickedBlock().getType() != Material.CHEST &&
+                event.getClickedBlock().getType() != Material.TRAPPED_CHEST &&
                 event.getClickedBlock().getType() != Material.BARREL &&
                 !Tag.SHULKER_BOXES.isTagged(event.getClickedBlock().getType())) {
             return;

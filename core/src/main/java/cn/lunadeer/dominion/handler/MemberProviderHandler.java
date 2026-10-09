@@ -35,7 +35,7 @@ public class MemberProviderHandler extends MemberProvider {
         public String setFlagFailed = "Failed to set flag, reason: {0}";
 
         public String addMemberSuccess = "Successfully added {0} to {1}.";
-        public String useTrustForTownOutposts = "This dominion belongs to a town; per-player grants are managed with /town trust instead of members.";
+        public String useTrustForTownOutposts = "For town members, use Town → Member Permissions. For visitors, use Trust.";
         public String alreadyMember = "{0} is already a member of {1}.";
         public String cantBeOwner = "You can't add dominion owner as a member.";
         public String addMemberFailed = "Failed to add member, reason: {0}";
@@ -68,11 +68,11 @@ public class MemberProviderHandler extends MemberProvider {
                 if (event.getMember().getGroupId() != -1) {
                     GroupDTO group = Objects.requireNonNull(CacheManager.instance.getCache(event.getDominion().getServerId())).getGroupCache().getGroup(event.getMember().getGroupId());
                     if (group == null) return null;
-                    throw new DominionException(Language.memberProviderHandlerText.groupAlready, group.getNamePlain());
+                    throw new DominionException(Language.memberProviderHandlerText.groupAlready, cn.lunadeer.dominion.managers.TownManager.groupDisplayName(group));
                 }
                 MemberDTO memberModified = event.getMember().setFlagValue(event.getFlag(), event.getNewValue());
                 Notification.info(event.getOperator(), Language.memberProviderHandlerText.setFlagSuccess,
-                        event.getFlag().getFlagName(), event.getMember().getPlayer().getLastKnownName(), event.getDominion().getName());
+                        event.getFlag().getDisplayName(), event.getMember().getPlayer().getLastKnownName(), event.getDominion().getName());
                 return memberModified;
             } catch (Exception e) {
                 Notification.error(event.getOperator(), Language.memberProviderHandlerText.setFlagFailed, e.getMessage());

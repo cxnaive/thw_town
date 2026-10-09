@@ -14,37 +14,38 @@ menu-tui-text:
   document-description: 在浏览器中打开插件文档页面。
   command-help-button: 指令帮助
   command-help-description: 在浏览器中打开插件指令帮助页面。
-  switch-to-cui-button: ' 切换到CUI 🆕 '
+  switch-to-cui-button: ' 切换箱子菜单 🆕 '
   fail-to-switch-message: 切换到 {0} 失败：{1}
 dominion-list-tui-text:
+  creator-tag: " §7创建者：§e{0}"
+  contributor-tag: " §7贡献者：§e{0}"
   remote-owned-line: §b{0} §7- 服务器 {1}
   remote-owned-section: 你在其他服务器的领地。
   town-managed-line: '§b{0} §7- 小镇: {1}, 服务器 {2}'
-  town-managed-section: 你管理的镇属地（所有服务器）。
-  remote-manage-hint: 属地 {0} 位于服务器 {1}。管理需要先切换到该服务器；前往属地请使用 TP。
+  town-managed-section: 你管理的小镇属地（所有服务器）。
+  remote-manage-hint: "属地 {0} 位于区服 {1}。管理需要先前往该区服；点击“传送”可前往。"
   town-tag: ' [{0}]'
-  contributor-tag: ' §7贡献者: §e{0}'
   title: 你的领地列表
   button: 领地列表
   description: 列出你的所有领地（含可管理领地）。
   delete-button: 删除
   admin-section: 以下为你拥有管理权限的领地列表
   server-section: 以下为你在服务器 {0} 的领地列表
-  legacy-tag: （旧系统——请尽快创建或加入小镇）
-  legacy-notice: 个人领地已是旧系统，请尽快创建或加入小镇（/town create、/town join 或主菜单），再使用 /town attach 选择要贡献的领地。
+  legacy-tag: "（个人领地）"
+  legacy-notice: "你拥有个人领地；如需贡献给小镇，可使用 /town attach 选择。"
 dominion-manage-tui-text:
   delete-outpost-button: '删除属地'
   delete-outpost-description: '镇长/副镇长可删除此属地；解除保护，不退款。'
   delete-outpost-confirm: '§c5 秒内再次点击确认删除属地 {0}。将解除保护并清除权限，不退款；方块、下级领地及小镇保留。'
   release-description: 将贡献领地归还给原贡献者（镇长操作，OP 可仲裁）。
   release-button: 归还
-  release-confirm: §c5 秒内再次点击确认归还贡献领地 {0}。小镇组、镜像成员和该属地 Trust 都会被删除。
-  trusts-description: 管理此镇属前哨的单人 Trust 授权。
+  release-confirm: "§c5 秒内再次点击确认归还属地 {0}。将解除小镇关联，清除这块地的小镇成员权限和信任设置。"
+  trusts-description: "给镇外朋友设置仅在此属地生效的额外权限。"
   title: 管理领地 {0}
   button: 管理领地
   teleport-button: 传送
   teleport-description: 传送到此领地。
-  set-tp-button: 设置传送
+  set-tp-button: "设置传送点"
   set-tp-description: 将你当前所在位置设置为领地传送点。
 set-size-tui-text:
   title: 修改领地 {0} 大小
@@ -58,9 +59,9 @@ set-size-tui-text:
   expand: 扩张
   contract: 缩小
 env-setting-tui-text:
-  title: 领地 {0} 环境行为
-  button: 环境行为
-  description: 设置领地环境行为。
+  title: 领地 {0} 环境设置
+  button: 环境设置
+  description: "设置领地内的环境与自然行为。"
 guest-setting-tui-text:
   title: 领地 {0} 访客权限
   button: 访客权限
@@ -92,7 +93,7 @@ member-list-tui-text:
   group-only: 该成员属于领地权限组 {0}，无法单独管理
   tag-admin: 领地管理员
   tag-normal: 普通成员
-  tag-ban: 黑名单成员（没有 MOVE 权限）
+  tag-ban: "禁止进入的成员"
   tag-group: 该成员属于权限组
 select-player-tui-text:
   title: 选择玩家
@@ -104,14 +105,14 @@ member-setting-tui-text:
   description: 设置成员在此领地的权限
   button: 权限设置
 template-list-tui-text:
-  title: 权限模板列表
-  button: 权限模板
-  description: 通过预先设置的权限模板快速设置领地成员的权限
+  title: "个人权限预设（旧领地）"
+  button: "个人权限预设（旧领地）"
+  description: "保存旧领地成员的权限预设，手动套用时生效，不会同步修改小镇权限。"
   delete-button: 删除
 select-template-tui-text:
-  title: 选择模板
-  description: 选择一个权限模板套用在成员上
-  button: 套用模板
+  title: "选择个人权限预设"
+  description: "将预设权限一次性套用给这位旧领地成员。"
+  button: "套用预设"
   back: 返回
   apply: 套用
 group-list-tui-text:
@@ -125,9 +126,9 @@ group-setting-tui-text:
   title: 权限组 {0} 设置
   description: 管理权限组 {0} 的权限配置
   button: 设置
-  inherit: 继承
+  inherit: "跟随全镇设置"
   allow: 允许
-  deny: 拒绝
+  deny: "禁止"
   reset: 恢复继承
 select-member-tui-text:
   title: 选择成员
@@ -141,13 +142,13 @@ title-list-tui-text:
   disuse-button: 卸下
   from-dominion: 来自领地 {0}
 all-dominion-tui-text:
-  title: 服务器所有领地
+  title: "本服务器全部领地"
   description: 列出服务器上的所有领地
-  button: 所有领地
+  button: "本服务器全部领地"
 template-setting-tui-text:
-  title: 模板设置
+  title: "个人权限预设设置"
   button: 设置
-  not-found: 找不到模板 {0}
+  not-found: "找不到预设 {0}"
 copy-menu-tui-text:
   button: 复制配置
   description: 从其他领地复制配置到当前领地。
@@ -174,31 +175,31 @@ town-info-tui-text:
   button: 小镇
   mayor-line: '§7镇长: §b{0}'
   member-count-line: '§7成员数: §b{0}'
-  balance-line: '§7镇库余额: §b{0}'
-  level-line: '§7小镇等级: §b{0}§7/§b{1} §7- 镇属地上限: §b全服 {2} 个 / 单世界 {3} 个'
+  balance-line: '§7小镇金库余额: §b{0}'
+  level-line: "§7小镇等级：§b{0}§7/{1} §7- 本镇属地总上限：§b{2} 个（跨服合计）§7 / 单世界 §b{3} 个"
   level-task-description: 查看小镇共同等级任务并提交物品。
-  outpost-count-line: '§7镇属地: §b{0}'
+  outpost-count-line: '§7小镇属地: §b{0}'
   your-role-line: '§7你的角色: §b{0}'
-  permission-mode-legacy: §7权限模式：§6旧版属地独立权限
-  permission-mode-template: §7权限模式：§a小镇权限模板
-  upgrade-button: 升级权限模式
-  upgrade-description: 一次性重置：全部附属领地将继承小镇模板。
+  permission-mode-legacy: "§7权限设置：§6各属地独立设置"
+  permission-mode-template: "§7权限设置：§a使用全镇默认权限"
+  upgrade-button: 启用全镇默认权限（一次性）
+  upgrade-description: "一次性清空各属地的成员组权限，改为继承全镇默认权限，不可撤回。"
   upgrade-waiting: §7只有镇长可以执行这项不可逆升级。
-  upgrade-confirm: §c5 秒内再次点击确认升级 {0}。全部镇属领地的小镇组权限将重置为继承，且不可撤销。
+  upgrade-confirm: §c5 秒内再次点击确认升级 {0}。全部小镇属地的成员权限组权限将重置为继承，且不可撤销。
   members-button: 成员
   members-description: 查看并管理小镇成员。
-  trusts-button: 授权
-  trusts-description: 查看并管理 Trust 授权。
-  bank-button: 银行
-  bank-description: 镇银行存取。
-  outposts-button: 前哨
-  outposts-description: 列出本镇全部前哨。
-  create-outpost-button: 创建镇属地
-  create-outpost-description: 使用当前选中的两个点创建，费用从镇库扣除。
+  trusts-button: "镇外玩家权限（信任）"
+  trusts-description: "给镇外朋友额外权限，可按全镇或单块属地设置。"
+  bank-button: 小镇金库
+  bank-description: "向小镇金库存入或取出金币。"
+  outposts-button: "属地列表"
+  outposts-description: "查看本镇各区服的小镇属地。"
+  create-outpost-button: "创建小镇属地"
+  create-outpost-description: 使用当前选中的两个点创建，费用从小镇金库扣除。
   attach-button: 挂靠
   attach-description: 将你的个人领地挂靠到本镇。
-  groups-button: 小镇组
-  groups-description: 管理所有镇属前哨共享的自定义组。
+  groups-button: "成员权限管理"
+  groups-description: "设置成员在小镇属地中的建造、破坏、开箱等权限。"
   invite-button: 邀请
   invite-description: 邀请玩家加入。
   leave-button: 退出
@@ -211,13 +212,13 @@ town-level-tasks-tui-text:
   title: '{0} 的等级任务'
   button: 等级任务
   level-line: '§7当前等级：§b{0}§7/§b{1}'
-  open-level-line: '§7成员晋升目前开放至：§b{0} 级'
-  capacity-line: '§7镇属地上限：§b全服 {0} 个 / 单世界 {1} 个'
+  open-level-line: "§7共同任务开放到：§b{0} 级"
+  capacity-line: "§7本镇属地总上限：§b{0} 个（跨服合计）§7 / 单世界 §b{1} 个"
   task-line: '§7目标等级：§b{0} §7- 所需物品：§e{1} x {2}'
   progress-line: '§7共同进度：§a{0}§7/§a{1} §7（还需 {2}）'
   submit-button: 提交物品
   submit-description: 从背包中提交匹配物品，支持所有成员分批贡献。
-  open-max-line: §a本镇已达到目前向成员开放的最高等级。
+  open-max-line: "§a本镇已达到共同任务目前开放的最高等级。"
   missing-line: §c尚未配置晋升到 {0} 级的共同任务。
   outsider-line: §7只有小镇成员可以提交任务物品。
 town-members-tui-text:
@@ -227,33 +228,33 @@ town-members-tui-text:
   invite-button: 邀请
   invite-hint: 输入要邀请的玩家名。
   kick-button: 踢出
-  promote-button: 升职
-  demote-button: 降职
+  promote-button: "任命副镇长"
+  demote-button: "设为普通成员"
   transfer-button: 转让镇长
 town-trusts-tui-text:
-  title: '{0} 的授权'
-  button: 授权
-  town-scope-label: §7[镇级]
-  outpost-scope-label: '§7[前哨: {0}]'
+  title: "{0} 的小镇信任"
+  button: "镇外玩家权限（信任）"
+  town-scope-label: "§7[全镇]"
+  outpost-scope-label: "§7[仅此属地：{0}]"
   trust-line: §b{0} {1}
-  add-button: 添加授权
-  add-hint: 输入要授权的玩家名（镇级，默认全关——添加后再逐项开启）。
-  remove-button: X
-  flag-on: §a{0}
-  flag-off: §8{0}
-  outposts-header: §6--- 属地授权：选择一块属地 ---
+  add-button: "添加信任玩家"
+  add-hint: "输入要信任的玩家名。生效范围为全镇；添加后请分别开启需要的权限。"
+  remove-button: "移除信任"
+  flag-on: "§a{0}：额外允许"
+  flag-off: "§8{0}：不额外授权"
+  outposts-header: "§6--- 属地信任：选择一块属地 ---"
   outpost-line: §e{0} §7→ 管理
 outpost-trusts-tui-text:
-  title: 属地 {0} 的授权
+  title: "{0} 的属地信任"
   trust-line: §b{0}
-  add-button: 添加授权
-  add-hint: 输入要授权的玩家名（仅此属地，默认全关——添加后再逐项开启）。
-  remove-button: X
-  flag-on: §a{0}
-  flag-off: §8{0}
+  add-button: "添加信任玩家"
+  add-hint: "输入要信任的玩家名。仅在此属地生效；添加后请分别开启需要的权限。"
+  remove-button: "移除信任"
+  flag-on: "§a{0}：额外允许"
+  flag-off: "§8{0}：不额外授权"
 town-bank-tui-text:
-  title: '{0} 的银行'
-  button: 银行
+  title: '{0} 的小镇金库'
+  button: 小镇金库
   balance-line: '§7余额: §b{0}'
   deposit-button: 存入
   deposit-hint: 输入存入金额。
@@ -261,10 +262,11 @@ town-bank-tui-text:
   withdraw-hint: 输入取出金额。
   invalid-amount: '无效金额: {0}'
 town-outposts-tui-text:
-  title: '{0} 的前哨'
-  button: 前哨
+  creator-tag: " §7创建者：§e{0}"
+  contributor-tag: " §7贡献者：§e{0}"
+  title: '{0} 的小镇属地'
+  button: "属地列表"
   outpost-line: §b{0} §7- {1} ({2}, 服务器 {3})
-  contributor-tag: ' §7贡献者: §e{0}'
   remote-hint: 查看远端位置
   remote-action-hint: 属地 {0} 位于服务器 {1}、世界 {2}。管理需要先切换到对应服务器；需要前往时请点击“传送”。
   teleport-button: 传送
@@ -281,28 +283,28 @@ town-attach-selector-tui-text:
   none-selected: 未选择任何领地。
   no-dominions: 你没有可挂靠的个人领地。
 town-groups-tui-text:
-  title: '{0} 的小镇组'
-  button: 小镇组
+  title: "{0} - 成员权限组"
+  button: "成员权限管理"
   create-button: 创建
   create-hint: '请输入“内部名 显示名”，例如：builders 建筑组。内部名仅限小写字母、数字、下划线和连字符。'
   create-display-hint: 现在请输入显示名，例如：建筑组。支持中文和空格；输入 - 则使用内部名。
   group-line: '§b{0} §7（{1}，成员：§b{2}）'
   open-button: 管理
-  open-description: 查看成员并管理此小镇组。
+  open-description: "查看成员并设置他们在小镇属地中的权限。"
   no-groups: 本小镇尚未创建自定义组。
-  default-template-line: §e小镇成员 §7(@town) - 镇级默认权限模板
+  default-template-line: "§e小镇成员（默认组） §7- 全镇默认权限"
 town-group-manage-tui-text:
-  title: '小镇组：{0}'
-  button: 小镇组
+  title: "成员权限组: {0}"
+  button: "成员权限组"
   internal-name: '§7内部名：§b{0}'
   member-line: §b{0}
   add-button: 添加成员
   rename-button: 修改显示名
-  template-button: 权限模板
+  template-button: "全镇默认权限"
   rename-hint: 请输入新的显示名（支持中文和空格）；输入 - 则恢复为内部名。
   remove-button: 移除
-  delete-button: 删除小镇组
-  delete-confirm: '§c5秒内再次点击确认删除小镇组 {0}。'
+  delete-button: 删除权限组
+  delete-confirm: '§c5秒内再次点击确认删除成员权限组 {0}。'
   no-members: 此组尚未分配成员。
 town-group-member-selector-tui-text:
   title: 为 {0} 选择成员
@@ -313,7 +315,7 @@ town-group-member-selector-tui-text:
   select-description: 将此成员分配到该组；若其已在其他组，将移动到当前组。
   no-candidates: 所有小镇成员都已在当前组中。
 town-template-flags-tui-text:
-  title: '小镇权限模板：{0}'
-  button: 权限模板
-  description: 编辑所有附属领地默认继承的镇级权限。
-  mode-hint: §7修改只会同步到仍处于继承状态的附属领地。
+  title: "全镇默认权限: {0}"
+  button: "全镇默认权限"
+  description: "各属地默认使用这里的设置，可以为某块属地单独调整。"
+  mode-hint: §7修改只会同步到仍处于继承状态的小镇属地。

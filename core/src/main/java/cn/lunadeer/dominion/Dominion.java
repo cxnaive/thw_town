@@ -78,6 +78,7 @@ public final class Dominion extends JavaPlugin {
         WorldLoadHandler.getInstance().addRunner(WorldMapManager::reconcileWorld);
         Notification.instance.setPrefix(Language.dominionText.notificationPrefix);
         XVersionManager.VERSION = XVersionManager.GetVersion(this);
+        if (XVersionManager.VERSION == null) return;
         NMSManager.initialize();
 
         new VaultConnect(this);

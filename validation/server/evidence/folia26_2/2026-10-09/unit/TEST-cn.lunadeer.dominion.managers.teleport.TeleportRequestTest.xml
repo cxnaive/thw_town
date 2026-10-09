@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:53.860Z" hostname="DESKTOP-L5R1PDQ" time="0.006">
+  <properties/>
+  <testcase name="oldCallbackCannotRemoveNewRequestOrReconnectedSession()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.001"/>
+  <testcase name="retiredSessionCanReleaseExecutingRequest()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.0"/>
+  <testcase name="resourceReplacementAndTerminalCleanupAreExactlyOnce()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.001"/>
+  <testcase name="onlyOneTerminalCallbackWins()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.001"/>
+  <testcase name="cancelledRequestRejectsLateExecutionAndClosesLateResource()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.001"/>
+  <testcase name="positionGuardIncludesWorldEvenWhenCoordinatesAreIdentical()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.0"/>
+  <testcase name="executingRequestCannotBeCancelledOrReplacedUntilResultArrives()" classname="cn.lunadeer.dominion.managers.teleport.TeleportRequestTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

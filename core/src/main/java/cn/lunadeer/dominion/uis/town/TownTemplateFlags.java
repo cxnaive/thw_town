@@ -53,24 +53,24 @@ public class TownTemplateFlags extends AbstractUI {
     }
 
     public static class TownTemplateFlagsTuiText extends ConfigurationPart {
-        public String title = "Town Template: {0}";
-        public String button = "TEMPLATE";
-        public String description = "Edit the town-wide default permissions inherited by outposts.";
+        public String title = "Town-wide Default Permissions: {0}";
+        public String button = "TOWN-WIDE DEFAULT PERMISSIONS";
+        public String description = "Outposts use these permissions by default; individual outposts can be set separately.";
         public String modeHint = "§7Changes apply to every outpost still using inheritance.";
     }
 
     public static class TownTemplateFlagsCui extends ConfigurationPart {
-        public String title = "§6✦ §eTown Template: {0} §6✦";
+        public String title = "§6✦ §eTown-wide Default Permissions: {0} §6✦";
         public ListViewConfiguration listConfiguration = new ListViewConfiguration(
                 'i', List.of("<########", "#iiiiiii#", "#iiiiiii#", "#iiiiiii#", "p#######n"));
         public ButtonConfiguration backButton = ButtonConfiguration.createMaterial(
-                '<', Material.RED_STAINED_GLASS_PANE, "§c« Back to Town Groups",
+                '<', Material.RED_STAINED_GLASS_PANE, "§c« Back to Member Permission Groups",
                 List.of("§e▶ Click to go back"));
         public String flagItemName = "§7Permission: §e{0}";
         public String flagStateTrue = "§a§l[ALLOW]";
         public String flagStateFalse = "§c§l[DENY]";
         public List<String> flagItemLore = List.of(
-                "§7Template: {0}", "§7{1}", "§7{2}", "", "§e▶ Click to toggle");
+                "§7Town-wide default: {0}", "§7{1}", "§7{2}", "", "§e▶ Click to toggle");
     }
 
     private void prefetch(String townName, String groupName) throws Exception {
@@ -115,7 +115,8 @@ public class TownTemplateFlags extends AbstractUI {
         boolean manager = TownManager.isManager(town, player.getUniqueId())
                 || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
         ListView view = ListView.create(10, button(player, town.getName(), groupName));
-        view.title(formatString(TextUserInterface.townTemplateFlagsTuiText.title, groupName));
+        view.title(formatString(TextUserInterface.townTemplateFlagsTuiText.title,
+                TownManager.townTemplateGroupDisplayName(town, groupName)));
         view.navigator(Line.create().append(TownInfo.button(player, town.getName()).build())
                 .append(TownGroups.button(player, town.getName()).build())
                 .append(TextUserInterface.townTemplateFlagsTuiText.button)
@@ -152,7 +153,8 @@ public class TownTemplateFlags extends AbstractUI {
         boolean manager = TownManager.isManager(town, player.getUniqueId())
                 || cn.lunadeer.dominion.misc.Others.bypassLimit(player);
         ChestListView view = ChestUserInterfaceManager.getInstance().getListViewOf(player);
-        view.setTitle(formatString(ChestUserInterface.townTemplateFlagsCui.title, groupName));
+        view.setTitle(formatString(ChestUserInterface.townTemplateFlagsCui.title,
+                TownManager.townTemplateGroupDisplayName(town, groupName)));
         view.applyListConfiguration(ChestUserInterface.townTemplateFlagsCui.listConfiguration,
                 toIntegrity(args[2], 1));
         view.setButton(ChestUserInterface.townTemplateFlagsCui.backButton.getSymbol(),

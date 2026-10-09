@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-09T08:56:52.848Z" hostname="DESKTOP-L5R1PDQ" time="1.01">
+  <properties/>
+  <testcase name="expiredAndLegacyRecordsNeverExecute()" classname="cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest" time="0.396"/>
+  <testcase name="staleCleanupAndStaleWriterCannotOverwriteNewRequest()" classname="cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest" time="0.102"/>
+  <testcase name="simultaneousArrivalHasExactlyOneWinner()" classname="cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest" time="0.131"/>
+  <testcase name="intermediateServerDoesNotConsumeTargetRecord()" classname="cn.lunadeer.dominion.managers.teleport.TeleportHandoffStoreTest" time="0.38"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

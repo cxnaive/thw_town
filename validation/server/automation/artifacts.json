@@ -19,5 +19,38 @@
     "url": "https://github.com/Winds-Studio/Leaf/releases/download/ver-1.21.11/leaf-1.21.11-178.jar",
     "algorithm": "sha256",
     "hash": "b01c2f6037f97a4e1cd1d23dc6574ebb4839de12395b62aa465fac63db263627"
+  },
+  "folia26_2": {
+    "version": "26.2-build7",
+    "filename": "folia-26.2-7.jar",
+    "url": "https://fill-data.papermc.io/v1/objects/128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3/folia-26.2-7.jar",
+    "algorithm": "sha256",
+    "hash": "128a634192261cd38bb4a5dc54075018a0f896fd6c6f529e37dca6e99e32b3b3",
+    "mojang": "mojang26_2",
+    "plugins": [
+      "viaversion26",
+      "viabackwards26"
+    ]
+  },
+  "mojang26_2": {
+    "version": "26.2",
+    "filename": "mojang_26.2.jar",
+    "url": "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar",
+    "algorithm": "sha256",
+    "hash": "cdacdfb25898de5e4b4b0e5ddcc2722f77067e46605709c2d886c000ebb63ec5"
+  },
+  "viaversion26": {
+    "version": "5.12.1",
+    "filename": "ViaVersion-5.12.1.jar",
+    "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/cc7QiCYw/ViaVersion-5.12.1.jar",
+    "algorithm": "sha256",
+    "hash": "551265afd892e78bb869162e08b4fdd151c518e245fce60af36b0603ad695d76"
+  },
+  "viabackwards26": {
+    "version": "5.12.1",
+    "filename": "ViaBackwards-5.12.1.jar",
+    "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/GXuG4GNJ/ViaBackwards-5.12.1.jar",
+    "algorithm": "sha256",
+    "hash": "dd72f7a459cbf1ea7862781dac92ed0ba738aa3cb3b7955e716ba379889d612a"
   }
 }

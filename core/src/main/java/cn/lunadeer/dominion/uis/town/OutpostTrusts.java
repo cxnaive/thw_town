@@ -8,6 +8,7 @@ import cn.lunadeer.dominion.doos.DominionDOO;
 import cn.lunadeer.dominion.doos.TownDOO;
 import cn.lunadeer.dominion.doos.TownTrustDOO;
 import cn.lunadeer.dominion.managers.TownManager;
+import cn.lunadeer.dominion.misc.DisplayNames;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -70,11 +71,6 @@ public class OutpostTrusts extends AbstractUI {
         return rows;
     }
 
-    private static String flags(TownTrustDOO trust) {
-        return (trust.isBuild() ? "B" : "-") + (trust.isDestroy() ? "D" : "-")
-                + (trust.isSwitch() ? "S" : "-") + (trust.isItemUse() ? "I" : "-");
-    }
-
     // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ TUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
     public static class OutpostTrustsTuiText extends ConfigurationPart {
@@ -83,11 +79,9 @@ public class OutpostTrusts extends AbstractUI {
         public String addButton = "ADD TRUST";
         public String addHint = "Enter the player name to trust on this outpost (all flags off — toggle after).";
         public String removeButton = "X";
-        public String flagOn = "§a{0}";
-        public String flagOff = "§8{0}";
+        public String flagOn = "§a{0}: additional access";
+        public String flagOff = "§8{0}: no additional access";
     }
-
-    private static final String[] FLAG_NAMES = {"build", "destroy", "switch", "item_use"};
 
     @Override
     protected void showTUI(Player player, String... args) {
@@ -118,11 +112,12 @@ public class OutpostTrusts extends AbstractUI {
                         CacheManager.instance.getPlayerName(trust.getPlayerUuid())));
                 if (editor) {
                     boolean[] values = {trust.isBuild(), trust.isDestroy(), trust.isSwitch(), trust.isItemUse()};
-                    for (int i = 0; i < FLAG_NAMES.length; i++) {
+                    List<String> labels = DisplayNames.trustCategories();
+                    for (int i = 0; i < labels.size(); i++) {
                         final int idx = i;
                         line.append(new FunctionalButton(formatString(
                                 values[i] ? TextUserInterface.outpostTrustsTuiText.flagOn
-                                        : TextUserInterface.outpostTrustsTuiText.flagOff, FLAG_NAMES[i])) {
+                                        : TextUserInterface.outpostTrustsTuiText.flagOff, labels.get(i))) {
                             @Override
                             public void function() {
                                 TownUI.action(player, () -> {
@@ -201,8 +196,8 @@ public class OutpostTrusts extends AbstractUI {
                 'i', Material.PLAYER_HEAD, "§e{0}",
                 List.of(
                         "§7Scope: §bThis outpost only",
-                        "§7Flags: §b{0}",
-                        "§8B Build · D Destroy · S Switch · I Item use",
+                        "§7Additional access: §b{0}",
+                        "§8Other categories keep their existing permissions.",
                         "",
                         "§a▶ Click to manage four independent flags"
                 )
@@ -243,7 +238,7 @@ public class OutpostTrusts extends AbstractUI {
                     }
                 };
                 btn = btn.setDisplayNameArgs(playerName);
-                btn = btn.setLoreArgs(flags(trust));
+                btn = btn.setLoreArgs(DisplayNames.additionalTrust(trust));
                 view = view.addItem(btn);
             }
             final ChestListView viewFinal = view;

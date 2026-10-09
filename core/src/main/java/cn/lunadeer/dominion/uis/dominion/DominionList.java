@@ -13,6 +13,8 @@ import cn.lunadeer.dominion.misc.CommandArguments;
 import cn.lunadeer.dominion.uis.AbstractUI;
 import cn.lunadeer.dominion.uis.AllDominion;
 import cn.lunadeer.dominion.uis.MainMenu;
+import cn.lunadeer.dominion.uis.NameSearch;
+import cn.lunadeer.dominion.utils.command.Argument;
 import cn.lunadeer.dominion.utils.Notification;
 import cn.lunadeer.dominion.utils.command.SecondaryCommand;
 import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
@@ -97,6 +99,14 @@ public class DominionList extends AbstractUI {
         }
     }.needPermission(defaultPermission).register();
 
+    public static SecondaryCommand search = new SecondaryCommand("search", List.of(
+            new Argument("keyword", ""), new CommandArguments.OptionalPageArgument()
+    ), Language.nameSearchText.landUsage) {
+        @Override public void executeHandler(CommandSender sender) {
+            new NameSearch(NameSearch.Scope.OWN_LAND, null, null).search(sender, getArgumentValue(0), getArgumentValue(1));
+        }
+    }.needPermission(defaultPermission).register();
+
     // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ TUI ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
     public static class DominionListTuiText extends ConfigurationPart {
@@ -107,7 +117,8 @@ public class DominionList extends AbstractUI {
         public String adminSection = "Your admin dominions section.";
         public String serverSection = "Server {0} dominions section.";
         public String townTag = " [{0}]";
-        public String contributorTag = " §7by §e{0}";
+        public String contributorTag = " §7Contributor: §e{0}";
+        public String creatorTag = " §7Creator: §e{0}";
         public String townManagedSection = "Town outposts you manage (all servers).";
         public String townManagedLine = "§b{0} §7- town: {1}, server {2}";
         public String remoteManageHint = "Outpost {0} is on server {1}. Switch to that server to manage it; use TP to travel there.";
@@ -126,9 +137,10 @@ public class DominionList extends AbstractUI {
         }.needPermission(defaultPermission);
     }
 
-    /** owner_uuid on a town outpost is the contributor record (§2.4). */
-    private static String contributorTag(cn.lunadeer.dominion.doos.DominionDOO outpost) {
-        return formatString(TextUserInterface.dominionListTuiText.contributorTag,
+    private static String originTag(cn.lunadeer.dominion.doos.DominionDOO outpost) {
+        return formatString(outpost.getAttachedBy() == null
+                        ? TextUserInterface.dominionListTuiText.creatorTag
+                        : TextUserInterface.dominionListTuiText.contributorTag,
                 CacheManager.instance.getPlayerName(outpost.getOwner()));
     }
 
@@ -175,7 +187,7 @@ public class DominionList extends AbstractUI {
                         .getTown(doo.getTownId());
                 line.append(Component.text(formatString(TextUserInterface.dominionListTuiText.townTag,
                         town == null ? "?" : town.getName()), ViewStyles.SECONDARY));
-                line.append(Component.text(contributorTag(doo), ViewStyles.SECONDARY));
+                line.append(Component.text(originTag(doo), ViewStyles.SECONDARY));
             }
             lines.add(line);
             lines.addAll(BuildTreeLines(sender, node.getChildren(), depth + 1));
@@ -191,7 +203,8 @@ public class DominionList extends AbstractUI {
         view.title(TextUserInterface.dominionListTuiText.title);
         view.navigator(Line.create()
                 .append(MainMenu.button(player).build())
-                .append(TextUserInterface.dominionListTuiText.button));
+                .append(TextUserInterface.dominionListTuiText.button)
+                .append(new NameSearch(NameSearch.Scope.OWN_LAND, null, () -> show(player, args[0])).button(player).build()));
         List<DominionNode> dominionNodes = CacheManager.instance.getCache().getDominionCache().getPlayerDominionNodes(player.getUniqueId());
         // town era: nag owners of personal (non-town) land to migrate —
         // personal dominions are frozen legacy
@@ -257,7 +270,7 @@ public class DominionList extends AbstractUI {
                 cn.lunadeer.dominion.doos.TownDOO town = CacheManager.instance.getTownCache()
                         .getTown(doo.getTownId());
                 townTag = formatString(TextUserInterface.dominionListTuiText.townTag,
-                        town == null ? "?" : town.getName()) + contributorTag(doo);
+                        town == null ? "?" : town.getName()) + originTag(doo);
             }
             line.append(Component.text(formatString(TextUserInterface.dominionListTuiText.remoteOwnedLine,
                     dominion.getName(), serverLabel(dominion)) + townTag, ViewStyles.SECONDARY));
@@ -333,7 +346,7 @@ public class DominionList extends AbstractUI {
                     .getTown(outpost.getTownId());
             line.append(formatString(TextUserInterface.dominionListTuiText.townManagedLine,
                     outpost.getName(), town == null ? "?" : town.getName(), serverLabel(outpost)));
-            line.append(Component.text(contributorTag(outpost), ViewStyles.SECONDARY));
+            line.append(Component.text(originTag(outpost), ViewStyles.SECONDARY));
             lines.add(line);
         }
         return lines;
@@ -397,12 +410,26 @@ public class DominionList extends AbstractUI {
                 )
         );
 
+        public ButtonConfiguration nativeDominionButton = ButtonConfiguration.createMaterial(
+                'i', Material.BROWN_BANNER, "§6🏰 §e{0}",
+                List.of(
+                        "§7Town: §b{0}",
+                        "§7Creator: §e{1}",
+                        "§8Created directly for the town.",
+                        "",
+                        "§b▶ Left Click: info/manage",
+                        "§b▶ Right Click: teleport",
+                        "",
+                        "§7Status: §6Town land"
+                )
+        );
+
         public ButtonConfiguration townManagedButton = ButtonConfiguration.createMaterial(
                 'i', Material.BEACON, "§3⛨ §b{0}",
                 List.of(
                         "§7Town: §b{0}",
                         "§7Server: §b{1}",
-                        "§7Contributor: §e{2}",
+                        "{2}",
                         "",
                         "§b▶ Left Click: manage (this server)",
                         "§b▶ Right Click: teleport (all servers)",
@@ -451,7 +478,9 @@ public class DominionList extends AbstractUI {
             boolean canManage = !remote
                     && cn.lunadeer.dominion.misc.Asserts.checkDominionAdmin(player, dominion);
             ChestButton btn = new ChestButton(townOutpost
-                    ? ChestUserInterface.dominionListCui.contributedDominionButton
+                    ? (((cn.lunadeer.dominion.doos.DominionDOO) dominion).getAttachedBy() == null
+                        ? ChestUserInterface.dominionListCui.nativeDominionButton
+                        : ChestUserInterface.dominionListCui.contributedDominionButton)
                     : ChestUserInterface.dominionListCui.ownDominionButton) {
                 @Override
                 public void onClick(ClickType type) {
@@ -511,7 +540,7 @@ public class DominionList extends AbstractUI {
                 btn = btn.setDisplayNameArgs(outpost.getName());
                 btn = btn.setLoreArgs(t == null ? "?" : t.getName(),
                         serverLabel(outpost),
-                        CacheManager.instance.getPlayerName(outpost.getOwner()));
+                        originTag(outpost).stripLeading());
                 view = view.addItem(btn);
             }
         } catch (Exception e) {
@@ -544,6 +573,7 @@ public class DominionList extends AbstractUI {
                 }
         );
 
+        new NameSearch(NameSearch.Scope.OWN_LAND, null, () -> show(player, args[0])).addButton(view, player);
         view.open();
     }
 
